@@ -1,0 +1,14 @@
+obj
+*.o
+local.properties
+.classpath
+debug.keystore
+gen/
+bin/
+.DS_Store
+
+*.apk
+
+*.class
+
+# Package Files #

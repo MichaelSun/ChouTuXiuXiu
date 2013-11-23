@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">丑图秀秀</string>
+    <string name="action_settings">Settings</string>
+    
+    <string name="main_photo_src_camera">相机</string>
+    <string name="main_photo_src_gallery">相册</string>
+    
+    <!-- 通用提醒 -->
+    <string name="storage_not_enough">存储空间不足，请及时清理</string>
+    
+    <!-- 选择照片 -->
+    <string name="no_sdcard_hint">请插入SD卡</string>
+    <string name="choose_photo_waiting">正在加载图片</string>
+    
+    <!-- 编辑窗口 -->
+    <string name="photo_editor_tab_scene">场景</string>
+    <string name="photo_editor_tab_widget">贴图</string>
+    <string name="photo_editor_tab_text">文字</string>
+    <string name="photo_editor_tab_finish">完成</string>
+    <string name="photo_editor_top_bar_camera">选择照片</string>
+    <string name="photo_editor_top_bar_reset">重置</string>
+
+</resources>
