@@ -90,13 +90,12 @@
         </RelativeLayout>
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/photo_editor_edit_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@id/photo_editor_bottom_bar"
-        android:layout_below="@id/photo_editor_top_bar"
-        android:orientation="vertical" >
+        android:layout_below="@id/photo_editor_top_bar">
 
         <uk.co.senab.photoview.PhotoView
             android:id="@+id/photo_editor_photo"
@@ -107,8 +106,9 @@
         <RelativeLayout
             android:id="@+id/photo_editor_overlay_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent" 
+            android:background="@color/transparent">
         </RelativeLayout>
-    </LinearLayout>
+    </RelativeLayout>
 
 </RelativeLayout>

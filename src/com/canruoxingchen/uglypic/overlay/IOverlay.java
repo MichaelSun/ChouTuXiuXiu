@@ -19,7 +19,7 @@ public interface IOverlay {
 	 * 获取内容区域的边框
 	 * @return
 	 */
-	public Rect getContentViewBounds();
+	public Rect getContentBounds();
 	
 	/**
 	 * 获取此OverLay对应的view
@@ -42,7 +42,7 @@ public interface IOverlay {
 	 * @param x
 	 * @param y
 	 */
-	public void contains(int x, int y);
+	public boolean contains(int x, int y);
 	
 	public void setSelected(boolean selected);
 	

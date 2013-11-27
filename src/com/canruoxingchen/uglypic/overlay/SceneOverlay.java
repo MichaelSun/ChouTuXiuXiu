@@ -58,13 +58,13 @@ public class SceneOverlay implements IOverlay {
 	 * @see com.canruoxingchen.uglypic.overlay.BaseOverlay#contains(int, int)
 	 */
 	@Override
-	public void contains(int x, int y) {
+	public boolean contains(int x, int y) {
 		// TODO Auto-generated method stub
-
+		return false;
 	}
 
 	@Override
-	public Rect getContentViewBounds() {
+	public Rect getContentBounds() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import uk.co.senab.photoview.PhotoView;
 import android.app.AlertDialog;
@@ -17,22 +18,26 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.view.Window;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.Toast;
 
+import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
-import com.canruoxingchen.uglypic.overlay.IOverlay;
 import com.canruoxingchen.uglypic.overlay.ImageWidgetOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
+import com.canruoxingchen.uglypic.util.Logger;
 
 /**
  * 
@@ -41,8 +46,8 @@ import com.canruoxingchen.uglypic.overlay.SceneOverlay;
  * @author wsf
  * 
  */
-public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener {
-
+public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener
+{
 	private static final String EXTRA_PHOTO_URI = "photo_uri";
 
 	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
@@ -73,6 +78,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private Dialog mDialog = null;
 
+	private MoveGestureDetector mMoveGestureDetector;
+
 	/**
 	 * 添加在图片上的浮层
 	 */
@@ -84,7 +91,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	/**
 	 * 当前被选中的浮层
 	 */
-	private IOverlay mCurrentOverlay;
+	private ObjectOverlay mCurrentOverlay;
 
 	/**
 	 * 启动照片编辑页面
@@ -118,6 +125,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		if (mPhotoUri != null) {
 			mPvPhoto.setImageInfo(ImageInfo.obtain(mPhotoUri.toString()));
 		}
+
+		mMoveGestureDetector = new MoveGestureDetector(this, new MoveListener());
 	}
 
 	@Override
@@ -128,6 +137,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	@Override
 	protected void initUI() {
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.photo_editor);
 
 		mPvPhoto = (PhotoView) findViewById(R.id.photo_editor_photo);
@@ -164,7 +174,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	// 重置所有效果
 	private void reset() {
 		for (ObjectOverlay overlay : mOverlays) {
-			if(overlay.getView() != null) {
+			if (overlay.getView() != null) {
 				mRlOverlayContainer.removeView(overlay.getView());
 			}
 		}
@@ -205,9 +215,21 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			dismissAllLists();
 			showWidgetList();
 			// TODO: 添加一个图片widget
-			ImageWidgetOverlay overlay = new ImageWidgetOverlay(this, Uri.fromFile(new File("/sdcard/test.jpg")));
-			// TODO
+			final ImageWidgetOverlay overlay = new ImageWidgetOverlay(this, Uri.fromFile(new File("/sdcard/test.jpg")));
+			Handler handler = new Handler();
+			handler.postDelayed(new Runnable() {
+
+				@Override
+				public void run() {
+					Random random = new Random();
+					overlay.translate(random.nextInt(100), random.nextInt(100));
+					float scale = random.nextFloat();
+					overlay.scale(scale, scale);
+					overlay.rotate(random.nextInt(180));
+				}
+			}, 1000);
 			addOverlay(overlay);
+			// TODO
 			break;
 		}
 		case R.id.photo_editor_tab_text: { // 编辑文字
@@ -253,14 +275,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mViewWidgetList.setVisibility(View.GONE);
 		}
 	}
-	
-	
-	//保存当前图片
+
+	// 保存当前图片
 	private void saveCurrentImage() {
-		//TODO: 测试，暂时写在了主线程中
+		// TODO: 测试，暂时写在了主线程中
 		mEditroView.buildDrawingCache();
 		Bitmap image = mEditroView.getDrawingCache();
-		if(image != null) {
+		if (image != null) {
 			try {
 				image.compress(CompressFormat.JPEG, 80, new FileOutputStream(new File("/sdcard/result.jpg")));
 			} catch (FileNotFoundException e) {
@@ -272,7 +293,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		} else {
 			Toast.makeText(this, "fail", Toast.LENGTH_SHORT).show();
 		}
-		//TODO:
+		// TODO:
 	}
 
 	// 显示场景列表
@@ -310,6 +331,36 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	@Override
 	public boolean onTouch(View view, MotionEvent e) {
+		mMoveGestureDetector.onTouchEvent(e);
+
+		switch (e.getAction()) {
+		case MotionEvent.ACTION_DOWN: {
+			for (ObjectOverlay overlay : mOverlays) {
+				if (overlay.contains((int) e.getX(), (int) e.getY())) {
+					if (mCurrentOverlay != null && mCurrentOverlay != overlay) {
+						mCurrentOverlay.setSelected(false);
+						mCurrentOverlay.getView().invalidate();
+						mCurrentOverlay = null;
+					}
+					overlay.setSelected(true);
+					//将当前View置于最上层
+					mCurrentOverlay = overlay;
+					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
+					overlay.getView().invalidate();
+					return true;
+				} else {
+					overlay.setSelected(false);
+				}
+			}
+
+			if (mCurrentOverlay != null) {
+				mCurrentOverlay.setSelected(false);
+				mCurrentOverlay.getView().invalidate();
+				mCurrentOverlay = null;
+			}
+			break;
+		}
+		}
 		return false;
 	}
 
@@ -321,5 +372,28 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	@Override
 	public void onMoveOverlay(ObjectOverlay overlay, int dx, int dy) {
 
+	}
+
+	private class MoveListener extends MoveGestureDetector.SimpleOnMoveGestureListener {
+		@Override
+		public boolean onMove(MoveGestureDetector detector) {
+			PointF d = detector.getFocusDelta();
+
+			LOGD("onMove >>>>>> " + detector.getFocusX() + ", " + detector.getFocusY()
+					+ "  <<<<<< with delta " + d.x + ", " + d.y);
+			if(mCurrentOverlay != null && mCurrentOverlay.isSelected()) {
+				
+				mCurrentOverlay.translate((int)d.x, (int)d.y);
+				mCurrentOverlay.getView().invalidate();
+				
+				LOGD("Translate Overlay >>>>>> " + (d.x) + ", " + (d.y));
+			}
+
+			return true;
+		}
+	}
+	
+	private void LOGD(String logMe) {
+		Logger.d("PhotoEditor", logMe);
 	}
 }
