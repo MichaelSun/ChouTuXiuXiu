@@ -21,5 +21,11 @@
     <string name="photo_editor_tab_finish">完成</string>
     <string name="photo_editor_top_bar_camera">选择照片</string>
     <string name="photo_editor_top_bar_reset">重置</string>
-
+	<string name="photo_editor_delete_all_widgets">确定删除所有素材吗?</string>
+	<string name="photo_editor_cancel">取消</string>
+	<string name="photo_editor_confirm">确定</string>
+	
+	<!-- 编辑文本页面 -->
+	<string name="edit_text_finish">完成</string>
+    
 </resources>

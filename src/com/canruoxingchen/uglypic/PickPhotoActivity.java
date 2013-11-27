@@ -45,8 +45,8 @@ public class PickPhotoActivity extends BaseActivity {
 	private static final int PHOTO_SRC_CAMERA = 1;
 	private static final int PHOTO_SRC_GALLERY = 2;
 
-	private static final int REQUEST_CODE_CAMERA = 1;
-	private static final int REQUEST_CODE_GALLERY = 2;
+	private static final int REQUEST_CODE_CAMERA = 111;
+	private static final int REQUEST_CODE_GALLERY = 112;
 	private static final int REQUEST_CODE_PHOTO_EDIT = 4;
 	// private static final int REQUEST_CODE_MODEL = 4;
 
@@ -56,8 +56,6 @@ public class PickPhotoActivity extends BaseActivity {
 	private int mPhotoSrc = PHOTO_SRC_CAMERA;
 	/*-拍照时用到的临时文件*/
 	private File mCameraTmpFile = null;
-
-	private Uri mOrigUri = null;
 
 	/**
 	 * 从相册中选择

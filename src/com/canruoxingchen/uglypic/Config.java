@@ -53,9 +53,9 @@ public class Config {
 		if(isSdCardAvailable && Environment.getExternalStorageDirectory() != null) {
 			String sdcardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
 			if(sdcardPath.endsWith("/")) {
-				ROOT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + ROOT_PATH_IN_SDCARD;
+				ROOT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + ROOT_PATH_IN_SDCARD;
 			} else {
-				ROOT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + ROOT_PATH_IN_SDCARD;
+				ROOT_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + ROOT_PATH_IN_SDCARD;
 			}
 		} else {
 			ROOT_PATH = "/sdcard/" + ROOT_PATH_IN_SDCARD;
