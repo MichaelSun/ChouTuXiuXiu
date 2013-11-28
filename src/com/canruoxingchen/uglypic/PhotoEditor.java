@@ -46,8 +46,7 @@ import com.canruoxingchen.uglypic.util.Logger;
  * @author wsf
  * 
  */
-public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener
-{
+public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener {
 	private static final String EXTRA_PHOTO_URI = "photo_uri";
 
 	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
@@ -222,10 +221,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				@Override
 				public void run() {
 					Random random = new Random();
-					overlay.translate(random.nextInt(100), random.nextInt(100));
+					// overlay.translate(random.nextInt(100),
+					// random.nextInt(100));
 					float scale = random.nextFloat();
-					overlay.scale(scale, scale);
-					overlay.rotate(random.nextInt(180));
+//					overlay.scale(scale, scale);
 				}
 			}, 1000);
 			addOverlay(overlay);
@@ -337,6 +336,16 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		case MotionEvent.ACTION_DOWN: {
 			int size = mOverlays.size();
 			if (mCurrentOverlay != null) {
+				mCurrentOverlay.checkKeyPointsSelectionStatus((int)e.getX(), (int)e.getY());
+				if(mCurrentOverlay.contains((int)e.getX(), (int)e.getY())
+						|| mCurrentOverlay.isControlPointSelected()
+						|| mCurrentOverlay.isDeletePointSelected()) {
+					if (mCurrentOverlay.isDeletePointSelected()) {
+						removeOverlay(mCurrentOverlay);
+						mCurrentOverlay = null;
+					} 
+					return true;
+				}
 				mCurrentOverlay.setSelected(false);
 				mCurrentOverlay.getView().invalidate();
 				mCurrentOverlay = null;
@@ -345,13 +354,15 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				ObjectOverlay overlay = mOverlays.get(i);
 				if (overlay.contains((int) e.getX(), (int) e.getY())) {
 					if (mCurrentOverlay != null && mCurrentOverlay != overlay) {
-					mCurrentOverlay.setSelected(false);
-					mCurrentOverlay.getView().invalidate();
-					mCurrentOverlay = null;
-				}
+						mCurrentOverlay.setSelected(false);
+						mCurrentOverlay.getView().invalidate();
+						mCurrentOverlay = null;
+					}
 					overlay.setSelected(true);
-					//将当前View置于最上层
+
+					// 将当前View置于最上层
 					mCurrentOverlay = overlay;
+					mCurrentOverlay.checkKeyPointsSelectionStatus((int) e.getX(), (int) e.getY());
 					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
 					overlay.getView().invalidate();
 					break;
@@ -360,10 +371,15 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				}
 			}
 
-			//选中了一个浮层
+			// 选中了一个浮层
 			if (mCurrentOverlay != null) {
-				mOverlays.remove(mCurrentOverlay);
-				mOverlays.add(mCurrentOverlay);
+				if (mCurrentOverlay.isDeletePointSelected()) {
+					removeOverlay(mCurrentOverlay);
+					mCurrentOverlay = null;
+				} else {
+					mOverlays.remove(mCurrentOverlay);
+					mOverlays.add(mCurrentOverlay);
+				}
 				return true;
 			}
 			break;
@@ -382,25 +398,75 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	}
 
+	private float distance(float x1, float y1, float x2, float y2) {
+		return (float) Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+	}
+	
+	//atan在-90~90范围内通过反正切获得角度（0-360度)
+	private float degreeByATan(float atan, float x, float y, float centerX, float centerY) {
+		if(x >= centerX && y >= centerY) { //第一象限
+			return atan;
+		} else if(x < centerX && y >= centerY) { //第二象限
+			return 180 + atan;
+		} else if(x < centerX && y < centerX) { //第三
+			return 180 + atan;
+		} else {
+			return 360 + atan;
+		}
+	}
+
 	private class MoveListener extends MoveGestureDetector.SimpleOnMoveGestureListener {
 		@Override
 		public boolean onMove(MoveGestureDetector detector) {
 			PointF d = detector.getFocusDelta();
 
-			LOGD("onMove >>>>>> " + detector.getFocusX() + ", " + detector.getFocusY()
-					+ "  <<<<<< with delta " + d.x + ", " + d.y);
-			if(mCurrentOverlay != null && mCurrentOverlay.isSelected()) {
-				
-				mCurrentOverlay.translate((int)d.x, (int)d.y);
-				mCurrentOverlay.getView().invalidate();
-				
-				LOGD("Translate Overlay >>>>>> " + (d.x) + ", " + (d.y));
+			LOGD("onMove >>>>>> " + detector.getFocusX() + ", " + detector.getFocusY() + "  <<<<<< with delta " + d.x
+					+ ", " + d.y);
+			if (mCurrentOverlay != null && mCurrentOverlay.isSelected()) {
+
+				// 如果选中的是控制点，则需要计算旋转和放缩
+				if (mCurrentOverlay.isControlPointSelected()) {
+					PointF ctrlPoint = mCurrentOverlay.getControlPoint();
+					PointF deletePoint = mCurrentOverlay.getDeletePoint();
+					if (ctrlPoint != null && deletePoint != null) {
+						// 计算旋转
+						float centerX = (ctrlPoint.x + deletePoint.x) / 2;
+						float centerY = (ctrlPoint.y + deletePoint.y) / 2;
+						float newCtrlX = ctrlPoint.x + d.x;
+						float newCtrlY = ctrlPoint.y + d.y;
+						float oldRadius = distance(ctrlPoint.x, ctrlPoint.y, centerX, centerY);
+						float newRadius = distance(newCtrlX, newCtrlY, centerX, centerY);
+						float scale = newRadius / oldRadius;
+						mCurrentOverlay.scale(scale, scale);
+
+						// 用正切计算转过的角度
+						float oldTan = (ctrlPoint.y - centerY) / (ctrlPoint.x - centerX);
+						float newTan = (newCtrlY - centerY) / (newCtrlX - centerX);
+						double oldDegree = Math.atan(oldTan) * 180 / Math.PI;
+						oldDegree = degreeByATan((float) oldDegree, ctrlPoint.x, ctrlPoint.y,
+								centerX, centerY);
+						double newDegree = Math.atan(newTan) * 180 / Math.PI;
+						newDegree = degreeByATan((float) newDegree, newCtrlX, newCtrlY,
+								centerX, centerY);
+						mCurrentOverlay.rotate((float) (newDegree - oldDegree));
+						mCurrentOverlay.getView().invalidate();
+					}
+				} else if (mCurrentOverlay.isDeletePointSelected()) {
+
+				} else if (mCurrentOverlay.isFlipPointSelected()) {
+
+				} else { // 平移
+					mCurrentOverlay.translate((int) d.x, (int) d.y);
+					mCurrentOverlay.getView().invalidate();
+
+					LOGD("Translate Overlay >>>>>> " + (d.x) + ", " + (d.y));
+				}
 			}
 
 			return true;
 		}
 	}
-	
+
 	private void LOGD(String logMe) {
 		Logger.d("PhotoEditor", logMe);
 	}

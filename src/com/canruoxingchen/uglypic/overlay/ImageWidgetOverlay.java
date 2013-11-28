@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.util.DisplayMetrics;
@@ -26,7 +27,7 @@ public class ImageWidgetOverlay extends ObjectOverlay {
 	private Context mContext;
 
 	private boolean mSelected = false;
-	
+
 	private float mScaleX = 1.0f;
 	private float mScaleY = 1.0f;
 
@@ -94,7 +95,7 @@ public class ImageWidgetOverlay extends ObjectOverlay {
 
 	private class MyImageView extends AsyncImageView {
 
-		private static final int CONTROL_POINTS_RADIS = 10;
+		private static final int CONTROL_POINTS_RADIS = 20;
 		private float mDensity = 1.0f;
 		private Paint mPaint;
 
@@ -112,35 +113,44 @@ public class ImageWidgetOverlay extends ObjectOverlay {
 		protected void onDraw(Canvas canvas) {
 			super.onDraw(canvas);
 
+			PointF leftTop = getDeletePoint();
+			PointF rightBottom = getControlPoint();
+			PointF leftBottom = getLeftBottom();
+			PointF rightTop = getRightTop();
+
+			if (leftTop == null || rightBottom == null || leftBottom == null
+					|| rightTop == null) {
+				return;
+			}
+
 			if (mPaint == null) {
 				mPaint = new Paint();
 			}
 
 			if (getDrawable() != null && mSelected) {
-				int saveCount = canvas.getSaveCount();
-				canvas.save();
+				// int saveCount = canvas.getSaveCount();
+				// canvas.save();
 
-				Matrix matrix = getImageMatrix();
-				int padding = (int) (CONTROL_POINTS_RADIS * mDensity * 1/mScaleX);
-				canvas.translate(padding, padding);
-				canvas.concat(matrix);
-				Rect rect = getDrawable().getBounds();
+				int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 
-				//画线
+				// 画线
 				mPaint.setStyle(Style.STROKE);
 				mPaint.setColor(Color.BLACK);
-				float[] pts = new float[]{rect.left, rect.top, rect.right, rect.top,
-						rect.right, rect.bottom, rect.left, rect.bottom};
+				mPaint.setStrokeWidth(2);
+				float[] pts = new float[] { leftTop.x, leftTop.y, rightTop.x, rightTop.y, rightTop.x, rightTop.y,
+						rightBottom.x, rightBottom.y, rightBottom.x, rightBottom.y, leftBottom.x, leftBottom.y,
+						leftBottom.x, leftBottom.y, leftTop.x, leftTop.y };
 				canvas.drawLines(pts, mPaint);
-				
+
 				mPaint.setStyle(Style.FILL);
 				mPaint.setColor(Color.RED);
-				// 画删除键
-				canvas.drawCircle(rect.left, rect.top, padding, mPaint);
-				// 画移动键
-				canvas.drawCircle(rect.right, rect.bottom, padding, mPaint);
 
-				canvas.restoreToCount(saveCount);
+				// 画删除键
+				canvas.drawCircle(leftTop.x, leftTop.y, padding, mPaint);
+				// 画移动键
+				canvas.drawCircle(rightBottom.x, rightBottom.y, padding, mPaint);
+
+				// canvas.restoreToCount(saveCount);
 			}
 		}
 	}
