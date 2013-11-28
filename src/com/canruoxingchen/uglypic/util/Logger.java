@@ -28,7 +28,7 @@ import com.canruoxingchen.uglypic.Config;
 
 
 public class Logger {
-	public final static String LOGTAG = "Ugly-Pic";
+	public final static String LOGTAG = "UglyPic";
 
 	public static final boolean DEBUG = Config.DEBUG;
 

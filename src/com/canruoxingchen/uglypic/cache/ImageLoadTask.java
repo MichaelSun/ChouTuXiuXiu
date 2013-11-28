@@ -232,6 +232,11 @@ public class ImageLoadTask extends
 					}
 					iv.setImageDrawable(result);
 				}
+				
+				int imageWidth = result.getBitmap() == null ? 0 : result.getBitmap().getWidth();
+				int imageHeight = result.getBitmap() == null ? 0 : result.getBitmap().getHeight();
+				iv.setImageWidth(imageWidth);
+				iv.setImageHeight(imageHeight);
 			}
 		}
 	}

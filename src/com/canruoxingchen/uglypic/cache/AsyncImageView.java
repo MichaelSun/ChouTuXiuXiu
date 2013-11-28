@@ -50,6 +50,9 @@ public class AsyncImageView extends CacheableImageView {
 	private float mMaxHeightPercent = 1.0f;
 
 	private Object mData = new Object();
+	
+	private int mImageWidth = 0;
+	private int mImageHeight = 0;
 
 	/**
 	 * 是否需要展示默认的动画
@@ -66,6 +69,26 @@ public class AsyncImageView extends CacheableImageView {
 
 	public AsyncImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs);
+	}
+	
+	//获得图片的宽度
+	public int getImageWidth() {
+		return mImageWidth;
+	}
+	
+	//获得图片高度
+	public int getImageHeight() {
+		return mImageHeight;
+	}
+	
+	//设置图片高度
+	public void setImageWidth(int imageWidth) {
+		this.mImageWidth = imageWidth;
+	}
+	
+	//设置图片高度
+	public void setImageHeight(int imageHeight) {
+		this.mImageHeight = imageHeight;
 	}
 
 	// 设置图片信息,默认压缩图片
