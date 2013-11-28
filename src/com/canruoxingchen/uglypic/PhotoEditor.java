@@ -335,28 +335,36 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		switch (e.getAction()) {
 		case MotionEvent.ACTION_DOWN: {
-			for (ObjectOverlay overlay : mOverlays) {
+			int size = mOverlays.size();
+			if (mCurrentOverlay != null) {
+				mCurrentOverlay.setSelected(false);
+				mCurrentOverlay.getView().invalidate();
+				mCurrentOverlay = null;
+			}
+			for (int i = size - 1; i >= 0; --i) {
+				ObjectOverlay overlay = mOverlays.get(i);
 				if (overlay.contains((int) e.getX(), (int) e.getY())) {
 					if (mCurrentOverlay != null && mCurrentOverlay != overlay) {
-						mCurrentOverlay.setSelected(false);
-						mCurrentOverlay.getView().invalidate();
-						mCurrentOverlay = null;
-					}
+					mCurrentOverlay.setSelected(false);
+					mCurrentOverlay.getView().invalidate();
+					mCurrentOverlay = null;
+				}
 					overlay.setSelected(true);
 					//将当前View置于最上层
 					mCurrentOverlay = overlay;
 					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
 					overlay.getView().invalidate();
-					return true;
+					break;
 				} else {
 					overlay.setSelected(false);
 				}
 			}
 
+			//选中了一个浮层
 			if (mCurrentOverlay != null) {
-				mCurrentOverlay.setSelected(false);
-				mCurrentOverlay.getView().invalidate();
-				mCurrentOverlay = null;
+				mOverlays.remove(mCurrentOverlay);
+				mOverlays.add(mCurrentOverlay);
+				return true;
 			}
 			break;
 		}
