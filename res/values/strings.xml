@@ -25,6 +25,13 @@
 	<string name="photo_editor_cancel">取消</string>
 	<string name="photo_editor_confirm">确定</string>
 	
+	<!-- 贴图相关操作 -->
+	<string name="image_menu_illumination">亮度</string>
+	<string name="image_menu_contrast">对比度</string>
+	<string name="image_menu_satuation">饱和度</string>
+	<string name="image_menu_erase">擦除</string>
+	<string name="image_menu_reset">重置</string>
+	
 	<!-- 编辑文本页面 -->
 	<string name="edit_text_finish">完成</string>
     

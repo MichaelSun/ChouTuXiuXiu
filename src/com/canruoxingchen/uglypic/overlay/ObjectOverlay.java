@@ -47,6 +47,8 @@ public abstract class ObjectOverlay implements IOverlay {
 
 		public void onMoveOverlay(ObjectOverlay overlay, int dx, int dy);
 	}
+	
+	private EditorContainerView mEditorContainer;
 
 	protected View mContentView;
 
@@ -59,6 +61,14 @@ public abstract class ObjectOverlay implements IOverlay {
 	protected ObjectOperationListener getOperationListener() {
 		return mObjectOperationListener;
 	}
+	
+	public void setEditorContainerView(EditorContainerView editorContainer) {
+		mEditorContainer = editorContainer;
+	}
+	
+	public EditorContainerView getEditorContainerView() {
+		return mEditorContainer;
+	}
 
 	@Override
 	public Rect getContentBounds() {
@@ -68,6 +78,12 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	// 初始化内容区域
 	protected abstract View initContentView();
+	
+	/**
+	 * 返回上下问菜单
+	 * @return
+	 */
+	public abstract View getContextView();
 
 	@Override
 	public View getView() {

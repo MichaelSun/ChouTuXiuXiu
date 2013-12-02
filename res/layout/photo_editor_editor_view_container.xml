@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/photo_editor_editor"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:visibility="gone" >
+
+    <RelativeLayout
+        android:id="@+id/photo_editor_editor_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="44dp" >
+
+        <Button
+            android:id="@+id/photo_editor_editor_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="返回" >
+        </Button>
+
+        <Button
+            android:id="@+id/photo_editor_editor_finish"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="完成" >
+        </Button>
+
+        <View
+            android:id="@+id/photo_editor_editor_top_bar_splitter"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_centerInParent="true" >
+        </View>
+
+        <Button
+            android:id="@+id/photo_editor_editor_regret"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/photo_editor_editor_top_bar_splitter"
+            android:text="撤销" >
+        </Button>
+
+        <Button
+            android:id="@+id/photo_editor_editor_redo"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_toRightOf="@id/photo_editor_editor_top_bar_splitter"
+            android:text="重做" >
+        </Button>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/photo_editor_editor_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+    </RelativeLayout>
+
+</LinearLayout>

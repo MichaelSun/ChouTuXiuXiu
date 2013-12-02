@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal" >
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
+
+        <Button
+            android:id="@+id/image_illumination"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:text="@string/image_menu_illumination" >
+        </Button>
+
+        <com.canruoxingchen.uglypic.view.VerticalSeekBar
+            android:id="@+id/image_seekbar_illumination"
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone" >
+        </com.canruoxingchen.uglypic.view.VerticalSeekBar>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
+
+        <Button
+            android:id="@+id/image_contrast"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/image_menu_contrast" >
+        </Button>
+
+        <com.canruoxingchen.uglypic.view.VerticalSeekBar
+            android:id="@+id/image_seekbar_contrast"
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone" >
+        </com.canruoxingchen.uglypic.view.VerticalSeekBar>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
+
+        <Button
+            android:id="@+id/image_satuation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/image_menu_satuation" >
+        </Button>
+
+        <com.canruoxingchen.uglypic.view.VerticalSeekBar
+            android:id="@+id/image_seekbar_satuation"
+            android:layout_width="wrap_content"
+            android:layout_height="120dp"
+            android:layout_centerHorizontal="true" 
+            android:layout_alignParentBottom="true"
+            android:visibility="gone">
+        </com.canruoxingchen.uglypic.view.VerticalSeekBar>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
+
+        <Button
+            android:id="@+id/image_erase"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/image_menu_erase" >
+        </Button>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
+
+        <Button
+            android:id="@+id/image_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:text="@string/image_menu_reset" >
+        </Button>
+    </RelativeLayout>
+
+</LinearLayout>

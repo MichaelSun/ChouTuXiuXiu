@@ -23,8 +23,6 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.AttributeSet;
-import android.view.View.OnLongClickListener;
-import android.widget.ImageView.ScaleType;
 
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 
@@ -184,7 +182,5 @@ public class PhotoView extends AsyncImageView implements IPhotoView {
 		mAttacher.cleanup();
 		super.onDetachedFromWindow();
 	}
-	
-	
 
 }
