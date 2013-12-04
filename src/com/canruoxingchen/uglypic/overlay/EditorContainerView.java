@@ -10,6 +10,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 
 /**
  * 编辑View的容器
@@ -46,10 +47,21 @@ public class EditorContainerView extends LinearLayout implements View.OnClickLis
 		mViewFinish.setOnClickListener(this);
 		mViewRedo.setOnClickListener(this);
 		mViewRegret.setOnClickListener(this);
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+				LayoutParams.MATCH_PARENT);
+		addView(view, params);
 	}
 
 	public void setEditorView(View editorView) {
-		if (editorView == null || !(editorView instanceof IEditor)) {
+		if(editorView == null) {
+			if (mEditorView != null) {
+				mVgEditorContainer.removeView(mEditorView);
+				mEditorView = null;
+				mEditor = null;
+			}
+		}
+		
+		if (!(editorView instanceof IEditor)) {
 			return;
 		}
 
@@ -65,6 +77,10 @@ public class EditorContainerView extends LinearLayout implements View.OnClickLis
 		mEditorView = editorView;
 		mEditor = (IEditor) editorView;
 	}
+	
+	public IEditor getEditor() {
+		return mEditor;
+	}
 
 	@Override
 	public void onClick(View v) {
@@ -75,8 +91,28 @@ public class EditorContainerView extends LinearLayout implements View.OnClickLis
 				mEditor.onFinish();
 			} else if (mViewRegret == v) {
 				mEditor.onRegret();
+				if(mEditor.hasMoreRedo()) {
+					mViewRedo.setEnabled(true);
+				} else {
+					mViewRedo.setEnabled(false);
+				}
+				if(mEditor.hasMoreRegret()) {
+					mViewRegret.setEnabled(true);
+				} else {
+					mViewRegret.setEnabled(false);
+				}
 			} else if (mViewRedo == v) {
 				mEditor.onRedo();
+				if(mEditor.hasMoreRedo()) {
+					mViewRedo.setEnabled(true);
+				} else {
+					mViewRedo.setEnabled(false);
+				}
+				if(mEditor.hasMoreRegret()) {
+					mViewRegret.setEnabled(true);
+				} else {
+					mViewRegret.setEnabled(false);
+				}
 			}
 		}
 	}

@@ -36,4 +36,16 @@ public interface IEditor {
 	 * @return
 	 */
 	public boolean canRegret();
+	
+	/**
+	 * 是否还可以继续回退
+	 * @return
+	 */
+	public boolean hasMoreRegret();
+	
+	/**
+	 * 是否还可以继续redo
+	 * @return
+	 */
+	public boolean hasMoreRedo();
 }

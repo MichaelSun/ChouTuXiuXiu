@@ -22,6 +22,7 @@ import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,6 +36,7 @@ import android.widget.Toast;
 import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.overlay.EditorContainerView;
+import com.canruoxingchen.uglypic.overlay.IEditor;
 import com.canruoxingchen.uglypic.overlay.ImageWidgetOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
@@ -75,7 +77,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private View mViewWidgetList; // 贴图列表
 	private View mViewTextList; // 文本背景
 
-	private View mEditroView;
+	private View mEditorPanel;
 	private RelativeLayout mRlOverlayContainer;
 	
 	//编辑页面View的容器
@@ -158,7 +160,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mViewBackToCamera = findViewById(R.id.photo_editor_top_bar_camera);
 		mViewReset = findViewById(R.id.photo_editor_top_bar_reset);
 
-		mEditroView = findViewById(R.id.photo_editor_edit_panel);
+		mEditorPanel = findViewById(R.id.photo_editor_edit_panel);
 		mRlOverlayContainer = (RelativeLayout) findViewById(R.id.photo_editor_overlay_container);
 		
 		mVgContextMenuContainer = (ViewGroup) findViewById(R.id.photo_editor_context_menu_container);
@@ -291,8 +293,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	// 保存当前图片
 	private void saveCurrentImage() {
 		// TODO: 测试，暂时写在了主线程中
-		mEditroView.buildDrawingCache();
-		Bitmap image = mEditroView.getDrawingCache();
+		mEditorPanel.buildDrawingCache();
+		Bitmap image = mEditorPanel.getDrawingCache();
 		if (image != null) {
 			try {
 				image.compress(CompressFormat.JPEG, 80, new FileOutputStream(new File("/sdcard/result.jpg")));
@@ -323,6 +325,21 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	}
 
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if(keyCode == KeyEvent.KEYCODE_BACK) {
+			//如果目前正在编辑模式，则先关闭编辑模式
+			if(mEditorContainerView.getVisibility() == View.VISIBLE) {
+				IEditor editor = mEditorContainerView.getEditor();
+				if(editor != null) {
+					editor.onCancel();
+					return true;
+				}
+			}
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
 	private void addOverlay(ObjectOverlay overlay) {
 		mOverlays.add(overlay);
 		if (overlay.getView() != null) {
@@ -330,6 +347,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					LayoutParams.MATCH_PARENT);
 			overlay.getView().setLayoutParams(params);
 			overlay.setOperationListener(this);
+			overlay.setEditorPanel(mEditorPanel);
 			mRlOverlayContainer.addView(overlay.getView());
 			if(mCurrentOverlay != null) {
 				mCurrentOverlay.setSelected(false);
@@ -347,7 +365,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mRlOverlayContainer.removeView(overlay.getView());
 		}
 	}
-
+	
 	@Override
 	public boolean onTouch(View view, MotionEvent e) {
 		mMoveGestureDetector.onTouchEvent(e);
@@ -365,6 +383,14 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						removeOverlay(mCurrentOverlay);
 						mCurrentOverlay = null;
 					} 
+					if(mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
+						mVgContextMenuContainer.removeAllViews();
+						mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
+						mVgContextMenuContainer.setVisibility(View.VISIBLE);
+						mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
+					} else {
+						mVgContextMenuContainer.setVisibility(View.GONE);
+					}
 					return true;
 				}
 				mCurrentOverlay.setSelected(false);
@@ -445,7 +471,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			return 360 + atan;
 		}
 	}
-
+	
 	private class MoveListener extends MoveGestureDetector.SimpleOnMoveGestureListener {
 		@Override
 		public boolean onMove(MoveGestureDetector detector) {

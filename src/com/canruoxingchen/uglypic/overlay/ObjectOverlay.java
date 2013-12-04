@@ -40,6 +40,8 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	// 控制按钮的中心坐标
 	private PointF mCtrlPoint;
+	
+	private View mEditorPanel;
 
 	public interface ObjectOperationListener {
 
@@ -68,6 +70,14 @@ public abstract class ObjectOverlay implements IOverlay {
 	
 	public EditorContainerView getEditorContainerView() {
 		return mEditorContainer;
+	}
+	
+	public void setEditorPanel(View editorPanel) {
+		this.mEditorPanel = editorPanel;
+	}
+	
+	protected View getEditorPanel() {
+		return this.mEditorPanel;
 	}
 
 	@Override

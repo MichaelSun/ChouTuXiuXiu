@@ -3,13 +3,13 @@
     android:id="@+id/photo_editor_editor"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:visibility="gone" >
+    android:orientation="vertical">
 
     <RelativeLayout
         android:id="@+id/photo_editor_editor_top_bar"
         android:layout_width="match_parent"
-        android:layout_height="44dp" >
+        android:layout_height="44dp" 
+        android:background="#FF0000FF">
 
         <Button
             android:id="@+id/photo_editor_editor_back"
@@ -44,8 +44,8 @@
 
         <Button
             android:id="@+id/photo_editor_editor_redo"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_toRightOf="@id/photo_editor_editor_top_bar_splitter"
             android:text="重做" >
         </Button>
