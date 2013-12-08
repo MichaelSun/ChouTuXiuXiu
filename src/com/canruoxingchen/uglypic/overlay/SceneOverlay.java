@@ -64,7 +64,7 @@ public class SceneOverlay implements IOverlay {
 	}
 
 	@Override
-	public Rect getContentBounds() {
+	public Rect getInitialContentBounds() {
 		// TODO Auto-generated method stub
 		return null;
 	}

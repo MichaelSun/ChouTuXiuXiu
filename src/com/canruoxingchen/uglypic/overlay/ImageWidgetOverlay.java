@@ -1,10 +1,10 @@
 package com.canruoxingchen.uglypic.overlay;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -26,9 +26,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 
+import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.overlay.ImageOverlayContextView.ContrastChangedListener;
@@ -41,7 +45,7 @@ import com.canruoxingchen.uglypic.util.Logger;
 public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationChangedListener, ContrastChangedListener,
 		SatuationChangedListener, ResetListener, EraseListener {
 
-	private static final int[] ERASER_WIDTH = new int[] { 5, 10, 15, 20, 25, 30, 35 };
+	private static final int[] ERASER_WIDTH = new int[] { 3, 5, 10, 20, 32, 48, 64 };
 	private static final int TOUCH_SPAN_THREASHOLD = 4;
 	private static final String TAG = "ImageWidgetOverlay";
 
@@ -50,9 +54,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	private Context mContext;
 
 	private boolean mSelected = false;
-
-	private float mScaleX = 1.0f;
-	private float mScaleY = 1.0f;
 
 	private ImageOverlayContextView mContextView;
 
@@ -80,8 +81,14 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	}
 
 	@Override
-	public Rect getContentBounds() {
+	public Rect getInitialContentBounds() {
+		super.getInitialContentBounds();
 		return mAivImage.getDrawable() == null ? null : mAivImage.getDrawable().getBounds();
+	}
+
+	@Override
+	public Rect getCurrentContentBounds() {
+		return null;
 	}
 
 	@Override
@@ -95,8 +102,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	@Override
 	public void scale(float sx, float sy) {
 		super.scale(sx, sy);
-		mScaleX *= sx;
-		mScaleY *= sy;
 		if (mAivImage.getDrawable() != null) {
 			mAivImage.setImageMatrix(getMatrix());
 		}
@@ -130,9 +135,31 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 		public EraseImageEditorView(Context context) {
 			super(context);
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-					LayoutParams.MATCH_PARENT);
-			params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+			initView();
+		}
+
+		private void initView() {
+			GridView gv = new GridView(getContext());
+			int height = (int) getResources().getDimension(R.dimen.photo_editor_bottom_bar_height);
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
+			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			addView(gv, params);
+			gv.setNumColumns(ERASER_WIDTH.length);
+			List<Integer> widths = new ArrayList<Integer>(ERASER_WIDTH.length);
+			for (int width : ERASER_WIDTH) {
+				widths.add(width);
+			}
+			gv.setAdapter(new ArrayAdapter<Integer>(getContext(), R.layout.image_erase_width_panel_item,
+					R.id.image_erase_width, widths));
+			gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+				@Override
+				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+					mAivImage.setCurrentStrokeWidth(ERASER_WIDTH[position]);
+				}
+			});
+
+			gv.setBackgroundColor(Color.WHITE);
 		}
 
 		@Override
@@ -147,6 +174,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			disableEraseMode();
 			getEditorContainerView().setEditorView(null);
 			getEditorContainerView().setVisibility(View.GONE);
+			// 显示上下文菜单
+			if (mContextView != null) {
+				mContextView.setVisibility(View.VISIBLE);
+			}
 		}
 
 		/*
@@ -186,6 +217,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			disableEraseMode();
 			getEditorContainerView().setEditorView(null);
 			getEditorContainerView().setVisibility(View.GONE);
+			// 显示上下文菜单
+			if (mContextView != null) {
+				mContextView.setVisibility(View.VISIBLE);
+			}
 		}
 
 		@Override
@@ -246,8 +281,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		private List<IImageOperation> mOperations = new LinkedList<IImageOperation>();
 
 		private Bitmap mImage = null;
+		private Bitmap mEraseableImage = null;
+		private Canvas mEraseableCanvas = null;
 
 		private ColorMatrix mColorMatrix = new ColorMatrix();
+		private ColorMatrix mSatuationMatrix = new ColorMatrix();
 
 		private float mIllumination;
 		private float mSatuation;
@@ -261,6 +299,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			mDensity = dm.density;
 			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 			setPadding(padding, padding, padding, padding);
+			
+			setIllumination(IlluminationImageOperation.DEFAULT);
+			setSatuation(SatuationImageOperation.DEFAULT);
+			setContrast(ContrastImageOperation.DEFAULT);
 
 			mEraserPaint = new Paint();
 			mEraserPaint.setAntiAlias(true);
@@ -279,10 +321,18 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			// 首次进入擦除模式时复制照片
 			if (mEraserMode) {
 				copyImage();
+				mEraseableCanvas = null;
+				mEraseableImage = mImage.copy(Config.ARGB_8888, true);
 			} else {
 				mRecords.clear();
 				mPathIndex = 0;
+				if (mEraseableImage != null && !mEraseableImage.isRecycled()) {
+					mEraseableImage.recycle();
+					mEraseableImage = null;
+				}
+				mEraseableCanvas = null;
 			}
+			invalidate();
 		}
 
 		private void reset() {
@@ -303,9 +353,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 		private void setContrast(int contrast) {
 			copyImage();
-			// mContrast = (contrast + 64) / 128.0f;
-			// mContrast = 128 * (1 - contrast);
-			mContrast = contrast;
+			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
+			// 首先调整contrast到[-1,1]
+			float c = (contrast * 1.0f - ContrastImageOperation.DEFAULT) / ContrastImageOperation.DEFAULT;
+			mContrast = (float) Math.tan((45 + 44 * c) / 180 * Math.PI);
+			LOGD(">>>>>>>> color params >>>>>>>> c=" + c + ", contrast=" + mContrast);
 			invalidate();
 		}
 
@@ -317,11 +369,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 		private void setIllumination(int illumination) {
 			copyImage();
-			// mIllumination = (illumination -
-			// IlluminationImageOperation.DEFAULT)
-			// * 1.0F / IlluminationImageOperation.DEFAULT * 180;
-
-			mIllumination = illumination;
+			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
+			// 调整亮度参数到 [-1, 1]区间
+			mIllumination = (illumination - IlluminationImageOperation.DEFAULT)
+					/ (1.0f * IlluminationImageOperation.DEFAULT);
 			invalidate();
 		}
 
@@ -366,6 +417,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 				mImage.recycle();
 				mImage = null;
 			}
+
+			if (mEraseableImage != null && !mEraseableImage.isRecycled()) {
+				mEraseableImage.recycle();
+				mEraseableImage = null;
+			}
 		}
 
 		@Override
@@ -407,6 +463,13 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			} else {
 				mRecords.clear();
 			}
+			if (mEraseableImage != null && !mEraseableImage.isRecycled()) {
+				mEraseableImage.recycle();
+			}
+			mEraseableImage = mImage.copy(Config.ARGB_8888, true);
+			mEraseableCanvas = null;
+			drawOnErasableImage();
+
 			invalidate();
 		}
 
@@ -465,6 +528,35 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			canvas.restoreToCount(saveCount);
 		}
 
+		private void drawOnErasableImage() {
+			if (mEraseableImage == null) {
+				return;
+			}
+
+			if (mEraseableCanvas == null) {
+				mEraseableCanvas = new Canvas(mEraseableImage);
+			}
+			if (mPathIndex < mRecords.size() - 1 && mPathIndex >= 0) {
+				mRecords = mRecords.subList(0, mPathIndex);
+			}
+			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+			int saveCount = mEraseableCanvas.getSaveCount();
+			mEraseableCanvas.save();
+			android.graphics.Matrix matrix = new Matrix();
+			getImageMatrix().invert(matrix);
+			mEraseableCanvas.concat(matrix);
+			mEraseableCanvas.translate(-padding, -padding);
+			for (EraseRecord record : mRecords) {
+				mEraserPaint.setStrokeWidth(record.strokeWidth);
+				mEraseableCanvas.drawPath(record.path, mEraserPaint);
+			}
+			if (mCurrentPath != null) {
+				mEraserPaint.setStrokeWidth(mCurrentStrokeWidth);
+				mEraseableCanvas.drawPath(mCurrentPath, mEraserPaint);
+			}
+			mEraseableCanvas.restoreToCount(saveCount);
+		}
+
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
 			if (!mEraserMode) {
@@ -476,15 +568,18 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			switch (event.getAction()) {
 			case MotionEvent.ACTION_DOWN:
 				touchStart(x, y);
+				drawOnErasableImage();
 				invalidate();
 				break;
 			case MotionEvent.ACTION_UP:
 				touchUp(x, y);
+				drawOnErasableImage();
 				invalidate();
 				break;
 			case MotionEvent.ACTION_MOVE:
 				// 判断移动的距离是否已经超过了门限
 				touchMove(x, y);
+				drawOnErasableImage();
 				invalidate();
 				break;
 			}
@@ -494,16 +589,36 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		@Override
 		protected void onDraw(Canvas canvas) {
 			// 先调整亮度、对比度、饱和度
-			mColorMatrix.set(new float[] { mContrast, 0, 0, 0, mIllumination, 0, mContrast, 0, 0, mIllumination, 0, 0,
-					mContrast, 0, mIllumination, 0, 0, 0, 1, 0 });
-			mColorMatrix.setSaturation(mSatuation);
+			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
+			// 通过对比度和亮度计算一个参数
+			// y = [x - 127.5 * (1 - B)] * k + 127.5 * (1 + B);
+
+			float factor = mContrast;
+			float addon = -127.5f * (1 - mIllumination) * mContrast + 127.5f * (1 + mIllumination);
+			// 叠加饱和度，参照了setSatuation源码
+			final float invSat = 1 - mSatuation;
+			final float R = 0.213f * invSat;
+			final float G = 0.715f * invSat;
+			final float B = 0.072f * invSat;
+
+			// m[0] = R + sat; m[1≤] = G; m[2] = B;
+			// m[5] = R; m[6] = G + sat; m[7] = B;
+			// m[10] = R; m[11] = G; m[12] = B + sat;
+			mSatuationMatrix.setSaturation(mSatuation);
+			mColorMatrix.set(new float[] { factor, 0, 0, 0, addon, // 1
+					0, factor, 0, 0, addon, // 1
+					0, 0, factor, 0, addon, // 2
+					0, 0, 0, 1, 0 }); // 4
+			mColorMatrix.postConcat(mSatuationMatrix);
 
 			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 			if (mPaint == null) {
 				mPaint = new Paint();
 			}
 
-			if (mImage != null) {
+			Bitmap image = mEraserMode ? mEraseableImage : mImage;
+
+			if (image != null) {
 				LOGD("<<<<<<<<< draw with color matrix >>>>>>>>>>>>");
 				int saveCount = canvas.getSaveCount();
 				canvas.save();
@@ -511,7 +626,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 				canvas.concat(getImageMatrix());
 				ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(mColorMatrix);
 				mPaint.setColorFilter(colorFilter);
-				canvas.drawBitmap(mImage, 0, 0, mPaint);
+				canvas.drawBitmap(image, 0, 0, mPaint);
 				canvas.restoreToCount(saveCount);
 			} else {
 				super.onDraw(canvas);
@@ -523,22 +638,23 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			// 非擦除模式时，绘制控制点
 			if (!mEraserMode) {
 				drawBtns(canvas);
-			} else {
-				// 绘制已有的擦除痕迹
-				for (int i = 0; i <= mPathIndex && i < mRecords.size(); ++i) {
-					EraseRecord record = mRecords.get(i);
-					int strokeWidth = mCurrentStrokeWidth;
-					strokeWidth = strokeWidth > 1 ? strokeWidth : 1;
-					mEraserPaint.setStrokeWidth(strokeWidth);
-					canvas.drawPath(record.path, mEraserPaint);
-				}
-				// 再绘制当前的痕迹
-				if (mCurrentPath != null) {
-					int strokeWidth = mCurrentStrokeWidth;
-					strokeWidth = strokeWidth > 1 ? strokeWidth : 1;
-					mEraserPaint.setStrokeWidth(strokeWidth);
-					canvas.drawPath(mCurrentPath, mEraserPaint);
-				}
+				// } else {
+				// // 绘制已有的擦除痕迹
+				// for (int i = 0; i <= mPathIndex && i < mRecords.size(); ++i)
+				// {
+				// EraseRecord record = mRecords.get(i);
+				// int strokeWidth = record.strokeWidth;
+				// strokeWidth = strokeWidth > 1 ? strokeWidth : 1;
+				// mEraserPaint.setStrokeWidth(strokeWidth);
+				// canvas.drawPath(record.path, mEraserPaint);
+				// }
+				// // 再绘制当前的痕迹
+				// if (mCurrentPath != null) {
+				// int strokeWidth = mCurrentStrokeWidth;
+				// strokeWidth = strokeWidth > 1 ? strokeWidth : 1;
+				// mEraserPaint.setStrokeWidth(strokeWidth);
+				// canvas.drawPath(mCurrentPath, mEraserPaint);
+				// }
 			}
 		}
 
@@ -600,6 +716,8 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		float scaleY = 1.0f;
 		float tx = 0.0f;
 		float ty = 0.0f;
+		float pivotX = 0.0f;
+		float pivotY = 0.0f;
 	}
 
 	// 获取切换到擦除模式的参数
@@ -648,6 +766,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			params.ty = t;
 			params.scaleX = width / (1.0f * (r - l));
 			params.scaleY = height / (1.0f * (b - t));
+			// 计算重心
+			params.pivotX = (width * l) / (width + l - r);
+			params.pivotY = (height * t) / (height + t - b);
 		}
 		return params;
 	}
@@ -660,39 +781,27 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			getEditorContainerView().setVisibility(View.VISIBLE);
 			mAivImage.setEraserMode(true);
 			enableEraseMode();
+			if (mContextView != null) {
+				mContextView.setVisibility(View.GONE);
+			}
 		}
 	}
-	
+
 	private void enableEraseMode() {
 		EraseModeParams params = getEraseModeParams();
 		float scale = Math.min(params.scaleX, params.scaleY);
-//		mAivImage.setScaleX(scale);
-//		mAivImage.setScaleY(scale);
-//		mAivImage.setTranslationX(params.tx);
-//		mAivImage.setTranslationY(params.ty);
-//		ViewParent parent = mAivImage.getParent();
 		View editorPanel = getEditorPanel();
-		if(editorPanel != null && scale > 1.0f) {
-//			editorPanel.setTranslationX(-params.tx / scale);
-//			editorPanel.setTranslationY(-params.ty / scale);
-			editorPanel.scrollTo((int)params.tx, (int)params.ty);
-			editorPanel.setPivotX(params.tx);
-			editorPanel.setPivotY(params.ty);
+		if (editorPanel != null && scale > 1.0f) {
+			editorPanel.setPivotX(params.pivotX);
+			editorPanel.setPivotY(params.pivotY);
 			editorPanel.setScaleX(scale);
 			editorPanel.setScaleY(scale);
-			LOGD("enableEraseMode >>>> scale = " + scale + ", tx=" + params.tx + ", ty=" + params.ty);
 		}
 	}
-	
+
 	private void disableEraseMode() {
-//		mAivImage.setTranslationX(-mAivImage.getTranslationX());
-//		mAivImage.setTranslationY(-mAivImage.getTranslationY());
-//		mAivImage.setScaleX(1/mAivImage.getScaleX());
-//		mAivImage.setScaleY(1/mAivImage.getScaleY());
 		View editorPanel = getEditorPanel();
-		if(editorPanel != null) {
-//			editorPanel.setTranslationX(0);
-//			editorPanel.setTranslationY(0);
+		if (editorPanel != null) {
 			editorPanel.scrollTo(0, 0);
 			editorPanel.setScaleX(1);
 			editorPanel.setScaleY(1);
@@ -707,7 +816,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	@Override
 	public void onSatuationChanged(ImageOverlayContextView view, int satuation) {
 		mAivImage.setSatuation(satuation);
-		LOGD("setSatuation >>>>>> " + satuation);
 	}
 
 	@Override
@@ -719,6 +827,5 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	@Override
 	public void onIlluminationChanged(ImageOverlayContextView view, int illumination) {
 		mAivImage.setIllumination(illumination);
-		LOGD("setIllumination >>>>>> " + illumination);
 	}
 }

@@ -22,6 +22,7 @@ import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -41,6 +42,7 @@ import com.canruoxingchen.uglypic.overlay.ImageWidgetOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
+import com.canruoxingchen.uglypic.overlay.TextOverlay;
 import com.canruoxingchen.uglypic.util.Logger;
 
 /**
@@ -79,12 +81,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private View mEditorPanel;
 	private RelativeLayout mRlOverlayContainer;
-	
-	//编辑页面View的容器
+
+	// 编辑页面View的容器
 	private EditorContainerView mEditorContainerView;
-	
+
 	private RelativeLayout mRootView;
-	
+
 	private Dialog mDialog = null;
 
 	private MoveGestureDetector mMoveGestureDetector;
@@ -150,7 +152,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		setContentView(R.layout.photo_editor);
 
 		mRootView = (RelativeLayout) findViewById(R.id.photo_editor_root_view);
-		
+
 		mPvPhoto = (PhotoView) findViewById(R.id.photo_editor_photo);
 		mTabScene = findViewById(R.id.photo_editor_tab_scene);
 		mTabWidget = findViewById(R.id.photo_editor_tab_widget);
@@ -162,12 +164,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		mEditorPanel = findViewById(R.id.photo_editor_edit_panel);
 		mRlOverlayContainer = (RelativeLayout) findViewById(R.id.photo_editor_overlay_container);
-		
+
 		mVgContextMenuContainer = (ViewGroup) findViewById(R.id.photo_editor_context_menu_container);
-	
-		//默认不显示编辑器，编辑器的显隐由子view控制
+
+		// 默认不显示编辑器，编辑器的显隐由子view控制
 		mEditorContainerView = new EditorContainerView(this, null);
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.MATCH_PARENT);
 		mRootView.addView(mEditorContainerView, params);
 		mEditorContainerView.setVisibility(View.GONE);
@@ -210,8 +212,17 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		switch (requestCode) {
 		case REQUEST_CODE_EDIT_TEXT: { // 编辑了文本后，显示选择背景列表
 			if (resultCode == RESULT_OK) {
-				dismissAllLists();
-				showTextList();
+				// 添加一个TextOverLay
+				if (data != null) {
+					String text = data.getStringExtra(EditTextActivity.EXTRA_TEXT);
+					if (!TextUtils.isEmpty(text)) {
+						RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+								LayoutParams.WRAP_CONTENT);
+						TextOverlay overlay = new TextOverlay(this, text);
+						addOverlay(overlay, params);
+						overlay.translate(100, 200);
+					}
+				}
 			}
 			break;
 		}
@@ -240,7 +251,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					// overlay.translate(random.nextInt(100),
 					// random.nextInt(100));
 					float scale = random.nextFloat();
-//					overlay.scale(scale, scale);
+					// overlay.scale(scale, scale);
 				}
 			}, 1000);
 			addOverlay(overlay);
@@ -268,6 +279,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
+							if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
+								mCurrentOverlay.getContextView().setVisibility(View.GONE);
+							}
 							reset();
 						}
 					}).setNegativeButton(R.string.photo_editor_cancel, null);
@@ -327,11 +341,11 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if(keyCode == KeyEvent.KEYCODE_BACK) {
-			//如果目前正在编辑模式，则先关闭编辑模式
-			if(mEditorContainerView.getVisibility() == View.VISIBLE) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			// 如果目前正在编辑模式，则先关闭编辑模式
+			if (mEditorContainerView.getVisibility() == View.VISIBLE) {
 				IEditor editor = mEditorContainerView.getEditor();
-				if(editor != null) {
+				if (editor != null) {
 					editor.onCancel();
 					return true;
 				}
@@ -349,13 +363,32 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			overlay.setOperationListener(this);
 			overlay.setEditorPanel(mEditorPanel);
 			mRlOverlayContainer.addView(overlay.getView());
-			if(mCurrentOverlay != null) {
+			if (mCurrentOverlay != null) {
 				mCurrentOverlay.setSelected(false);
 			}
 			mVgContextMenuContainer.setVisibility(View.GONE);
 			mCurrentOverlay = overlay;
 			mCurrentOverlay.setSelected(true);
 			mCurrentOverlay.setEditorContainerView(mEditorContainerView);
+			mCurrentOverlay.getView().invalidate();
+		}
+	}
+
+	private void addOverlay(ObjectOverlay overlay, RelativeLayout.LayoutParams params) {
+		mOverlays.add(overlay);
+		if (overlay.getView() != null) {
+			overlay.getView().setLayoutParams(params);
+			overlay.setOperationListener(this);
+			overlay.setEditorPanel(mEditorPanel);
+			mRlOverlayContainer.addView(overlay.getView());
+			if (mCurrentOverlay != null) {
+				mCurrentOverlay.setSelected(false);
+			}
+			mVgContextMenuContainer.setVisibility(View.GONE);
+			mCurrentOverlay = overlay;
+			mCurrentOverlay.setSelected(true);
+			mCurrentOverlay.setEditorContainerView(mEditorContainerView);
+			mCurrentOverlay.getView().invalidate();
 		}
 	}
 
@@ -365,7 +398,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mRlOverlayContainer.removeView(overlay.getView());
 		}
 	}
-	
+
 	@Override
 	public boolean onTouch(View view, MotionEvent e) {
 		mMoveGestureDetector.onTouchEvent(e);
@@ -374,16 +407,15 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		case MotionEvent.ACTION_DOWN: {
 			int size = mOverlays.size();
 			if (mCurrentOverlay != null) {
-				mCurrentOverlay.checkKeyPointsSelectionStatus((int)e.getX(), (int)e.getY());
-				if(mCurrentOverlay.contains((int)e.getX(), (int)e.getY())
-						|| mCurrentOverlay.isControlPointSelected()
-						|| mCurrentOverlay.isDeletePointSelected()) {
-					//是否点中了删除按钮
+				mCurrentOverlay.checkKeyPointsSelectionStatus((int) e.getX(), (int) e.getY());
+				if (mCurrentOverlay.contains((int) e.getX(), (int) e.getY())
+						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isDeletePointSelected()) {
+					// 是否点中了删除按钮
 					if (mCurrentOverlay.isDeletePointSelected()) {
 						removeOverlay(mCurrentOverlay);
 						mCurrentOverlay = null;
-					} 
-					if(mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
+					}
+					if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
 						mVgContextMenuContainer.removeAllViews();
 						mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
 						mVgContextMenuContainer.setVisibility(View.VISIBLE);
@@ -397,8 +429,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mCurrentOverlay.getView().invalidate();
 				mCurrentOverlay = null;
 			}
-			
-			//找到当前选中的overlay
+
+			// 找到当前选中的overlay
 			for (int i = size - 1; i >= 0; --i) {
 				ObjectOverlay overlay = mOverlays.get(i);
 				if (overlay.contains((int) e.getX(), (int) e.getY())) {
@@ -428,7 +460,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					mVgContextMenuContainer.removeAllViews();
 					mVgContextMenuContainer.setVisibility(View.GONE);
 				} else {
-					if(mCurrentOverlay.getContextView() != null) {
+					if (mCurrentOverlay.getContextView() != null) {
 						mVgContextMenuContainer.removeAllViews();
 						mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
 						mVgContextMenuContainer.setVisibility(View.VISIBLE);
@@ -458,20 +490,20 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private float distance(float x1, float y1, float x2, float y2) {
 		return (float) Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 	}
-	
-	//atan在-90~90范围内通过反正切获得角度（0-360度)
+
+	// atan在-90~90范围内通过反正切获得角度（0-360度)
 	private float degreeByATan(float atan, float x, float y, float centerX, float centerY) {
-		if(x >= centerX && y >= centerY) { //第一象限
+		if (x >= centerX && y >= centerY) { // 第一象限
 			return atan;
-		} else if(x < centerX && y >= centerY) { //第二象限
+		} else if (x < centerX && y >= centerY) { // 第二象限
 			return 180 + atan;
-		} else if(x < centerX && y < centerX) { //第三
+		} else if (x < centerX && y < centerX) { // 第三
 			return 180 + atan;
 		} else {
 			return 360 + atan;
 		}
 	}
-	
+
 	private class MoveListener extends MoveGestureDetector.SimpleOnMoveGestureListener {
 		@Override
 		public boolean onMove(MoveGestureDetector detector) {
@@ -500,11 +532,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						float oldTan = (ctrlPoint.y - centerY) / (ctrlPoint.x - centerX);
 						float newTan = (newCtrlY - centerY) / (newCtrlX - centerX);
 						double oldDegree = Math.atan(oldTan) * 180 / Math.PI;
-						oldDegree = degreeByATan((float) oldDegree, ctrlPoint.x, ctrlPoint.y,
-								centerX, centerY);
+						oldDegree = degreeByATan((float) oldDegree, ctrlPoint.x, ctrlPoint.y, centerX, centerY);
 						double newDegree = Math.atan(newTan) * 180 / Math.PI;
-						newDegree = degreeByATan((float) newDegree, newCtrlX, newCtrlY,
-								centerX, centerY);
+						newDegree = degreeByATan((float) newDegree, newCtrlX, newCtrlY, centerX, centerY);
 						mCurrentOverlay.rotate((float) (newDegree - oldDegree));
 						mCurrentOverlay.getView().invalidate();
 					}

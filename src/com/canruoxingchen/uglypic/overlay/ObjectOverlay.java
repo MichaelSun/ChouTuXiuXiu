@@ -40,7 +40,7 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	// 控制按钮的中心坐标
 	private PointF mCtrlPoint;
-	
+
 	private View mEditorPanel;
 
 	public interface ObjectOperationListener {
@@ -49,7 +49,7 @@ public abstract class ObjectOverlay implements IOverlay {
 
 		public void onMoveOverlay(ObjectOverlay overlay, int dx, int dy);
 	}
-	
+
 	private EditorContainerView mEditorContainer;
 
 	protected View mContentView;
@@ -63,34 +63,42 @@ public abstract class ObjectOverlay implements IOverlay {
 	protected ObjectOperationListener getOperationListener() {
 		return mObjectOperationListener;
 	}
-	
+
 	public void setEditorContainerView(EditorContainerView editorContainer) {
 		mEditorContainer = editorContainer;
 	}
-	
+
 	public EditorContainerView getEditorContainerView() {
 		return mEditorContainer;
 	}
-	
+
 	public void setEditorPanel(View editorPanel) {
 		this.mEditorPanel = editorPanel;
 	}
-	
+
 	protected View getEditorPanel() {
 		return this.mEditorPanel;
 	}
 
 	@Override
-	public Rect getContentBounds() {
-		// TODO Auto-generated method stub
+	public Rect getInitialContentBounds() {
+		if (mDensity < 0) {
+			WindowManager wm = (WindowManager) UglyPicApp.getAppExContext().getSystemService(Context.WINDOW_SERVICE);
+			DisplayMetrics dm = new DisplayMetrics();
+			wm.getDefaultDisplay().getMetrics(dm);
+			mDensity = dm.density;
+		}
 		return null;
 	}
 
+	public abstract Rect getCurrentContentBounds();
+
 	// 初始化内容区域
 	protected abstract View initContentView();
-	
+
 	/**
 	 * 返回上下问菜单
+	 * 
 	 * @return
 	 */
 	public abstract View getContextView();
@@ -127,7 +135,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	 */
 	@Override
 	public boolean contains(int x, int y) {
-		Rect rect = getContentBounds();
+		Rect rect = getInitialContentBounds();
 		if (rect != null) {
 			Matrix matrix = new Matrix();
 			mMatrix.invert(matrix);
@@ -150,7 +158,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	 * @param dy
 	 */
 	public void translate(int dx, int dy) {
-		if (getContentBounds() != null) {
+		if (getInitialContentBounds() != null) {
 			mMatrix.postTranslate(dx, dy);
 		}
 	}
@@ -199,8 +207,8 @@ public abstract class ObjectOverlay implements IOverlay {
 	 * @return
 	 */
 	public PointF getControlPoint() {
-		if (getContentBounds() != null) {
-			Rect rect = getContentBounds();
+		if (getInitialContentBounds() != null) {
+			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.bottom };
 			mMatrix.mapPoints(pts);
 			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
@@ -214,8 +222,8 @@ public abstract class ObjectOverlay implements IOverlay {
 	 * @return
 	 */
 	public PointF getDeletePoint() {
-		if (getContentBounds() != null) {
-			Rect rect = getContentBounds();
+		if (getInitialContentBounds() != null) {
+			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.left, rect.top };
 			mMatrix.mapPoints(pts);
 			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
@@ -224,8 +232,8 @@ public abstract class ObjectOverlay implements IOverlay {
 	}
 
 	public PointF getLeftBottom() {
-		if (getContentBounds() != null) {
-			Rect rect = getContentBounds();
+		if (getInitialContentBounds() != null) {
+			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.left, rect.bottom };
 			mMatrix.mapPoints(pts);
 			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
@@ -234,8 +242,8 @@ public abstract class ObjectOverlay implements IOverlay {
 	}
 
 	public PointF getRightTop() {
-		if (getContentBounds() != null) {
-			Rect rect = getContentBounds();
+		if (getInitialContentBounds() != null) {
+			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.top };
 			mMatrix.mapPoints(pts);
 			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);

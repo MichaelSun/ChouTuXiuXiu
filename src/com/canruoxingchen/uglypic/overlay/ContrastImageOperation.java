@@ -11,9 +11,9 @@ package com.canruoxingchen.uglypic.overlay;
  */
 public class ContrastImageOperation extends SingleParamImageOperation {
 	
-	public static final int MAX = 10;
+	public static final int MAX = 200;
 	public static final int MIN = 0;
-	public static final int DEFAULT = 1;
+	public static final int DEFAULT = 100;
 	
 	private int mValue = DEFAULT;
 

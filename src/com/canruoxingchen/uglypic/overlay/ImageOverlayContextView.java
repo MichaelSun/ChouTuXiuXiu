@@ -126,6 +126,7 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 
 	@Override
 	public void onClick(View v) {
+		resetAllBtnAndSeekbars();
 		switch(v.getId()) {
 		case R.id.image_contrast:
 			resetAllBtnAndSeekbars();	
@@ -190,7 +191,7 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 			mBtnContrast.setVisibility(View.VISIBLE);
 		} else if(seekBar == mSbSatuation) {
 			mSbSatuation.setVisibility(View.GONE);
-			mSbSatuation.setVisibility(View.VISIBLE);
+			mBtnSatuation.setVisibility(View.VISIBLE);
 		}
 	}
 	
@@ -213,7 +214,7 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 			mBtnContrast.setVisibility(View.VISIBLE);
 		} else if(seekBar == mSbSatuation) {
 			mSbSatuation.setVisibility(View.GONE);
-			mSbSatuation.setVisibility(View.VISIBLE);
+			mBtnSatuation.setVisibility(View.VISIBLE);
 		}
 	}
 

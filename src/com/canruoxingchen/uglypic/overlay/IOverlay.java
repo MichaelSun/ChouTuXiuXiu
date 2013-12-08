@@ -19,7 +19,7 @@ public interface IOverlay {
 	 * 获取内容区域的边框
 	 * @return
 	 */
-	public Rect getContentBounds();
+	public Rect getInitialContentBounds();
 	
 	/**
 	 * 获取此OverLay对应的view
