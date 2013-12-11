@@ -4,15 +4,23 @@
 package com.canruoxingchen.uglypic.overlay;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.RelativeLayout;
 
 import com.canruoxingchen.uglypic.UglyPicApp;
+import com.canruoxingchen.uglypic.util.Logger;
 
 /**
  * 物品浮层，可以删除，并且可以平移、放大缩小、以及旋转
@@ -24,9 +32,9 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	private static final int SIZE_CONTORL_VIEW = 30;
 
-	private static final int CONTROL_POINTS_RADIUS = 20;
+	public static final int CONTROL_POINTS_RADIUS = 20;
 
-	private float mDensity = -1.0f;
+	protected float mDensity = -1.0f;
 
 	private Matrix mMatrix = new Matrix();
 
@@ -56,6 +64,9 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	private ObjectOperationListener mObjectOperationListener;
 
+	// contentView外加控制按钮
+	private ViewGroup mContainerView = null;
+
 	public void setOperationListener(ObjectOperationListener listener) {
 		this.mObjectOperationListener = listener;
 	}
@@ -82,12 +93,7 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	@Override
 	public Rect getInitialContentBounds() {
-		if (mDensity < 0) {
-			WindowManager wm = (WindowManager) UglyPicApp.getAppExContext().getSystemService(Context.WINDOW_SERVICE);
-			DisplayMetrics dm = new DisplayMetrics();
-			wm.getDefaultDisplay().getMetrics(dm);
-			mDensity = dm.density;
-		}
+		retrieveDensity();
 		return null;
 	}
 
@@ -97,7 +103,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	protected abstract View initContentView();
 
 	/**
-	 * 返回上下问菜单
+	 * 返回上下文菜单，比如贴图的编辑菜单
 	 * 
 	 * @return
 	 */
@@ -106,6 +112,45 @@ public abstract class ObjectOverlay implements IOverlay {
 	@Override
 	public View getView() {
 		return mContentView;
+	}
+	
+	protected void retrieveDensity() {
+
+		if (mDensity < 0) {
+			WindowManager wm = (WindowManager) UglyPicApp.getAppExContext().getSystemService(Context.WINDOW_SERVICE);
+			DisplayMetrics dm = new DisplayMetrics();
+			wm.getDefaultDisplay().getMetrics(dm);
+			mDensity = dm.density;
+		}
+	}
+
+	/**
+	 * 对本身的View进行了包装，增加了边框和控制按钮，子类可根据需要重写此方法s
+	 * 
+	 * @return
+	 */
+	public View getContainerView(Context context) {
+		if (mContainerView == null) {
+			mContainerView = new ContainerView(context);
+			if(getView() != null) {
+
+				RelativeLayout.LayoutParams params  = getDefaultParams();
+				if(params == null) {
+					params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 
+						LayoutParams.WRAP_CONTENT);
+				}
+				mContainerView.addView(getView(), params);
+			}
+		}
+		if(getView() == null) {
+			return null;
+		}
+		return mContainerView;
+	}
+	
+	//添加到container view中的默认参数
+	protected RelativeLayout.LayoutParams getDefaultParams() {
+		return null;
 	}
 
 	/*
@@ -295,5 +340,60 @@ public abstract class ObjectOverlay implements IOverlay {
 		} else {
 			mControlPointSelected = false;
 		}
+	}
+
+	private class ContainerView extends RelativeLayout {
+
+		private Paint mPaint;
+
+		public ContainerView(Context context) {
+			super(context);
+			mPaint = new Paint();
+		}
+
+		@Override
+		protected void dispatchDraw(Canvas canvas) {
+			super.dispatchDraw(canvas);
+			LOGD("======= dispatchDraw in containerView =======");
+			drawBtns(canvas);
+		}
+
+		private void drawBtns(Canvas canvas) {
+			PointF leftTop = getDeletePoint();
+			PointF rightBottom = getControlPoint();
+			PointF leftBottom = getLeftBottom();
+			PointF rightTop = getRightTop();
+			int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
+
+			if (leftTop == null || rightBottom == null || leftBottom == null || rightTop == null) {
+				return;
+			}
+			if (isOverlaySelected()) {
+				
+				mPaint.setColorFilter(null);
+				// 画线
+				mPaint.setStyle(Style.STROKE);
+				mPaint.setColor(Color.BLACK);
+				mPaint.setStrokeWidth(2);
+				float[] pts = new float[] { leftTop.x, leftTop.y, rightTop.x, rightTop.y, rightTop.x, rightTop.y,
+						rightBottom.x, rightBottom.y, rightBottom.x, rightBottom.y, leftBottom.x, leftBottom.y,
+						leftBottom.x, leftBottom.y, leftTop.x, leftTop.y };
+				canvas.drawLines(pts, mPaint);
+
+				mPaint.setStyle(Style.FILL);
+				mPaint.setColor(Color.RED);
+
+				// 画删除键
+				canvas.drawCircle(leftTop.x, leftTop.y, padding, mPaint);
+				// 画移动键
+				canvas.drawCircle(rightBottom.x, rightBottom.y, padding, mPaint);
+				
+				LOGD("======= draw the container view =======");
+			}
+		}
+	}
+	
+	private static void LOGD(String logMe) {
+		Logger.d("ObjectOverlay", logMe);
 	}
 }

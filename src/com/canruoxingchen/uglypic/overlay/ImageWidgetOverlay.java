@@ -116,12 +116,12 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	}
 
 	@Override
-	public void setSelected(boolean selected) {
+	public void setOverlaySelected(boolean selected) {
 		mSelected = selected;
 	}
 
 	@Override
-	public boolean isSelected() {
+	public boolean isOverlaySelected() {
 		return mSelected;
 	}
 
@@ -596,10 +596,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			float factor = mContrast;
 			float addon = -127.5f * (1 - mIllumination) * mContrast + 127.5f * (1 + mIllumination);
 			// 叠加饱和度，参照了setSatuation源码
-			final float invSat = 1 - mSatuation;
-			final float R = 0.213f * invSat;
-			final float G = 0.715f * invSat;
-			final float B = 0.072f * invSat;
 
 			// m[0] = R + sat; m[1≤] = G; m[2] = B;
 			// m[5] = R; m[6] = G + sat; m[7] = B;
@@ -636,26 +632,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			// super.onDraw(canvas);
 
 			// 非擦除模式时，绘制控制点
-			if (!mEraserMode) {
-				drawBtns(canvas);
-				// } else {
-				// // 绘制已有的擦除痕迹
-				// for (int i = 0; i <= mPathIndex && i < mRecords.size(); ++i)
-				// {
-				// EraseRecord record = mRecords.get(i);
-				// int strokeWidth = record.strokeWidth;
-				// strokeWidth = strokeWidth > 1 ? strokeWidth : 1;
-				// mEraserPaint.setStrokeWidth(strokeWidth);
-				// canvas.drawPath(record.path, mEraserPaint);
-				// }
-				// // 再绘制当前的痕迹
-				// if (mCurrentPath != null) {
-				// int strokeWidth = mCurrentStrokeWidth;
-				// strokeWidth = strokeWidth > 1 ? strokeWidth : 1;
-				// mEraserPaint.setStrokeWidth(strokeWidth);
-				// canvas.drawPath(mCurrentPath, mEraserPaint);
-				// }
-			}
+//			if (!mEraserMode) {
+//				drawBtns(canvas);
+//			}
 		}
 
 		private void drawBtns(Canvas canvas) {
@@ -670,8 +649,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 			if (getDrawable() != null && mSelected) {
 				mPaint.setColorFilter(null);
-				// int saveCount = canvas.getSaveCount();
-				// canvas.save();
 				// 画线
 				mPaint.setStyle(Style.STROKE);
 				mPaint.setColor(Color.BLACK);
@@ -797,6 +774,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			editorPanel.setScaleX(scale);
 			editorPanel.setScaleY(scale);
 		}
+		setOverlaySelected(false);
+		View container = getContainerView(mContext);
+		if(container != null) {
+			container.invalidate();
+		}
 	}
 
 	private void disableEraseMode() {
@@ -805,6 +787,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			editorPanel.scrollTo(0, 0);
 			editorPanel.setScaleX(1);
 			editorPanel.setScaleY(1);
+		}
+		setOverlaySelected(true);
+		View container = getContainerView(mContext);
+		if(container != null) {
+			container.invalidate();
 		}
 	}
 

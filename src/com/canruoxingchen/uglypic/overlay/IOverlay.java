@@ -44,7 +44,7 @@ public interface IOverlay {
 	 */
 	public boolean contains(int x, int y);
 	
-	public void setSelected(boolean selected);
+	public void setOverlaySelected(boolean selected);
 	
-	public boolean isSelected();
+	public boolean isOverlaySelected();
 }

@@ -1,0 +1,118 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rl_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#00000000" >
+
+    <com.canruoxingchen.uglypic.camera.PmCameraRender
+        android:id="@+id/camera_surface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="48dip"
+        android:background="@drawable/camera_surface_background"
+        android:contentDescription="camera_camera_surface" />
+
+    <View
+        android:id="@+id/focus_indicator"
+        android:layout_width="100dip"
+        android:layout_height="100dip"
+        android:background="@drawable/camera_focus"
+        android:visibility="gone" />
+
+    <RelativeLayout
+        android:id="@+id/rl_topbar"
+        android:layout_width="match_parent"
+        android:layout_height="48dip"
+        android:layout_alignParentTop="true"
+        android:background="#FFFFFFFF"
+        android:paddingLeft="5dip"
+        android:paddingRight="5dip" >
+
+        <RelativeLayout
+            android:id="@+id/rl_exit"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/camera_titlebar_bg"
+            android:clickable="true"
+            android:paddingLeft="5dip"
+            android:paddingRight="5dip" >
+
+            <ImageView
+                android:id="@+id/iv_exit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@null"
+                android:contentDescription="camera_iv_exit"
+                android:src="@drawable/camera_close" />
+
+            <TextView
+                android:id="@+id/tv_exit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="3dip"
+                android:layout_toRightOf="@id/iv_exit"
+                android:background="@null"
+                android:contentDescription="camera_tv_exit"
+                android:text="@string/camera_btn_close"
+                android:textColor="@color/camera_button_text"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:orientation="horizontal" >
+
+            <ImageButton
+                android:id="@+id/ib_flash_on_off"
+                android:layout_width="48dip"
+                android:layout_height="48dip"
+                android:layout_marginRight="4dip"
+                android:background="@drawable/camera_titlebar_bg"
+                android:contentDescription="camera_ib_flash_on_off"
+                android:src="@drawable/camera_flash_on" />
+
+            <ImageButton
+                android:id="@+id/ib_camera_next"
+                android:layout_width="48dip"
+                android:layout_height="48dip"
+                android:background="@drawable/camera_titlebar_bg"
+                android:contentDescription="camera_ib_camera_next"
+                android:src="@drawable/camera_switch" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_bottombar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:background="#FFFFFFFF" >
+
+        <ImageButton
+            android:id="@+id/ib_capture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/camera_capture"
+            android:contentDescription="camera_ib_capture" />
+
+        <ImageButton
+            android:id="@+id/ib_choose_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="50dip"
+            android:layout_toRightOf="@id/ib_capture"
+            android:background="@drawable/camera_choose_gallery"
+            android:contentDescription="camera_ib_choose_photo" />
+    </RelativeLayout>
+
+</RelativeLayout>

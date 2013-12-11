@@ -6,4 +6,9 @@
     
     <color name="red">#FFFF0000</color>
     
+    
+    <color name="camera_button_background">#ffffffff</color>
+    <color name="camera_button_pressed_background">#1a000000</color>
+    <color name="camera_button_text">#8622ab</color>
+    
 </resources>

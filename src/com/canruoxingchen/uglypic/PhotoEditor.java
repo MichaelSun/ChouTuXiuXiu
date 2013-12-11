@@ -191,8 +191,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	// 重置所有效果
 	private void reset() {
 		for (ObjectOverlay overlay : mOverlays) {
-			if (overlay.getView() != null) {
-				mRlOverlayContainer.removeView(overlay.getView());
+			if (overlay.getContainerView(PhotoEditor.this) != null) {
+				mRlOverlayContainer.removeView(overlay.getContainerView(PhotoEditor.this));
 			}
 		}
 		mOverlays.clear();
@@ -216,11 +216,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				if (data != null) {
 					String text = data.getStringExtra(EditTextActivity.EXTRA_TEXT);
 					if (!TextUtils.isEmpty(text)) {
-						RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-								LayoutParams.WRAP_CONTENT);
 						TextOverlay overlay = new TextOverlay(this, text);
-						addOverlay(overlay, params);
-						overlay.translate(100, 200);
+						addOverlay(overlay);
 					}
 				}
 			}
@@ -269,6 +266,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		case R.id.photo_editor_top_bar_camera: { // 返回照相页面
 			finish();
+			Intent intent = new Intent(this, CameraActivity.class);
+			startActivity(intent);
 			break;
 		}
 		case R.id.photo_editor_top_bar_reset: { // 重置所有素材
@@ -356,46 +355,46 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private void addOverlay(ObjectOverlay overlay) {
 		mOverlays.add(overlay);
-		if (overlay.getView() != null) {
+		if (overlay.getContainerView(PhotoEditor.this) != null) {
 			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 					LayoutParams.MATCH_PARENT);
-			overlay.getView().setLayoutParams(params);
+			overlay.getContainerView(PhotoEditor.this).setLayoutParams(params);
 			overlay.setOperationListener(this);
 			overlay.setEditorPanel(mEditorPanel);
-			mRlOverlayContainer.addView(overlay.getView());
+			mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
 			if (mCurrentOverlay != null) {
-				mCurrentOverlay.setSelected(false);
+				mCurrentOverlay.setOverlaySelected(false);
 			}
 			mVgContextMenuContainer.setVisibility(View.GONE);
 			mCurrentOverlay = overlay;
-			mCurrentOverlay.setSelected(true);
+			mCurrentOverlay.setOverlaySelected(true);
 			mCurrentOverlay.setEditorContainerView(mEditorContainerView);
-			mCurrentOverlay.getView().invalidate();
+			mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 		}
 	}
 
 	private void addOverlay(ObjectOverlay overlay, RelativeLayout.LayoutParams params) {
 		mOverlays.add(overlay);
-		if (overlay.getView() != null) {
-			overlay.getView().setLayoutParams(params);
+		if (overlay.getContainerView(PhotoEditor.this) != null) {
+			overlay.getContainerView(PhotoEditor.this).setLayoutParams(params);
 			overlay.setOperationListener(this);
 			overlay.setEditorPanel(mEditorPanel);
-			mRlOverlayContainer.addView(overlay.getView());
+			mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
 			if (mCurrentOverlay != null) {
-				mCurrentOverlay.setSelected(false);
+				mCurrentOverlay.setOverlaySelected(false);
 			}
 			mVgContextMenuContainer.setVisibility(View.GONE);
 			mCurrentOverlay = overlay;
-			mCurrentOverlay.setSelected(true);
+			mCurrentOverlay.setOverlaySelected(true);
 			mCurrentOverlay.setEditorContainerView(mEditorContainerView);
-			mCurrentOverlay.getView().invalidate();
+			mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 		}
 	}
 
 	private void removeOverlay(ObjectOverlay overlay) {
 		mOverlays.remove(overlay);
-		if (overlay.getView() != null) {
-			mRlOverlayContainer.removeView(overlay.getView());
+		if (overlay.getContainerView(PhotoEditor.this) != null) {
+			mRlOverlayContainer.removeView(overlay.getContainerView(PhotoEditor.this));
 		}
 	}
 
@@ -419,14 +418,14 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						mVgContextMenuContainer.removeAllViews();
 						mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
 						mVgContextMenuContainer.setVisibility(View.VISIBLE);
-						mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
+						mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
 					} else {
 						mVgContextMenuContainer.setVisibility(View.GONE);
 					}
 					return true;
 				}
-				mCurrentOverlay.setSelected(false);
-				mCurrentOverlay.getView().invalidate();
+				mCurrentOverlay.setOverlaySelected(false);
+				mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 				mCurrentOverlay = null;
 			}
 
@@ -435,20 +434,20 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				ObjectOverlay overlay = mOverlays.get(i);
 				if (overlay.contains((int) e.getX(), (int) e.getY())) {
 					if (mCurrentOverlay != null && mCurrentOverlay != overlay) {
-						mCurrentOverlay.setSelected(false);
-						mCurrentOverlay.getView().invalidate();
+						mCurrentOverlay.setOverlaySelected(false);
+						mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 						mCurrentOverlay = null;
 					}
-					overlay.setSelected(true);
+					overlay.setOverlaySelected(true);
 
 					// 将当前View置于最上层
 					mCurrentOverlay = overlay;
 					mCurrentOverlay.checkKeyPointsSelectionStatus((int) e.getX(), (int) e.getY());
-					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
-					overlay.getView().invalidate();
+					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
+					overlay.getContainerView(PhotoEditor.this).invalidate();
 					break;
 				} else {
-					overlay.setSelected(false);
+					overlay.setOverlaySelected(false);
 				}
 			}
 
@@ -467,7 +466,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					} else {
 						mVgContextMenuContainer.setVisibility(View.GONE);
 					}
-					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getView());
+					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
 				}
 				return true;
 			}
@@ -511,7 +510,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 			LOGD("onMove >>>>>> " + detector.getFocusX() + ", " + detector.getFocusY() + "  <<<<<< with delta " + d.x
 					+ ", " + d.y);
-			if (mCurrentOverlay != null && mCurrentOverlay.isSelected()) {
+			if (mCurrentOverlay != null && mCurrentOverlay.isOverlaySelected()) {
 
 				// 如果选中的是控制点，则需要计算旋转和放缩
 				if (mCurrentOverlay.isControlPointSelected()) {
@@ -536,7 +535,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						double newDegree = Math.atan(newTan) * 180 / Math.PI;
 						newDegree = degreeByATan((float) newDegree, newCtrlX, newCtrlY, centerX, centerY);
 						mCurrentOverlay.rotate((float) (newDegree - oldDegree));
-						mCurrentOverlay.getView().invalidate();
+						mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 					}
 				} else if (mCurrentOverlay.isDeletePointSelected()) {
 
@@ -544,7 +543,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 				} else { // 平移
 					mCurrentOverlay.translate((int) d.x, (int) d.y);
-					mCurrentOverlay.getView().invalidate();
+					mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 
 					LOGD("Translate Overlay >>>>>> " + (d.x) + ", " + (d.y));
 				}

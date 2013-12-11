@@ -70,12 +70,12 @@ public class SceneOverlay implements IOverlay {
 	}
 
 	@Override
-	public void setSelected(boolean selected) {
+	public void setOverlaySelected(boolean selected) {
 		mSelected = selected;
 	}
 
 	@Override
-	public boolean isSelected() {
+	public boolean isOverlaySelected() {
 		return mSelected;
 	}
 

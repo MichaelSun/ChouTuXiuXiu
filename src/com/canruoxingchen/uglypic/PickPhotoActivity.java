@@ -159,7 +159,8 @@ public class PickPhotoActivity extends BaseActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (resultCode == RESULT_OK) {
 
-			TipsDialog.getInstance().showProcess(this, getString(R.string.choose_photo_waiting));
+			TipsDialog.getInstance().show(this, R.drawable.tips_loading, 
+					getString(R.string.choose_photo_waiting), false);
 
 			switch (requestCode) {
 			case REQUEST_CODE_CAMERA:

@@ -34,5 +34,12 @@
 	
 	<!-- 编辑文本页面 -->
 	<string name="edit_text_finish">完成</string>
+	
+	<!-- 相机 -->
+    <string name="camera_btn_close">Cancel</string>
+    <string name="tips_photo_size_invalid">The picture is not in a supported format.</string>
+    <string name="tips_photo_invalid_path">Invalid photo path</string>
+    <string name="tips_photo_loading">Loading</string>
+    <string name="tips_no_sdcard">No sdcard found!</string>
     
 </resources>
