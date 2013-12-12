@@ -3,7 +3,7 @@
     android:id="@+id/rl_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#00000000" >
+    android:background="#FF302A22" >
 
     <com.canruoxingchen.uglypic.camera.PmCameraRender
         android:id="@+id/camera_surface"
@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dip"
         android:layout_alignParentTop="true"
-        android:background="#FFFFFFFF"
+        android:background="#FF302A22"
         android:paddingLeft="5dip"
         android:paddingRight="5dip" >
 
@@ -94,7 +94,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
-        android:background="#FFFFFFFF" >
+        android:background="#FF302A22" >
 
         <ImageButton
             android:id="@+id/ib_capture"
@@ -104,13 +104,14 @@
             android:background="@drawable/camera_capture"
             android:contentDescription="camera_ib_capture" />
 
-        <ImageButton
+        <com.canruoxingchen.uglypic.cache.AsyncImageView
             android:id="@+id/ib_choose_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="50dip"
-            android:layout_toRightOf="@id/ib_capture"
+            android:layout_marginRight="50dip"
+            android:layout_toLeftOf="@id/ib_capture"
+            android:scaleType="centerCrop"
             android:background="@drawable/camera_choose_gallery"
             android:contentDescription="camera_ib_choose_photo" />
     </RelativeLayout>

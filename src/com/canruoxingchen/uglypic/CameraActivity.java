@@ -10,10 +10,14 @@ import java.util.Locale;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera.Parameters;
@@ -42,19 +46,22 @@ import android.view.animation.ScaleAnimation;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
+import com.canruoxingchen.uglypic.cache.AsyncImageView;
+import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.camera.ImageProcessConstants;
 import com.canruoxingchen.uglypic.camera.PmCamera;
 import com.canruoxingchen.uglypic.camera.PmCameraData;
 import com.canruoxingchen.uglypic.camera.PmCameraRender;
+import com.canruoxingchen.uglypic.util.Logger;
 import com.canruoxingchen.uglypic.util.jni.NativeImageUtil;
 
-public class CameraActivity extends BaseActivity implements OnClickListener, OnTouchListener {
+public class CameraActivity extends BaseActivity implements OnClickListener, OnTouchListener, LoaderCallbacks<Cursor> {
 	private static final String TAG = CameraActivity.class.getSimpleName();
 	private static final boolean DEBUG = true;
 
 	private static final int REQUEST_CODE_GALLERY = 0x001;
-//	private static final int REQUEST_CODE_PUBLISHER = 0x002;
-//	private static final int REQUEST_CODE_PREVIEW = 0x003;
+
+	private static final int URL_LOADER_ALBUM_EXTERNAL = 1;
 
 	public static final String INTENT_EXTRA_PICTURE_SIZE = "picture_size";
 	public static final String INTENT_EXTRA_IS_SQUARE = "is_square";
@@ -81,7 +88,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	ImageButton mFlashOnOffIB;
 	ImageButton mCameraNextIB;
 	ImageButton mCapturePhotoIB;
-	ImageButton mChoosePhotoIB;
+	AsyncImageView mChoosePhotoAiv;
 	View mFocusIndicatorView;
 	RelativeLayout mTopBarRL;
 	RelativeLayout mBottomBarRL;
@@ -119,7 +126,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 			mPictureMinSize = ImageProcessConstants.PICTURE_MIN_SIZE_LARGE;
 			mIsPreviewSquare = true;
-			mIsFrontCamera = true;
+			// mIsFrontCamera = true;
 		}
 
 		mPmCamera = new PmCamera(this.getApplicationContext());
@@ -139,6 +146,8 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 		needShowFlashButton();
 		needShowSwitchCameraButton();
+
+		this.getLoaderManager().initLoader(URL_LOADER_ALBUM_EXTERNAL, null, this);
 	}
 
 	@Override
@@ -167,7 +176,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 		mFlashOnOffIB.setEnabled(true);
 		mCameraNextIB.setEnabled(true);
-		mChoosePhotoIB.setEnabled(true);
+		mChoosePhotoAiv.setEnabled(true);
 		mCapturePhotoIB.setEnabled(true);
 	}
 
@@ -194,7 +203,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 			mOrientationObserver.disable();
 			mFlashOnOffIB.setEnabled(false);
 			mCameraNextIB.setEnabled(false);
-			mChoosePhotoIB.setEnabled(false);
+			mChoosePhotoAiv.setEnabled(false);
 			mCapturePhotoIB.setEnabled(false);
 			mPmCamera.takenPicture(mCameraObserver);
 			break;
@@ -251,10 +260,10 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 			}
 		} else if (resultCode == RESULT_OK) {
 			if (requestCode == REQUEST_CODE_GALLERY) {
-//				setResult(RESULT_OK, data);
+				// setResult(RESULT_OK, data);
 				finish();
 				PhotoEditor.start(this, data.getData());
-			} 
+			}
 		} else if (resultCode == RESULT_CANCELED) {
 
 		}
@@ -272,13 +281,13 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		mFlashOnOffIB = (ImageButton) findViewById(R.id.ib_flash_on_off);
 		mCameraNextIB = (ImageButton) findViewById(R.id.ib_camera_next);
 		mCapturePhotoIB = (ImageButton) findViewById(R.id.ib_capture);
-		mChoosePhotoIB = (ImageButton) findViewById(R.id.ib_choose_photo);
+		mChoosePhotoAiv = (AsyncImageView) findViewById(R.id.ib_choose_photo);
 		mFocusIndicatorView = (View) findViewById(R.id.focus_indicator);
 		mTopBarRL = (RelativeLayout) findViewById(R.id.rl_topbar);
 		mBottomBarRL = (RelativeLayout) findViewById(R.id.rl_bottombar);
 		mFlashOnOffIB.setOnClickListener(this);
 		mCameraNextIB.setOnClickListener(this);
-		mChoosePhotoIB.setOnClickListener(this);
+		mChoosePhotoAiv.setOnClickListener(this);
 		mCapturePhotoIB.setOnClickListener(this);
 		mExitRL.setOnClickListener(this);
 
@@ -363,21 +372,15 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	}
 
 	private void setImageResult(String filePath) {
-//		Intent intent = new Intent();
-//		if (!TextUtils.isEmpty(filePath)) {
-//			intent.setData(Uri.fromFile(new File(filePath)));
-//		}
-//		intent.putExtra(ImageProcessConstants.TAG_IMAGE_PATH, filePath);
-//		setResult(RESULT_OK, intent);
-//		finish();
+		// Intent intent = new Intent();
+		// if (!TextUtils.isEmpty(filePath)) {
+		// intent.setData(Uri.fromFile(new File(filePath)));
+		// }
+		// intent.putExtra(ImageProcessConstants.TAG_IMAGE_PATH, filePath);
+		// setResult(RESULT_OK, intent);
+		// finish();
 		finish();
 		PhotoEditor.start(this, Uri.fromFile(new File(filePath)));
-	}
-
-	private void LOGD(String message) {
-		if (DEBUG) {
-			Log.i(TAG, message);
-		}
 	}
 
 	public enum FlashMode {
@@ -440,7 +443,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 			mCapturePhotoIB.setRotation(-orientation);
 			mCameraNextIB.setRotation(-orientation);
 			mFlashOnOffIB.setRotation(-orientation);
-			mChoosePhotoIB.setRotation(-orientation);
+			mChoosePhotoAiv.setRotation(-orientation);
 		}
 	}
 
@@ -458,7 +461,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 			mPmCamera.onPause();
 
-			//保存图片
+			// 保存图片
 			Thread thread = new Thread(new SaveRunnable());
 			thread.setPriority(Thread.MAX_PRIORITY);
 			thread.start();
@@ -634,6 +637,46 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	@Override
 	protected void initListers() {
 
+	}
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		LOGD("load created >>>>>>>> ");
+		// 查询SD卡上所有的照片
+		String[] projection = new String[] { MediaStore.Images.Media.DATA };
+
+		// 按照时间排序返回
+		return new CursorLoader(CameraActivity.this, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null,
+				null, MediaStore.Images.Media.DATE_ADDED + " DESC");
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		LOGD("load finished >>>>>>>> ");
+		if (data != null) {
+			LOGD("load finished >>>>>>>> 1");
+			if (data.moveToFirst()) {
+				LOGD("load finished >>>>>>>> 2");
+				do {
+					int indexOfUrl = data.getColumnIndex(MediaStore.Images.Media.DATA);
+					String url = data.getString(indexOfUrl);
+					if (!TextUtils.isEmpty(url) && (new File(url).exists())) {
+						LOGD("load finished >>>>>>>> 3  url=" + url);
+						mChoosePhotoAiv.setImageInfo(ImageInfo.obtain(Uri.fromFile(new File(url)).toString()));
+						break;
+					}
+				} while (data.moveToNext());
+			}
+		}
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+
+	}
+
+	private void LOGD(String logMe) {
+		Logger.d("CameraActivity", logMe);
 	}
 
 }
