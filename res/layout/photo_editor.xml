@@ -90,6 +90,12 @@
             </TextView>
         </RelativeLayout>
     </LinearLayout>
+    
+    <View android:id="@+id/photo_editor_edit_panel_ref_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/photo_editor_bottom_bar"
+        android:layout_below="@id/photo_editor_top_bar"></View>
 
     <RelativeLayout
         android:id="@+id/photo_editor_edit_panel"

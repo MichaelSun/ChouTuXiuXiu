@@ -46,7 +46,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 
 	public static final float DEFAULT_MAX_SCALE = 3.0f;
 	public static final float DEFAULT_MID_SCALE = 1.75f;
-	public static final float DEFAULT_MIN_SCALE = 1.0f;
+	public static final float DEFAULT_MIN_SCALE = 0.2f;
 
 	private float mMinScale = DEFAULT_MIN_SCALE;
 	private float mMidScale = DEFAULT_MID_SCALE;
@@ -522,7 +522,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 	 * Helper method that simply checks the Matrix, and then displays the result
 	 */
 	private void checkAndDisplayMatrix() {
-		checkMatrixBounds();
+//		checkMatrixBounds();
 		setImageViewMatrix(getDisplayMatrix());
 	}
 

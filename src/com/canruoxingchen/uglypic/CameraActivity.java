@@ -33,7 +33,6 @@ import android.provider.MediaStore.Images;
 import android.provider.MediaStore.Images.ImageColumns;
 import android.provider.MediaStore.MediaColumns;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
@@ -57,7 +56,6 @@ import com.canruoxingchen.uglypic.util.jni.NativeImageUtil;
 
 public class CameraActivity extends BaseActivity implements OnClickListener, OnTouchListener, LoaderCallbacks<Cursor> {
 	private static final String TAG = CameraActivity.class.getSimpleName();
-	private static final boolean DEBUG = true;
 
 	private static final int REQUEST_CODE_GALLERY = 0x001;
 

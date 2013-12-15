@@ -109,10 +109,10 @@ public abstract class ObjectOverlay implements IOverlay {
 	 */
 	public abstract View getContextView();
 
-	@Override
-	public View getView() {
-		return mContentView;
-	}
+//	@Override
+//	public View getView() {
+//		return mContentView;
+//	}
 	
 	protected void retrieveDensity() {
 

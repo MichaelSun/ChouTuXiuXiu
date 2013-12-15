@@ -42,6 +42,7 @@ import com.canruoxingchen.uglypic.overlay.ImageWidgetOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
+import com.canruoxingchen.uglypic.overlay.SceneOverlay.SceneSizeAquiredListener;
 import com.canruoxingchen.uglypic.overlay.TextOverlay;
 import com.canruoxingchen.uglypic.util.Logger;
 
@@ -52,7 +53,7 @@ import com.canruoxingchen.uglypic.util.Logger;
  * @author wsf
  * 
  */
-public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener {
+public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener, SceneSizeAquiredListener {
 	private static final String EXTRA_PHOTO_URI = "photo_uri";
 
 	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
@@ -81,6 +82,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private View mEditorPanel;
 	private RelativeLayout mRlOverlayContainer;
+	private View mEditorPanelRefView; //参考View，用来获取宽高
 
 	// 编辑页面View的容器
 	private EditorContainerView mEditorContainerView;
@@ -163,6 +165,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mViewReset = findViewById(R.id.photo_editor_top_bar_reset);
 
 		mEditorPanel = findViewById(R.id.photo_editor_edit_panel);
+		mEditorPanelRefView = findViewById(R.id.photo_editor_edit_panel_ref_view);
 		mRlOverlayContainer = (RelativeLayout) findViewById(R.id.photo_editor_overlay_container);
 
 		mVgContextMenuContainer = (ViewGroup) findViewById(R.id.photo_editor_context_menu_container);
@@ -196,6 +199,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			}
 		}
 		mOverlays.clear();
+		setSceneOverlay(null);
 	}
 
 	// 关闭对话框
@@ -232,6 +236,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		case R.id.photo_editor_tab_scene: {
 			dismissAllLists();
 			showSceneList();
+			// TODO: 添加一个背景
+			SceneOverlay.Builder builder = new SceneOverlay.Builder(this, Uri.fromFile(new File("/sdcard/test_bg.png")));
+			builder.setTextBounds(10, 10, 200, 60);
+			builder.setTextHint("测试一下对不对");
+			builder.setTextSize(14);
+			setSceneOverlay(builder.create());
+			// TODO
 			break;
 		}
 		case R.id.photo_editor_tab_widget: {
@@ -351,6 +362,27 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			}
 		}
 		return super.onKeyDown(keyCode, event);
+	}
+
+	private void setSceneOverlay(SceneOverlay scene) {
+		if (mSceneOverlay != null) {
+			if (mSceneOverlay.getView() != null) {
+				mRlOverlayContainer.removeView(mSceneOverlay.getView());
+			}
+		}
+
+		if (scene != null) {
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+					LayoutParams.MATCH_PARENT);
+			scene.getView().setLayoutParams(params);
+			mRlOverlayContainer.addView(scene.getView(), 0);
+			scene.setViewSizeAdjustedListener(this);
+		} else {
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 
+					LayoutParams.MATCH_PARENT);
+			mEditorPanel.setLayoutParams(params);
+		}
+		mSceneOverlay = scene;
 	}
 
 	private void addOverlay(ObjectOverlay overlay) {
@@ -555,5 +587,28 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private void LOGD(String logMe) {
 		Logger.d("PhotoEditor", logMe);
+	}
+
+	@Override
+	public void onSceneSizeAquired(int width, int height) {
+		//根据当前场景的尺寸调整大小
+		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mEditorPanel.getLayoutParams();
+		int editorPanelWidth = mEditorPanelRefView.getWidth();
+		int editorPanelHeight = mEditorPanelRefView.getHeight();
+		float scaleX = (1.0f * editorPanelWidth) / (1.0f * width);
+		float scaleY = (1.0f * editorPanelHeight) / (1.0f * height);
+		if(scaleX > scaleY) { //容器比背景胖，则调整宽
+			params.topMargin = 0;
+			params.bottomMargin = 0;
+			int margin = (int)((editorPanelWidth - width * scaleY) / 2);
+			params.leftMargin = margin;
+			params.rightMargin = margin;
+		} else {
+			params.leftMargin = 0;
+			params.rightMargin = 0;
+			int margin = (int)((editorPanelHeight - height * scaleX) / 2);
+			params.topMargin = margin;
+			params.bottomMargin = margin;
+		}
 	}
 }

@@ -6,8 +6,6 @@ package com.canruoxingchen.uglypic.overlay;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-import com.canruoxingchen.uglypic.UglyPicApp;
-
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Color;
@@ -15,12 +13,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.text.InputType;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.LinearLayout.LayoutParams;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
