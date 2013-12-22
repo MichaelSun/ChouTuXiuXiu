@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView.ScaleType;
@@ -51,6 +52,7 @@ public class SceneOverlay implements IOverlay {
 	private int mTextSize = 16;
 	private String mTextHint = "";
 	private int mTextColor = Color.WHITE;
+	private int mTextGravity = Gravity.LEFT;
 
 	// 放缩的倍数
 	private float mSreenScale = 1.0f;
@@ -240,6 +242,8 @@ public class SceneOverlay implements IOverlay {
 					mEtText.setTextSize(overlay.mTextSize * scale);
 					mEtText.setLayoutParams(params);
 					mEtText.setHint(overlay.mTextHint == null ? "" : overlay.mTextHint);
+					mEtText.setMaxLines(1);
+					mEtText.setGravity(overlay.mTextGravity);
 					//如果尚未添加EditText，则将其加入到Layout中
 					if (!mViewAdded) {
 						addView(mEtText);

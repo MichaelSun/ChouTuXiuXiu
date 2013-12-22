@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="msg_load_footage_types_success" type="id"/>
+    <item name="msg_load_footage_types_failure" type="id"></item>
+    <item name="msg_load_footage_success" type="id"/>
+    <item name="msg_load_footage_failure" type="id"></item>
+    <item name="msg_load_local_footage_types_success" type="id"/>
+    <item name="msg_load_local_footage_types_failure" type="id"></item>
+    <item name="msg_load_local_footage_success" type="id"/>
+    <item name="msg_load_local_footage_failure" type="id"></item>
+    <item name="msg_load_footage_icon_success" type="id"/>
+    <item name="msg_load_footage_icon_failure" type="id"></item>
+    
+</resources>

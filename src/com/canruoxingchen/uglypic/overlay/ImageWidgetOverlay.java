@@ -59,13 +59,19 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	private Uri mUri = null;
 
+	private float mScaleX = 1.0f;
+	private float mScaleY = 1.0f;
+	private float mTranslateX = 0.0f;
+	private float mTranslateY = 0.0f;
+	private float mRotate = 0.0f;
+
 	public ImageWidgetOverlay(Context context, Uri uri) {
 		this.mContext = context;
 		initContentView();
 		if (uri != null) {
 			mUri = uri;
 			mAivImage.setImageInfo(ImageInfo.obtain(uri.toString()));
-			mAivImage.setScaleType(ScaleType.MATRIX);
+			mAivImage.setScaleType(ScaleType.CENTER_INSIDE);
 		}
 	}
 
@@ -82,20 +88,28 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	@Override
 	public Rect getInitialContentBounds() {
-		super.getInitialContentBounds();
-		return mAivImage.getDrawable() == null ? null : mAivImage.getDrawable().getBounds();
-	}
+//		super.getInitialContentBounds();
+//		return mAivImage.getDrawable() == null ? null : mAivImage.getDrawable().getBounds();
 
-	@Override
-	public Rect getCurrentContentBounds() {
-		return null;
+		retrieveDensity();
+		// float density = mDensity > 0 ? mDensity : 1.0f;
+		float density = 1.0f;
+		int left = (int) (mAivImage.getLeft() / density);
+		int top = (int) (mAivImage.getTop() / density);
+		int right = (int) (mAivImage.getRight() / density);
+		int bottom = (int) (mAivImage.getBottom() / density);
+		return new Rect(left, top, right, bottom);
 	}
 
 	@Override
 	public void translate(int dx, int dy) {
 		super.translate(dx, dy);
 		if (mAivImage.getDrawable() != null) {
-			mAivImage.setImageMatrix(getMatrix());
+//			mAivImage.setImageMatrix(getMatrix());
+			mTranslateX += dx;
+			mTranslateY += dy;
+			mAivImage.setTranslationX(mTranslateX);
+			mAivImage.setTranslationY(mTranslateY);
 		}
 	}
 
@@ -103,7 +117,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void scale(float sx, float sy) {
 		super.scale(sx, sy);
 		if (mAivImage.getDrawable() != null) {
-			mAivImage.setImageMatrix(getMatrix());
+//			mAivImage.setImageMatrix(getMatrix());
+			mScaleX *= sx;
+			mScaleY *= sy;
+			mAivImage.setScaleX(mScaleX);
+			mAivImage.setScaleY(mScaleY);
 		}
 	}
 
@@ -111,7 +129,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void rotate(float degrees) {
 		super.rotate(degrees);
 		if (mAivImage.getDrawable() != null) {
-			mAivImage.setImageMatrix(getMatrix());
+//			mAivImage.setImageMatrix(getMatrix());
+			mRotate += degrees;
+			mAivImage.setRotation(mRotate);
 		}
 	}
 
@@ -297,8 +317,8 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			DisplayMetrics dm = new DisplayMetrics();
 			wm.getDefaultDisplay().getMetrics(dm);
 			mDensity = dm.density;
-			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
-			setPadding(padding, padding, padding, padding);
+//			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+//			setPadding(padding, padding, padding, padding);
 			
 			setIllumination(IlluminationImageOperation.DEFAULT);
 			setSatuation(SatuationImageOperation.DEFAULT);
@@ -586,87 +606,48 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			return true;
 		}
 
-		@Override
-		protected void onDraw(Canvas canvas) {
-			// 先调整亮度、对比度、饱和度
-			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
-			// 通过对比度和亮度计算一个参数
-			// y = [x - 127.5 * (1 - B)] * k + 127.5 * (1 + B);
-
-			float factor = mContrast;
-			float addon = -127.5f * (1 - mIllumination) * mContrast + 127.5f * (1 + mIllumination);
-			// 叠加饱和度，参照了setSatuation源码
-
-			// m[0] = R + sat; m[1≤] = G; m[2] = B;
-			// m[5] = R; m[6] = G + sat; m[7] = B;
-			// m[10] = R; m[11] = G; m[12] = B + sat;
-			mSatuationMatrix.setSaturation(mSatuation);
-			mColorMatrix.set(new float[] { factor, 0, 0, 0, addon, // 1
-					0, factor, 0, 0, addon, // 1
-					0, 0, factor, 0, addon, // 2
-					0, 0, 0, 1, 0 }); // 4
-			mColorMatrix.postConcat(mSatuationMatrix);
-
-			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
-			if (mPaint == null) {
-				mPaint = new Paint();
-			}
-
-			Bitmap image = mEraserMode ? mEraseableImage : mImage;
-
-			if (image != null) {
-				LOGD("<<<<<<<<< draw with color matrix >>>>>>>>>>>>");
-				int saveCount = canvas.getSaveCount();
-				canvas.save();
-				canvas.translate(padding, padding);
-				canvas.concat(getImageMatrix());
-				ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(mColorMatrix);
-				mPaint.setColorFilter(colorFilter);
-				canvas.drawBitmap(image, 0, 0, mPaint);
-				canvas.restoreToCount(saveCount);
-			} else {
-				super.onDraw(canvas);
-			}
-
-			// // 再开始绘制
-			// super.onDraw(canvas);
-
-			// 非擦除模式时，绘制控制点
-//			if (!mEraserMode) {
-//				drawBtns(canvas);
+//		@Override
+//		protected void onDraw(Canvas canvas) {
+//			// 先调整亮度、对比度、饱和度
+//			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
+//			// 通过对比度和亮度计算一个参数
+//			// y = [x - 127.5 * (1 - B)] * k + 127.5 * (1 + B);
+//
+//			float factor = mContrast;
+//			float addon = -127.5f * (1 - mIllumination) * mContrast + 127.5f * (1 + mIllumination);
+//			// 叠加饱和度，参照了setSatuation源码
+//
+//			// m[0] = R + sat; m[1≤] = G; m[2] = B;
+//			// m[5] = R; m[6] = G + sat; m[7] = B;
+//			// m[10] = R; m[11] = G; m[12] = B + sat;
+//			mSatuationMatrix.setSaturation(mSatuation);
+//			mColorMatrix.set(new float[] { factor, 0, 0, 0, addon, // 1
+//					0, factor, 0, 0, addon, // 1
+//					0, 0, factor, 0, addon, // 2
+//					0, 0, 0, 1, 0 }); // 4
+//			mColorMatrix.postConcat(mSatuationMatrix);
+//
+//			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+//			if (mPaint == null) {
+//				mPaint = new Paint();
 //			}
-		}
-
-		private void drawBtns(Canvas canvas) {
-			PointF leftTop = getDeletePoint();
-			PointF rightBottom = getControlPoint();
-			PointF leftBottom = getLeftBottom();
-			PointF rightTop = getRightTop();
-			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
-
-			if (leftTop == null || rightBottom == null || leftBottom == null || rightTop == null) {
-				return;
-			}
-			if (getDrawable() != null && mSelected) {
-				mPaint.setColorFilter(null);
-				// 画线
-				mPaint.setStyle(Style.STROKE);
-				mPaint.setColor(Color.BLACK);
-				mPaint.setStrokeWidth(2);
-				float[] pts = new float[] { leftTop.x, leftTop.y, rightTop.x, rightTop.y, rightTop.x, rightTop.y,
-						rightBottom.x, rightBottom.y, rightBottom.x, rightBottom.y, leftBottom.x, leftBottom.y,
-						leftBottom.x, leftBottom.y, leftTop.x, leftTop.y };
-				canvas.drawLines(pts, mPaint);
-
-				mPaint.setStyle(Style.FILL);
-				mPaint.setColor(Color.RED);
-
-				// 画删除键
-				canvas.drawCircle(leftTop.x, leftTop.y, padding, mPaint);
-				// 画移动键
-				canvas.drawCircle(rightBottom.x, rightBottom.y, padding, mPaint);
-			}
-		}
+//
+//			Bitmap image = mEraserMode ? mEraseableImage : mImage;
+//
+//			if (image != null) {
+//				LOGD("<<<<<<<<< draw with color matrix >>>>>>>>>>>>");
+//				int saveCount = canvas.getSaveCount();
+//				canvas.save();
+//				canvas.translate(padding, padding);
+//				canvas.concat(getImageMatrix());
+//				ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(mColorMatrix);
+//				mPaint.setColorFilter(colorFilter);
+//				canvas.drawBitmap(image, 0, 0, mPaint);
+//				canvas.restoreToCount(saveCount);
+//			} else {
+//				super.onDraw(canvas);
+//			}
+//		}
 	}
 
 	private static void LOGD(String logMe) {

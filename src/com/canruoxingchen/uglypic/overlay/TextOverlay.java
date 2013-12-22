@@ -9,12 +9,15 @@ import java.io.InputStream;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -36,9 +39,9 @@ public class TextOverlay extends ObjectOverlay {
 	private float mTranslateY = 0.0f;
 	private float mRotate = 0.0f;
 
-	private int DEFAULT_WIDTH = 150;
-	private int DEFAULT_HEIGHT = 80;
-	private int DEFAULTI_TEXT_SIZE = 30;
+	public int DEFAULT_WIDTH = 100;
+	public int DEFAULT_HEIGHT = 80;
+	private int DEFAULT_TEXT_SIZE = 30;
 
 	static class TextOverlayDesc {
 		Uri backgroundUri;
@@ -51,34 +54,29 @@ public class TextOverlay extends ObjectOverlay {
 	public TextOverlay(Context context, String text) {
 		super();
 		mTextView = new TextView(context);
-		mTextView.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE|InputType.TYPE_CLASS_TEXT);
+		mTextView.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_CLASS_TEXT);
 		mTextView.setGravity(Gravity.CENTER);
-		mTextView.setTextSize(DEFAULTI_TEXT_SIZE);
+		mTextView.setTextSize(DEFAULT_TEXT_SIZE);
 		mTextView.setText(text);
 
 		retrieveDensity();
 
-		int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
-		mTextView.setPadding(padding, padding, padding, padding);
+		// int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
+		// mTextView.setPadding(padding, padding, padding, padding);
 		mContext = context;
 	}
 
 	@Override
-	protected RelativeLayout.LayoutParams getDefaultParams() {
-		retrieveDensity();
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams
-				((int)(mDensity * DEFAULT_WIDTH),
-				(int)(mDensity * DEFAULT_HEIGHT));
-//		params.addRule(RelativeLayout.CENTER_IN_PARENT);
-		return params;
-	}
-
-	@Override
 	public View getView() {
-		if(mDensity < -1) {
+		if (mDensity < -1) {
 			retrieveDensity();
-			int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
-			mTextView.setPadding(padding, padding, padding, padding);
+			if (mDensity > 0) {
+				int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
+				mTextView.setPadding(padding, padding, padding, padding);
+				if (mDensity > 0) {
+					mTextView.setMaxWidth((int) (mDensity * DEFAULT_WIDTH));
+				}
+			}
 		}
 		return mTextView;
 	}
@@ -120,11 +118,6 @@ public class TextOverlay extends ObjectOverlay {
 	}
 
 	@Override
-	public Rect getCurrentContentBounds() {
-		return new Rect(0, 0, mTextView.getWidth(), mTextView.getHeight());
-	}
-
-	@Override
 	protected View initContentView() {
 		return mTextView;
 	}
@@ -162,16 +155,12 @@ public class TextOverlay extends ObjectOverlay {
 	@Override
 	public Rect getInitialContentBounds() {
 		retrieveDensity();
-//		int left = (int) (mTextView.getLeft() / mDensity);
-//		int top = (int) (mTextView.getTop() / mDensity);
-//		int right = (int) (mTextView.getRight() / mDensity);
-//		int bottom = (int) (mTextView.getBottom() / mDensity);
-		Rect rect = new Rect();
-		mTextView.getLineBounds(0, rect);
-		int left = rect.left;
-		int top = rect.top;
-		int right = mTextView.getRight();
-		int bottom = mTextView.getBottom();
+		// float density = mDensity > 0 ? mDensity : 1.0f;
+		float density = 1.0f;
+		int left = (int) (mTextView.getLeft() / density);
+		int top = (int) (mTextView.getTop() / density);
+		int right = (int) (mTextView.getRight() / density);
+		int bottom = (int) (mTextView.getBottom() / density);
 		return new Rect(left, top, right, bottom);
 	}
 

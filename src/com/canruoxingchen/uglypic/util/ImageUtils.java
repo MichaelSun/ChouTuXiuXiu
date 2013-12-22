@@ -3,7 +3,6 @@
  */
 package com.canruoxingchen.uglypic.util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -15,6 +14,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -43,6 +43,11 @@ import com.canruoxingchen.uglypic.cache.ImageDownloader;
 public class ImageUtils {
 
 	private static final Map<String, String> sImgMIMETypeDict = new HashMap<String, String>();
+
+	private static final int MAX_SIZE = 400 * 1024;
+	private static final long MAX_MEMORY_SIZE = 720 * 1028 * 4;
+	private static final long MAX_WIDTH = 2048;
+	private static final int MAX_HEIGHT = 2048;
 
 	static {
 		sImgMIMETypeDict.put("bmp", "image/bmp");
@@ -193,8 +198,7 @@ public class ImageUtils {
 		}
 	}
 
-	public static Bitmap scaleDecode(ContentResolver resolver, Uri uri,
-			int destWidth, int destHeight, int density) {
+	public static Bitmap scaleDecode(ContentResolver resolver, Uri uri, int destWidth, int destHeight, int density) {
 
 		if (uri == null || resolver == null) {
 			return null;
@@ -237,13 +241,11 @@ public class ImageUtils {
 				// 这里不考虑什么越界不越界了，撑死用个10000 * 10000的图片吧？
 				int inSampleSize = 1;
 				if (opts.outWidth * destHeight < opts.outHeight * destWidth) { // 图片比目标瘦，以高为准
-					inSampleSize = (int) Math
-							.round(opts.outHeight < (float) destHeight ? 1
-									: opts.outHeight / (float) destHeight);
+					inSampleSize = (int) Math.round(opts.outHeight < (float) destHeight ? 1 : opts.outHeight
+							/ (float) destHeight);
 				} else {
-					inSampleSize = (int) Math
-							.round(opts.outWidth < (float) destWidth ? 1
-									: opts.outWidth / (float) destWidth);
+					inSampleSize = (int) Math.round(opts.outWidth < (float) destWidth ? 1 : opts.outWidth
+							/ (float) destWidth);
 				}
 				opts = new Options();
 				opts.inSampleSize = inSampleSize;
@@ -338,13 +340,11 @@ public class ImageUtils {
 		int minBitmapLength;
 		if (bitmapHeight > bitmapWidth) {
 			minBitmapLength = bitmapWidth;
-			tmpBitmap = Bitmap.createBitmap(origBitmap, 0,
-					(int) ((bitmapHeight - minBitmapLength) / 2),
+			tmpBitmap = Bitmap.createBitmap(origBitmap, 0, (int) ((bitmapHeight - minBitmapLength) / 2),
 					minBitmapLength, minBitmapLength);
 		} else {
 			minBitmapLength = bitmapHeight;
-			tmpBitmap = Bitmap.createBitmap(origBitmap,
-					(int) ((bitmapWidth - minBitmapLength) / 2), 0,
+			tmpBitmap = Bitmap.createBitmap(origBitmap, (int) ((bitmapWidth - minBitmapLength) / 2), 0,
 					minBitmapLength, minBitmapLength);
 		}
 
@@ -388,13 +388,11 @@ public class ImageUtils {
 				// 这里不考虑什么越界不越界了，撑死用个10000 * 10000的图片吧？
 				int inSampleSize = 1;
 				if (opts.outWidth * destHeight < opts.outHeight * destWidth) { // 图片比目标瘦，以高为准
-					inSampleSize = (int) Math
-							.round(opts.outHeight < (float) destHeight ? 1
-									: opts.outHeight / (float) destHeight);
+					inSampleSize = (int) Math.round(opts.outHeight < (float) destHeight ? 1 : opts.outHeight
+							/ (float) destHeight);
 				} else {
-					inSampleSize = (int) Math
-							.round(opts.outWidth < (float) destWidth ? 1
-									: opts.outWidth / (float) destWidth);
+					inSampleSize = (int) Math.round(opts.outWidth < (float) destWidth ? 1 : opts.outWidth
+							/ (float) destWidth);
 				}
 				opts = new Options();
 				opts.inSampleSize = inSampleSize;
@@ -421,8 +419,7 @@ public class ImageUtils {
 	 * @param destHeight
 	 * @return
 	 */
-	public static Bitmap scaleDecode(Context context, Uri uri, int destWidth,
-			int destHeight) {
+	public static Bitmap scaleDecode(Context context, Uri uri, int destWidth, int destHeight) {
 		if (context == null || uri == null) {
 			return null;
 		}
@@ -446,8 +443,7 @@ public class ImageUtils {
 			}
 
 			int index = str.lastIndexOf(".");
-			String extention = (index >= 0 && index < str.length() - 1) ? str
-					.substring(index + 1) : null;
+			String extention = (index >= 0 && index < str.length() - 1) ? str.substring(index + 1) : null;
 			if (extention == null) {
 				return contentType;
 			}
@@ -487,8 +483,7 @@ public class ImageUtils {
 		return opts;
 	}
 
-	public static Options getDecodeOptions(ContentResolver resolver, Uri uri,
-			int destWidth, int destHeight) {
+	public static Options getDecodeOptions(ContentResolver resolver, Uri uri, int destWidth, int destHeight) {
 
 		if (uri == null || resolver == null) {
 			return null;
@@ -519,13 +514,11 @@ public class ImageUtils {
 				// 这里不考虑什么越界不越界了，撑死用个10000 * 10000的图片吧？
 				int inSampleSize = 1;
 				if (opts.outWidth * destHeight < opts.outHeight * destWidth) { // 图片比目标瘦，以高为准
-					inSampleSize = (int) Math
-							.round(opts.outHeight < (float) destHeight ? 1
-									: opts.outHeight / (float) destHeight);
+					inSampleSize = (int) Math.round(opts.outHeight < (float) destHeight ? 1 : opts.outHeight
+							/ (float) destHeight);
 				} else {
-					inSampleSize = (int) Math
-							.round(opts.outWidth < (float) destWidth ? 1
-									: opts.outWidth / (float) destWidth);
+					inSampleSize = (int) Math.round(opts.outWidth < (float) destWidth ? 1 : opts.outWidth
+							/ (float) destWidth);
 				}
 				int imgWidth = opts.outWidth;
 				int imgHeight = opts.outHeight;
@@ -542,8 +535,7 @@ public class ImageUtils {
 		}
 	}
 
-	public static Options getDecodeOptions(String path, int destWidth,
-			int destHeight) {
+	public static Options getDecodeOptions(String path, int destWidth, int destHeight) {
 
 		if (path == null) {
 			return null;
@@ -574,13 +566,11 @@ public class ImageUtils {
 				// 这里不考虑什么越界不越界了，撑死用个10000 * 10000的图片吧？
 				int inSampleSize = 1;
 				if (opts.outWidth * destHeight < opts.outHeight * destWidth) { // 图片比目标瘦，以高为准
-					inSampleSize = (int) Math
-							.round(opts.outHeight < (float) destHeight ? 1
-									: opts.outHeight / (float) destHeight);
+					inSampleSize = (int) Math.round(opts.outHeight < (float) destHeight ? 1 : opts.outHeight
+							/ (float) destHeight);
 				} else {
-					inSampleSize = (int) Math
-							.round(opts.outWidth < (float) destWidth ? 1
-									: opts.outWidth / (float) destWidth);
+					inSampleSize = (int) Math.round(opts.outWidth < (float) destWidth ? 1 : opts.outWidth
+							/ (float) destWidth);
 				}
 				opts = new Options();
 				opts.inSampleSize = inSampleSize;
@@ -597,8 +587,7 @@ public class ImageUtils {
 		}
 	}
 
-	public static Options getDecodeOptions(Context context, Uri uri,
-			int destWidth, int destHeight) {
+	public static Options getDecodeOptions(Context context, Uri uri, int destWidth, int destHeight) {
 		if (context == null || uri == null) {
 			return null;
 		}
@@ -607,8 +596,7 @@ public class ImageUtils {
 		return getDecodeOptions(resolver, uri, destWidth, destHeight);
 	}
 
-	public static String saveBitmapForLocalPath(Context context, Bitmap bmp,
-			int orientation, boolean saveToGallery) {
+	public static String saveBitmapForLocalPath(Context context, Bitmap bmp, int orientation, boolean saveToGallery) {
 		long dateTaken = System.currentTimeMillis();
 		String name = "dbn" + System.currentTimeMillis() + ".jpg";
 		File file = getTempImageFile(name);
@@ -629,8 +617,7 @@ public class ImageUtils {
 					values.put(Images.Media.DATA, file.getAbsolutePath());
 					values.put(Images.Media.SIZE, file.length());
 
-					context.getContentResolver().insert(
-							Images.Media.EXTERNAL_CONTENT_URI, values);
+					context.getContentResolver().insert(Images.Media.EXTERNAL_CONTENT_URI, values);
 				}
 			} catch (FileNotFoundException e) {
 				return null;
@@ -644,8 +631,7 @@ public class ImageUtils {
 		return file.getAbsolutePath();
 	}
 
-	public static Uri saveBitmapToGallery(Context context, Uri uri,
-			int orientation) {
+	public static Uri saveBitmapToGallery(Context context, Uri uri, int orientation) {
 		if (uri == null) {
 			return null;
 		}
@@ -686,8 +672,7 @@ public class ImageUtils {
 			values.put(Images.Media.DATA, file.getAbsolutePath());
 			values.put(Images.Media.SIZE, file.length());
 
-			return context.getContentResolver().insert(
-					Images.Media.EXTERNAL_CONTENT_URI, values);
+			return context.getContentResolver().insert(Images.Media.EXTERNAL_CONTENT_URI, values);
 		} catch (FileNotFoundException e) {
 
 		} catch (IOException e) {
@@ -707,8 +692,7 @@ public class ImageUtils {
 	 * @param bmp
 	 * @return
 	 */
-	public static Uri saveBitmapToGallery(Context context, Bitmap bmp,
-			int orientation, boolean saveToGallery) {
+	public static Uri saveBitmapToGallery(Context context, Bitmap bmp, int orientation, boolean saveToGallery) {
 
 		if (bmp == null) {
 			return null;
@@ -734,8 +718,7 @@ public class ImageUtils {
 					values.put(Images.Media.DATA, file.getAbsolutePath());
 					values.put(Images.Media.SIZE, file.length());
 
-					return context.getContentResolver().insert(
-							Images.Media.EXTERNAL_CONTENT_URI, values);
+					return context.getContentResolver().insert(Images.Media.EXTERNAL_CONTENT_URI, values);
 				} else if (result) {
 					return Uri.fromFile(file);
 				}
@@ -772,8 +755,7 @@ public class ImageUtils {
 	 * @return int[] 。int[0] 为图片的宽,int[1]为图片的高。
 	 * @throws FileNotFoundException
 	 */
-	public static int[] getPicWidthAndHeight(ContentResolver contentResolver,
-			Uri uri) throws FileNotFoundException {
+	public static int[] getPicWidthAndHeight(ContentResolver contentResolver, Uri uri) throws FileNotFoundException {
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		options.inJustDecodeBounds = true;
 		InputStream is = contentResolver.openInputStream(uri);
@@ -808,16 +790,13 @@ public class ImageUtils {
 			minLength = Math.min(minLength, maxRadix);
 		}
 
-		Bitmap bitmap = Bitmap.createBitmap(minLength, minLength,
-				android.graphics.Bitmap.Config.ARGB_8888);
+		Bitmap bitmap = Bitmap.createBitmap(minLength, minLength, android.graphics.Bitmap.Config.ARGB_8888);
 		Canvas canvas = new Canvas(bitmap);
 
 		Matrix matrix = new Matrix();
-		matrix.postTranslate((minLength - oriBitmapWidth) / 2,
-				(minLength - oriBitmapHeight) / 2);
+		matrix.postTranslate((minLength - oriBitmapWidth) / 2, (minLength - oriBitmapHeight) / 2);
 
-		BitmapShader shader = new BitmapShader(oriBitmap, TileMode.CLAMP,
-				TileMode.CLAMP);
+		BitmapShader shader = new BitmapShader(oriBitmap, TileMode.CLAMP, TileMode.CLAMP);
 		shader.setLocalMatrix(matrix);
 
 		Paint paint = new Paint();
@@ -825,8 +804,7 @@ public class ImageUtils {
 		paint.setAntiAlias(true);
 
 		Path path = new Path();
-		path.addCircle(minLength / 2, minLength / 2, minLength / 2,
-				Direction.CCW);
+		path.addCircle(minLength / 2, minLength / 2, minLength / 2, Direction.CCW);
 		path.close();
 
 		canvas.drawPath(path, paint);
@@ -838,4 +816,117 @@ public class ImageUtils {
 		return getRoundBitmap(oriBitmap, -1);
 	}
 
+	private static int makeSample(File srcBitmap, int srcBtWidth, int srcBtHeight) {
+		long fileMemorySize = srcBtWidth * srcBtHeight * 4;
+		int sample = 1;
+		if (fileMemorySize <= MAX_MEMORY_SIZE) {
+			sample = 1;
+		} else if (fileMemorySize <= MAX_MEMORY_SIZE * 4) {
+			sample = 2;
+		} else {
+			long times = fileMemorySize / MAX_MEMORY_SIZE;
+			sample = (int) (Math.log(times) / Math.log(2.0)) + 1;
+			int inSampleScale = (int) (Math.log(sample) / Math.log(2.0));
+			sample = (int) Math.scalb(1, inSampleScale);
+
+			long curFileMemorySize = (srcBtWidth / sample) * (srcBtHeight / sample) * 4;
+			if (curFileMemorySize > MAX_MEMORY_SIZE) {
+				sample = sample * 2;
+			}
+		}
+
+		if (sample == 1 && (srcBtWidth > MAX_WIDTH || srcBtHeight > MAX_WIDTH)) {
+			sample = 2;
+		}
+
+		return sample;
+	}
+
+	@SuppressLint("NewApi")
+	public static Bitmap loadBitmapWithSizeCheckAndBitmapReuse(File bitmapFile, Bitmap reuseBt, int orientataion) {
+
+		Bitmap bmp = null;
+		FileInputStream fis = null;
+		int oomCount = 0;
+		try {
+			bitmapFile.setLastModified(System.currentTimeMillis());
+
+			BitmapFactory.Options opt = new BitmapFactory.Options();
+			opt.inPurgeable = true;
+			opt.inJustDecodeBounds = true;
+
+			BitmapFactory.decodeFile(bitmapFile.getAbsolutePath(), opt);
+			int width = opt.outWidth;
+			int height = opt.outHeight;
+
+			BitmapFactory.Options newOpt = new BitmapFactory.Options();
+			newOpt.inSampleSize = makeSample(bitmapFile, width, height);
+
+			// check width and height with sample
+			if (width > 2048 || height > 2048) {
+				int max = width > height ? width : height;
+				int maxOrigin = max;
+				int curSample = newOpt.inSampleSize;
+				max = maxOrigin / curSample;
+				while (max > 2048) {
+					curSample = curSample * 2;
+					max = maxOrigin / curSample;
+				}
+				newOpt.inSampleSize = curSample;
+			}
+
+			// newOpt.inScaled = true;
+			newOpt.inPurgeable = true;
+			newOpt.inInputShareable = true;
+
+			boolean reusedBt = false;
+			if (reuseBt != null && !reuseBt.isRecycled() && width == reuseBt.getWidth()
+					&& height == reuseBt.getHeight()) {
+				// need to check target sdk version
+				reusedBt = true;
+				newOpt.inBitmap = reuseBt;
+			}
+
+			newOpt.outHeight = height;
+			newOpt.outWidth = width;
+			fis = new FileInputStream(bitmapFile);
+
+			bmp = BitmapFactory.decodeStream(fis, null, newOpt);
+
+			if (orientataion != 0 && bmp != null) {
+				Matrix matrix = new Matrix();
+				matrix.postRotate((float) orientataion);
+				Bitmap tmp = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
+				if (tmp != null) {
+					bmp.recycle();
+					bmp = null;
+					bmp = tmp;
+				}
+			}
+
+			return bmp;
+		} catch (Exception e) {
+			Logger.d(">>>>> Exception: " + e);
+		} catch (OutOfMemoryError e) {
+			Logger.d(">>>>> OutOfMemoryError: " + e);
+			oomCount++;
+			if (oomCount > 5) {
+				/**
+				 * 做一个释放资源的尝试
+				 */
+				oomCount = 0;
+				UglyPicApp.getApplication(UglyPicApp.getAppExContext()).getBitmapCache().trimMemory();
+			}
+		} finally {
+			try {
+				if (fis != null) {
+					fis.close();
+					fis = null;
+				}
+			} catch (Exception ex) {
+				Logger.d(">>>>> OutOfMemoryError: " + ex);
+			}
+		}
+		return null;
+	}
 }

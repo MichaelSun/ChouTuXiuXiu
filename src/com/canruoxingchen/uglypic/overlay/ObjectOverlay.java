@@ -97,8 +97,6 @@ public abstract class ObjectOverlay implements IOverlay {
 		return null;
 	}
 
-	public abstract Rect getCurrentContentBounds();
-
 	// 初始化内容区域
 	protected abstract View initContentView();
 
@@ -150,7 +148,11 @@ public abstract class ObjectOverlay implements IOverlay {
 	
 	//添加到container view中的默认参数
 	protected RelativeLayout.LayoutParams getDefaultParams() {
-		return null;
+		retrieveDensity();
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
+				LayoutParams.WRAP_CONTENT);
+		params.addRule(RelativeLayout.CENTER_IN_PARENT);
+		return params;
 	}
 
 	/*
@@ -246,32 +248,24 @@ public abstract class ObjectOverlay implements IOverlay {
 		return false;
 	}
 
-	/**
-	 * 获得当前控制按钮的中心
-	 * 
-	 * @return
-	 */
 	public PointF getControlPoint() {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.bottom };
-			mMatrix.mapPoints(pts);
-			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
+			Matrix matrix = getMatrix();
+			matrix.mapPoints(pts);
+			return new PointF(pts[0], pts[1]);
 		}
 		return null;
 	}
 
-	/**
-	 * 获得当前控制按钮的中心
-	 * 
-	 * @return
-	 */
 	public PointF getDeletePoint() {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.left, rect.top };
-			mMatrix.mapPoints(pts);
-			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
+			Matrix matrix = getMatrix();
+			matrix.mapPoints(pts);
+			return new PointF(pts[0], pts[1]);
 		}
 		return null;
 	}
@@ -280,8 +274,9 @@ public abstract class ObjectOverlay implements IOverlay {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.left, rect.bottom };
-			mMatrix.mapPoints(pts);
-			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
+			Matrix matrix = getMatrix();
+			matrix.mapPoints(pts);
+			return new PointF(pts[0], pts[1]);
 		}
 		return null;
 	}
@@ -290,8 +285,9 @@ public abstract class ObjectOverlay implements IOverlay {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.top };
-			mMatrix.mapPoints(pts);
-			return new PointF(pts[0] + CONTROL_POINTS_RADIUS * mDensity, pts[1] + CONTROL_POINTS_RADIUS * mDensity);
+			Matrix matrix = getMatrix();
+			matrix.mapPoints(pts);
+			return new PointF(pts[0], pts[1]);
 		}
 		return null;
 	}

@@ -4,24 +4,20 @@
 package com.canruoxingchen.uglypic;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import uk.co.senab.photoview.PhotoView;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.CompressFormat;
 import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -30,12 +26,20 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
+import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
+import com.canruoxingchen.uglypic.footage.FootAge;
+import com.canruoxingchen.uglypic.footage.FootAgeType;
+import com.canruoxingchen.uglypic.footage.FootageManager;
 import com.canruoxingchen.uglypic.overlay.EditorContainerView;
 import com.canruoxingchen.uglypic.overlay.IEditor;
 import com.canruoxingchen.uglypic.overlay.ImageWidgetOverlay;
@@ -44,7 +48,10 @@ import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay.SceneSizeAquiredListener;
 import com.canruoxingchen.uglypic.overlay.TextOverlay;
+import com.canruoxingchen.uglypic.util.FileUtils;
+import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.Logger;
+import com.canruoxingchen.uglypic.view.HorizontalListView;
 
 /**
  * 
@@ -53,7 +60,8 @@ import com.canruoxingchen.uglypic.util.Logger;
  * @author wsf
  * 
  */
-public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener, SceneSizeAquiredListener {
+public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener,
+		SceneSizeAquiredListener {
 	private static final String EXTRA_PHOTO_URI = "photo_uri";
 
 	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
@@ -67,22 +75,35 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	 * 各种View
 	 */
 	private PhotoView mPvPhoto;
-	private View mTabScene;
-	private View mTabWidget;
-	private View mTabText;
-	private View mTabFinish;
 	private ViewGroup mVgContextMenuContainer;
 
-	private View mViewBackToCamera;
-	private View mViewReset;
+	/**
+	 * 图片调整的按钮
+	 */
+	private View mViewModify;
+	private View mViewDelete;
+	private View mViewEraser;
+	private View mTopContextMenu;
 
-	private View mViewSceneList; // 场景列表
-	private View mViewWidgetList; // 贴图列表
-	private View mViewTextList; // 文本背景
+	/**
+	 * "分享"和"重置"
+	 */
+	private Button mViewContextBtn;
+
+	/**
+	 * 类型列表
+	 */
+	private HorizontalListView mLvTypes;
+	/**
+	 * 素材列表
+	 */
+	private HorizontalListView mLvFootages;
+
+	private View mViewBackToCamera;
 
 	private View mEditorPanel;
 	private RelativeLayout mRlOverlayContainer;
-	private View mEditorPanelRefView; //参考View，用来获取宽高
+	private View mEditorPanelRefView; // 参考View，用来获取宽高
 
 	// 编辑页面View的容器
 	private EditorContainerView mEditorContainerView;
@@ -106,6 +127,15 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	 */
 	private ObjectOverlay mCurrentOverlay;
 
+	private List<FootAgeType> mFootageTypes = new ArrayList<FootAgeType>();
+	private List<FootAge> mFootages = new ArrayList<FootAge>();
+	private TypeAdapter mTypeAdapter = new TypeAdapter();
+	private FootageAdapter mFootageAdapter = new FootageAdapter();
+
+	private FootageManager mFootageManager;
+
+	private FootAgeType mCurrentType;
+
 	/**
 	 * 启动照片编辑页面
 	 * 
@@ -116,6 +146,127 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		Intent intent = new Intent(context, PhotoEditor.class);
 		intent.putExtra(EXTRA_PHOTO_URI, photoUri);
 		context.startActivity(intent);
+	}
+
+	private MyHandler mHandler = null;
+
+	private static class MyHandler extends Handler {
+
+		public WeakReference<PhotoEditor> mActivity;
+
+		public MyHandler(PhotoEditor activity) {
+			mActivity = new WeakReference<PhotoEditor>(activity);
+		}
+
+		@Override
+		public void handleMessage(Message msg) {
+			super.handleMessage(msg);
+			PhotoEditor activity = mActivity.get();
+			if (activity == null) {
+				return;
+			}
+			switch (msg.what) {
+			case FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_SUCCESS: {
+				List<FootAgeType> types = (List<FootAgeType>) msg.obj;
+				LOGD(">>>>>>>>>>> load types from local >>>>>>>>>> " + types);
+				if (types != null && types.size() > 0) {
+					activity.mFootageTypes.addAll(types);
+					activity.mTypeAdapter.notifyDataSetChanged();
+					// 如果尚无选中的类型，则选择第一个
+					if (activity.mCurrentType == null) {
+						activity.mCurrentType = activity.mFootageTypes.get(2);
+						activity.mFootageManager.loadLocalFootages(activity.mCurrentType.getObjectId());
+					}
+				} else {
+					activity.mFootageManager.loadFootageTypeFromServer();
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_FAILURE: { // 从本地没有取到，则从服务器直接取数据
+				activity.mFootageManager.loadFootageTypeFromServer();
+				break;
+			}
+			case FootageManager.MSG_LOAD_FOOTAGE_TYPES_SUCCESS: {
+				List<FootAgeType> types = (List<FootAgeType>) msg.obj;
+				LOGD(">>>>>>>>>>> load types from server >>>>>>>>>> " + types);
+				// 如果从本地未取到素材类型列表，则显示服务器取到的数据
+				if (types != null && types.size() > 0 && activity.mFootageTypes.size() == 0) {
+					activity.mFootageTypes.addAll(types);
+					activity.mTypeAdapter.notifyDataSetChanged();
+					// 如果尚无选中的类型，则选择第一个
+					if (activity.mCurrentType == null) {
+						activity.mCurrentType = activity.mFootageTypes.get(2);
+						activity.mFootageManager.loadLocalFootages(activity.mCurrentType.getObjectId());
+					}
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_FOOTAGE_TYPES_FAILURE:
+				break;
+			case FootageManager.MSG_LOAD_FOOTAGE_SUCCESS: {// 显示本地的素材
+				List<FootAge> footages = (List<FootAge>) msg.obj;
+				LOGD("<<<<<<<<<<<<<<<<<<<load local footages>>>>>>>>>>>>>>>>>>>" + footages);
+				if (footages != null && footages.size() > 0 && activity.mCurrentType != null) {
+					// 判断当前的素材的id是否为当前选中的type
+					FootAge footage = footages.get(0);
+					if (footage.getParentId().equals(activity.mCurrentType.getObjectId())) {
+						activity.mFootages.clear();
+						activity.mFootages.addAll(footages);
+						activity.mFootageAdapter.notifyDataSetChanged();
+					}
+				} else {
+					if (activity.mCurrentType != null) {
+						activity.mFootageManager.loadFootagesFromServer(activity.mCurrentType.getObjectId());
+					}
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_FOOTAGE_FAILURE:
+				break;
+			case FootageManager.MSG_LOAD_LOCAL_FOOTAGE_SUCCESS: {
+				List<FootAge> footages = (List<FootAge>) msg.obj;
+				LOGD("<<<<<<<<<<<<<<<<<<<load local footages>>>>>>>>>>>>>>>>>>>" + footages);
+				// 显示本地的素材
+				if (footages != null && footages.size() > 0 && activity.mCurrentType != null) {
+					// 判断当前的素材的id是否为当前选中的type
+					FootAge footage = footages.get(0);
+					if (footage.getParentId().equals(activity.mCurrentType.getObjectId())) {
+						activity.mFootages.clear();
+						activity.mFootages.addAll(footages);
+						activity.mFootageAdapter.notifyDataSetChanged();
+					}
+				} else {
+					if (activity.mCurrentType != null) {
+						activity.mFootageManager.loadFootagesFromServer(activity.mCurrentType.getObjectId());
+					}
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_LOCAL_FOOTAGE_FAILURE: {
+				if (activity.mCurrentType != null) {
+					activity.mFootageManager.loadFootagesFromServer(activity.mCurrentType.getObjectId());
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS: {
+				if (activity.mFootages != null) {
+					FootAge footage = (FootAge) msg.obj;
+					for (FootAge f : activity.mFootages) {
+						if (footage == null || footage.getObjectId().equals(f.getObjectId())) {
+							f.setIconUrl(footage.getIconUrl());
+							activity.mFootageAdapter.notifyDataSetChanged();
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE: {
+				break;
+			}
+			}
+		}
+
 	}
 
 	@Override
@@ -133,6 +284,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		initUI();
 		initListers();
+		mTypeAdapter = new TypeAdapter();
+		mFootageAdapter = new FootageAdapter();
+		mLvTypes.setAdapter(mTypeAdapter);
+		mLvFootages.setAdapter(mFootageAdapter);
+
+		mHandler = new MyHandler(this);
 
 		// 显示当前的照片
 		if (mPhotoUri != null) {
@@ -140,6 +297,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 
 		mMoveGestureDetector = new MoveGestureDetector(this, new MoveListener());
+
+		mFootageManager = FootageManager.getInstance(this);
+		// 先从本地加载数据
+		mFootageManager.loadFootageTypeFromLocal();
 	}
 
 	@Override
@@ -156,13 +317,20 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mRootView = (RelativeLayout) findViewById(R.id.photo_editor_root_view);
 
 		mPvPhoto = (PhotoView) findViewById(R.id.photo_editor_photo);
-		mTabScene = findViewById(R.id.photo_editor_tab_scene);
-		mTabWidget = findViewById(R.id.photo_editor_tab_widget);
-		mTabText = findViewById(R.id.photo_editor_tab_text);
-		mTabFinish = findViewById(R.id.photo_editor_tab_finish);
+		// mTabScene = findViewById(R.id.photo_editor_tab_scene);
+		// mTabWidget = findViewById(R.id.photo_editor_tab_widget);
+		// mTabText = findViewById(R.id.photo_editor_tab_text);
+		// mTabFinish = findViewById(R.id.photo_editor_tab_finish);
+
+		mTopContextMenu = findViewById(R.id.photo_editor_topbar_object_menu);
+		mViewModify = findViewById(R.id.photo_editor_top_bar_object_modify);
+		mViewDelete = findViewById(R.id.photo_editor_top_bar_object_delete);
+		mViewEraser = findViewById(R.id.photo_editor_top_bar_object_eraser);
+		mViewContextBtn = (Button) findViewById(R.id.photo_editor_context_button);
+		mLvTypes = (HorizontalListView) findViewById(R.id.photo_editor_footage_types_list);
+		mLvFootages = (HorizontalListView) findViewById(R.id.photo_editor_footage_list);
 
 		mViewBackToCamera = findViewById(R.id.photo_editor_top_bar_camera);
-		mViewReset = findViewById(R.id.photo_editor_top_bar_reset);
 
 		mEditorPanel = findViewById(R.id.photo_editor_edit_panel);
 		mEditorPanelRefView = findViewById(R.id.photo_editor_edit_panel_ref_view);
@@ -180,15 +348,73 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	@Override
 	protected void initListers() {
-		mTabScene.setOnClickListener(this);
-		mTabWidget.setOnClickListener(this);
-		mTabText.setOnClickListener(this);
-		mTabFinish.setOnClickListener(this);
+		// mTabScene.setOnClickListener(this);
+		// mTabWidget.setOnClickListener(this);
+		// mTabText.setOnClickListener(this);
+		// mTabFinish.setOnClickListener(this);
+
+		mViewModify.setOnClickListener(this);
+		mViewDelete.setOnClickListener(this);
+		mViewEraser.setOnClickListener(this);
+		mViewContextBtn.setOnClickListener(this);
 
 		mViewBackToCamera.setOnClickListener(this);
-		mViewReset.setOnClickListener(this);
 
 		mRlOverlayContainer.setOnTouchListener(this);
+
+		mLvFootages.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				final FootAge footage = mFootages.get(position);
+				if (!TextUtils.isEmpty(footage.getIconUrl())) {
+					ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
+							.getIconUrl()));
+					addOverlay(overlay);
+				}
+			}
+
+		});
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		registerAllFootageMsg();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unregisterAllFootageMsg();
+	}
+
+	private void registerAllFootageMsg() {
+		MessageCenter messageCenter = MessageCenter.getInstance(this);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE, mHandler);
+	}
+
+	private void unregisterAllFootageMsg() {
+		MessageCenter messageCenter = MessageCenter.getInstance(this);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE, mHandler);
 	}
 
 	// 重置所有效果
@@ -233,46 +459,53 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	@Override
 	public void onClick(View view) {
 		switch (view.getId()) {
-		case R.id.photo_editor_tab_scene: {
-			dismissAllLists();
-			showSceneList();
-			// TODO: 添加一个背景
-			SceneOverlay.Builder builder = new SceneOverlay.Builder(this, Uri.fromFile(new File("/sdcard/test_bg.png")));
-			builder.setTextBounds(10, 10, 200, 60);
-			builder.setTextHint("测试一下对不对");
-			builder.setTextSize(14);
-			setSceneOverlay(builder.create());
-			// TODO
-			break;
-		}
-		case R.id.photo_editor_tab_widget: {
-			dismissAllLists();
-			showWidgetList();
-			// TODO: 添加一个图片widget
-			final ImageWidgetOverlay overlay = new ImageWidgetOverlay(this, Uri.fromFile(new File("/sdcard/test.jpg")));
-			Handler handler = new Handler();
-			handler.postDelayed(new Runnable() {
+		// case R.id.photo_editor_tab_scene: {
+		// dismissAllLists();
+		// showSceneList();
+		// // TODO: 添加一个背景
+		// SceneOverlay.Builder builder = new SceneOverlay.Builder(this,
+		// Uri.fromFile(new File("/sdcard/test_bg.png")));
+		// builder.setTextBounds(116, 371, 500, 412);
+		// builder.setTextHint("测试一下对不对");
+		// builder.setTextSize(14);
+		// setSceneOverlay(builder.create());
+		// // TODO
+		// break;
+		// }
+		// case R.id.photo_editor_tab_widget: {
+		// dismissAllLists();
+		// showWidgetList();
+		// // TODO: 添加一个图片widget
+		// final ImageWidgetOverlay overlay = new ImageWidgetOverlay(this,
+		// Uri.fromFile(new File("/sdcard/test.jpg")));
+		// Handler handler = new Handler();
+		// handler.postDelayed(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// Random random = new Random();
+		// // overlay.translate(random.nextInt(100),
+		// // random.nextInt(100));
+		// float scale = random.nextFloat();
+		// // overlay.scale(scale, scale);
+		// }
+		// }, 1000);
+		// addOverlay(overlay);
+		// // TODO
+		// break;
+		// }
+		// case R.id.photo_editor_tab_text: { // 编辑文字
+		// Intent intent = new Intent(this, EditTextActivity.class);
+		// startActivityForResult(intent, REQUEST_CODE_EDIT_TEXT);
+		// break;
+		// }
+		case R.id.photo_editor_context_button: {
+			// 分享
+			if (mViewContextBtn.getText().equals(getString(R.string.photo_editor_context_btn_share))) {
+				saveCurrentImage();
+			} else { // 重置
 
-				@Override
-				public void run() {
-					Random random = new Random();
-					// overlay.translate(random.nextInt(100),
-					// random.nextInt(100));
-					float scale = random.nextFloat();
-					// overlay.scale(scale, scale);
-				}
-			}, 1000);
-			addOverlay(overlay);
-			// TODO
-			break;
-		}
-		case R.id.photo_editor_tab_text: { // 编辑文字
-			Intent intent = new Intent(this, EditTextActivity.class);
-			startActivityForResult(intent, REQUEST_CODE_EDIT_TEXT);
-			break;
-		}
-		case R.id.photo_editor_tab_finish: {
-			saveCurrentImage();
+			}
 			break;
 		}
 		case R.id.photo_editor_top_bar_camera: { // 返回照相页面
@@ -281,36 +514,31 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			startActivity(intent);
 			break;
 		}
-		case R.id.photo_editor_top_bar_reset: { // 重置所有素材
-			dismissDialog();
-			AlertDialog.Builder builder = new AlertDialog.Builder(this);
-			builder.setMessage(R.string.photo_editor_delete_all_widgets)
-					.setPositiveButton(R.string.photo_editor_confirm, new DialogInterface.OnClickListener() {
-
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
-								mCurrentOverlay.getContextView().setVisibility(View.GONE);
-							}
-							reset();
-						}
-					}).setNegativeButton(R.string.photo_editor_cancel, null);
-			mDialog = builder.show();
+		// case R.id.photo_editor_top_bar_reset: { // 重置所有素材
+		// dismissDialog();
+		// AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		// builder.setMessage(R.string.photo_editor_delete_all_widgets)
+		// .setPositiveButton(R.string.photo_editor_confirm, new
+		// DialogInterface.OnClickListener() {
+		//
+		// @Override
+		// public void onClick(DialogInterface dialog, int which) {
+		// if (mCurrentOverlay != null && mCurrentOverlay.getContextView() !=
+		// null) {
+		// mCurrentOverlay.getContextView().setVisibility(View.GONE);
+		// }
+		// reset();
+		// }
+		// }).setNegativeButton(R.string.photo_editor_cancel, null);
+		// mDialog = builder.show();
+		// break;
+		// }
+		case R.id.photo_editor_top_bar_object_modify: // 调整
 			break;
-		}
-		}
-	}
-
-	// 隐藏所有的列表
-	private void dismissAllLists() {
-		if (mViewSceneList != null) {
-			mViewSceneList.setVisibility(View.GONE);
-		}
-		if (mViewTextList != null) {
-			mViewTextList.setVisibility(View.GONE);
-		}
-		if (mViewWidgetList != null) {
-			mViewWidgetList.setVisibility(View.GONE);
+		case R.id.photo_editor_top_bar_object_delete: // 删除当前的ObjecOverlay
+			break;
+		case R.id.photo_editor_top_bar_object_eraser: // 擦除
+			break;
 		}
 	}
 
@@ -319,34 +547,20 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		// TODO: 测试，暂时写在了主线程中
 		mEditorPanel.buildDrawingCache();
 		Bitmap image = mEditorPanel.getDrawingCache();
-		if (image != null) {
-			try {
-				image.compress(CompressFormat.JPEG, 80, new FileOutputStream(new File("/sdcard/result.jpg")));
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		if (image != null && !image.isRecycled()) {
+			String path = ImageUtils.saveBitmapForLocalPath(this, image, 0, true);
+			if (path != null) {
+				PublishActivity.start(this, mPhotoUri, path);
+			} else {
+				// TODO: 如果保存失败
 			}
 			image.recycle();
 			Toast.makeText(this, "success", Toast.LENGTH_SHORT).show();
 		} else {
 			Toast.makeText(this, "fail", Toast.LENGTH_SHORT).show();
 		}
+		mEditorPanel.destroyDrawingCache();
 		// TODO:
-	}
-
-	// 显示场景列表
-	private void showSceneList() {
-
-	}
-
-	// 显示文本背景列表
-	private void showTextList() {
-
-	}
-
-	// 显示贴图列表
-	private void showWidgetList() {
-
 	}
 
 	@Override
@@ -378,16 +592,23 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mRlOverlayContainer.addView(scene.getView(), 0);
 			scene.setViewSizeAdjustedListener(this);
 		} else {
-			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, 
-					LayoutParams.MATCH_PARENT);
-			mEditorPanel.setLayoutParams(params);
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mEditorPanel.getLayoutParams();
+			params.width = LayoutParams.MATCH_PARENT;
+			params.height = LayoutParams.MATCH_PARENT;
 		}
 		mSceneOverlay = scene;
+	}
+
+	private void unSelectAllOverlays() {
+		for (ObjectOverlay overlay : mOverlays) {
+			overlay.setOverlaySelected(false);
+		}
 	}
 
 	private void addOverlay(ObjectOverlay overlay) {
 		mOverlays.add(overlay);
 		if (overlay.getContainerView(PhotoEditor.this) != null) {
+			unSelectAllOverlays();
 			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 					LayoutParams.MATCH_PARENT);
 			overlay.getContainerView(PhotoEditor.this).setLayoutParams(params);
@@ -396,6 +617,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
 			if (mCurrentOverlay != null) {
 				mCurrentOverlay.setOverlaySelected(false);
+				mCurrentOverlay.getContainerView(this).invalidate();
 			}
 			mVgContextMenuContainer.setVisibility(View.GONE);
 			mCurrentOverlay = overlay;
@@ -405,23 +627,24 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 	}
 
-	private void addOverlay(ObjectOverlay overlay, RelativeLayout.LayoutParams params) {
-		mOverlays.add(overlay);
-		if (overlay.getContainerView(PhotoEditor.this) != null) {
-			overlay.getContainerView(PhotoEditor.this).setLayoutParams(params);
-			overlay.setOperationListener(this);
-			overlay.setEditorPanel(mEditorPanel);
-			mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
-			if (mCurrentOverlay != null) {
-				mCurrentOverlay.setOverlaySelected(false);
-			}
-			mVgContextMenuContainer.setVisibility(View.GONE);
-			mCurrentOverlay = overlay;
-			mCurrentOverlay.setOverlaySelected(true);
-			mCurrentOverlay.setEditorContainerView(mEditorContainerView);
-			mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
-		}
-	}
+	// private void addOverlay(ObjectOverlay overlay,
+	// RelativeLayout.LayoutParams params) {
+	// mOverlays.add(overlay);
+	// if (overlay.getContainerView(PhotoEditor.this) != null) {
+	// overlay.getContainerView(PhotoEditor.this).setLayoutParams(params);
+	// overlay.setOperationListener(this);
+	// overlay.setEditorPanel(mEditorPanel);
+	// mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
+	// if (mCurrentOverlay != null) {
+	// mCurrentOverlay.setOverlaySelected(false);
+	// }
+	// mVgContextMenuContainer.setVisibility(View.GONE);
+	// mCurrentOverlay = overlay;
+	// mCurrentOverlay.setOverlaySelected(true);
+	// mCurrentOverlay.setEditorContainerView(mEditorContainerView);
+	// mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
+	// }
+	// }
 
 	private void removeOverlay(ObjectOverlay overlay) {
 		mOverlays.remove(overlay);
@@ -585,30 +808,133 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 	}
 
-	private void LOGD(String logMe) {
-		Logger.d("PhotoEditor", logMe);
-	}
-
 	@Override
 	public void onSceneSizeAquired(int width, int height) {
-		//根据当前场景的尺寸调整大小
+		// 根据当前场景的尺寸调整大小
 		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mEditorPanel.getLayoutParams();
 		int editorPanelWidth = mEditorPanelRefView.getWidth();
 		int editorPanelHeight = mEditorPanelRefView.getHeight();
 		float scaleX = (1.0f * editorPanelWidth) / (1.0f * width);
 		float scaleY = (1.0f * editorPanelHeight) / (1.0f * height);
-		if(scaleX > scaleY) { //容器比背景胖，则调整宽
+		if (scaleX > scaleY) { // 容器比背景胖，则调整宽
 			params.topMargin = 0;
 			params.bottomMargin = 0;
-			int margin = (int)((editorPanelWidth - width * scaleY) / 2);
+			int margin = (int) ((editorPanelWidth - width * scaleY) / 2);
 			params.leftMargin = margin;
 			params.rightMargin = margin;
 		} else {
 			params.leftMargin = 0;
 			params.rightMargin = 0;
-			int margin = (int)((editorPanelHeight - height * scaleX) / 2);
+			int margin = (int) ((editorPanelHeight - height * scaleX) / 2);
 			params.topMargin = margin;
 			params.bottomMargin = margin;
 		}
+	}
+
+	private class TypeAdapter extends BaseAdapter {
+
+		@Override
+		public int getCount() {
+			return mFootageTypes.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mFootageTypes.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(final int position, View convertView, ViewGroup parent) {
+			if (convertView == null) {
+				convertView = View.inflate(PhotoEditor.this, R.layout.footage_type_item, null);
+				TextView tvName = (TextView) convertView.findViewById(R.id.footage_type_item_name);
+				convertView.setTag(tvName);
+			}
+			TextView tvName = (TextView) convertView.getTag();
+			FootAgeType footageType = mFootageTypes.get(position);
+			tvName.setText(footageType.getTypeName());
+
+			tvName.setOnClickListener(new View.OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					if (position == 0) { // 常用的素材
+
+					} else {
+						FootAgeType type = mFootageTypes.get(position);
+						if (type != null && mCurrentType != type) {
+							mCurrentType = type;
+							// 加载素材列表
+							mFootageManager.loadLocalFootages(type.getObjectId());
+						}
+					}
+				}
+			});
+			return convertView;
+		}
+	}
+
+	private static class ViewHolder {
+		private AsyncImageView aivIcon;
+		private TextView tvName;
+	}
+
+	private class FootageAdapter extends BaseAdapter {
+
+		@Override
+		public int getCount() {
+			return mFootages.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mFootages.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			ViewHolder viewHolder = new ViewHolder();
+			if (convertView == null) {
+				convertView = View.inflate(PhotoEditor.this, R.layout.footage_item, null);
+				viewHolder.aivIcon = (AsyncImageView) convertView.findViewById(R.id.footage_item_icon);
+				viewHolder.tvName = (TextView) convertView.findViewById(R.id.footage_item_name);
+				convertView.setTag(viewHolder);
+			}
+			viewHolder = (ViewHolder) convertView.getTag();
+			final FootAge footage = mFootages.get(position);
+			if (!TextUtils.isEmpty(footage.getIconUrl())) {
+				viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
+				viewHolder.aivIcon.setOnClickListener(new View.OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
+								.getIconUrl()));
+						addOverlay(overlay);
+					}
+				});
+			} else {
+				// 尚未下载图片，则先下载
+				viewHolder.aivIcon.setOnClickListener(null);
+			}
+			viewHolder.tvName.setText(footage.getIconName());
+
+			return convertView;
+		}
+
+	}
+
+	private static void LOGD(String logMe) {
+		Logger.d("PhotoEditor", logMe);
 	}
 }

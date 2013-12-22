@@ -18,9 +18,18 @@
     <string name="photo_editor_tab_scene">场景</string>
     <string name="photo_editor_tab_widget">贴图</string>
     <string name="photo_editor_tab_text">文字</string>
-    <string name="photo_editor_tab_finish">完成</string>
+    
+    <string name="photo_editor_top_bar_finish">完成</string>
+    
     <string name="photo_editor_top_bar_camera">选择照片</string>
     <string name="photo_editor_top_bar_reset">重置</string>
+    <string name="photo_editor_top_bar_modify">调整</string>
+    <string name="photo_editor_top_bar_delete">删除</string>
+    <string name="photo_editor_top_bar_eraser">橡皮</string>
+    
+    <string name="photo_editor_context_btn_share">分享</string>
+    <string name="photo_editor_context_btn_reset">重置</string>
+    
 	<string name="photo_editor_delete_all_widgets">确定删除所有素材吗?</string>
 	<string name="photo_editor_cancel">取消</string>
 	<string name="photo_editor_confirm">确定</string>
@@ -36,10 +45,12 @@
 	<string name="edit_text_finish">完成</string>
 	
 	<!-- 相机 -->
-    <string name="camera_btn_close">Cancel</string>
-    <string name="tips_photo_size_invalid">The picture is not in a supported format.</string>
-    <string name="tips_photo_invalid_path">Invalid photo path</string>
-    <string name="tips_photo_loading">Loading</string>
-    <string name="tips_no_sdcard">No sdcard found!</string>
+    <string name="camera_btn_close">取消</string>
+    <string name="camera_btn_crop_done">完成</string>
+    <string name="camera_btn_crop_back">返回</string>
+    <string name="tips_photo_size_invalid">图片格式不支持.</string>
+    <string name="tips_photo_invalid_path">错误的路径</string>
+    <string name="tips_photo_loading">正在加载中</string>
+    <string name="tips_no_sdcard">未发现SD卡!</string>
     
 </resources>

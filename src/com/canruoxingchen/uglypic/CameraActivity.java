@@ -82,7 +82,6 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	PmCameraRender mPmCameraRender;
 	PmCameraHander mHandler;
 
-	RelativeLayout mExitRL;
 	ImageButton mFlashOnOffIB;
 	ImageButton mCameraNextIB;
 	ImageButton mCapturePhotoIB;
@@ -186,9 +185,6 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.rl_exit:
-			finish();
-			break;
 		case R.id.ib_flash_on_off:
 			switchFlashMode();
 			break;
@@ -270,11 +266,11 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	private void startPhotoPicker() {
 		// TODO: 从相册选图
 		PickPhotoActivity.startForPhotoFromGallery(this, REQUEST_CODE_GALLERY);
+//		ImageCropActivity.start(this, REQUEST_CODE_GALLERY);
 		// TODO
 	}
 
 	private void initView() {
-		mExitRL = (RelativeLayout) findViewById(R.id.rl_exit);
 		mPmCameraRender = (PmCameraRender) findViewById(R.id.camera_surface);
 		mFlashOnOffIB = (ImageButton) findViewById(R.id.ib_flash_on_off);
 		mCameraNextIB = (ImageButton) findViewById(R.id.ib_camera_next);
@@ -287,7 +283,6 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		mCameraNextIB.setOnClickListener(this);
 		mChoosePhotoAiv.setOnClickListener(this);
 		mCapturePhotoIB.setOnClickListener(this);
-		mExitRL.setOnClickListener(this);
 
 		needFocusWhenTouch();
 
