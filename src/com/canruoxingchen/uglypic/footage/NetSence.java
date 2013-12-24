@@ -50,6 +50,10 @@ public class NetSence implements Comparable<NetSence> {
 	private Integer mTimeFontSize;
 	private Integer mTimeFontColor;
 	private Integer mTimeFontAlignment;
+	
+	public NetSence() {
+		
+	}
 
 	public NetSence(String objectId, String senceNetIcon, String senceParentId, Integer senceOrderNum,
 			String senceName, String senceDescribe, String inputContent, String inputRect, String inputFontName,

@@ -94,7 +94,7 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 					setResult(RESULT_CANCELED);
 					finish();
 				} else if (isFileSizeInvalid(mImagePath)) {
-//					mHandler.sendEmptyMessage(MESSAGE_FINISH_CHOOSE_PHOTO);
+					mHandler.sendEmptyMessage(MESSAGE_FINISH_CHOOSE_PHOTO);
 				} else {
 					// file size invalid
 					ThreadPoolManager.getInstance().execute(new SaveRunnable());

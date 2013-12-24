@@ -8,6 +8,7 @@ import android.util.Log;
 import de.greenrobot.dao.AbstractDaoMaster;
 import de.greenrobot.dao.identityscope.IdentityScopeType;
 
+import com.canruoxingchen.uglypic.dao.RecentFootageDao;
 import com.canruoxingchen.uglypic.dao.FootAgeTypeDao;
 import com.canruoxingchen.uglypic.dao.FootageDao;
 import com.canruoxingchen.uglypic.dao.NetSenceDao;
@@ -21,6 +22,7 @@ public class DaoMaster extends AbstractDaoMaster {
 
     /** Creates underlying database table using DAOs. */
     public static void createAllTables(SQLiteDatabase db, boolean ifNotExists) {
+        RecentFootageDao.createTable(db, ifNotExists);
         FootAgeTypeDao.createTable(db, ifNotExists);
         FootageDao.createTable(db, ifNotExists);
         NetSenceDao.createTable(db, ifNotExists);
@@ -28,6 +30,7 @@ public class DaoMaster extends AbstractDaoMaster {
     
     /** Drops underlying database table using DAOs. */
     public static void dropAllTables(SQLiteDatabase db, boolean ifExists) {
+        RecentFootageDao.dropTable(db, ifExists);
         FootAgeTypeDao.dropTable(db, ifExists);
         FootageDao.dropTable(db, ifExists);
         NetSenceDao.dropTable(db, ifExists);
@@ -62,6 +65,7 @@ public class DaoMaster extends AbstractDaoMaster {
 
     public DaoMaster(SQLiteDatabase db) {
         super(db, SCHEMA_VERSION);
+        registerDaoClass(RecentFootageDao.class);
         registerDaoClass(FootAgeTypeDao.class);
         registerDaoClass(FootageDao.class);
         registerDaoClass(NetSenceDao.class);

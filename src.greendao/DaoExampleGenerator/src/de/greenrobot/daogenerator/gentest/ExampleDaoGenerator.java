@@ -35,6 +35,7 @@ public class ExampleDaoGenerator {
 		//TODO: 修改数据库时，需要升级此处的版本号
 		Schema schema = new Schema(1, "com.canruoxingchen.uglypic.dao");
 
+		addRecentFootageType(schema);
 		addFootageType(schema);
 		addFootage(schema);
 		addNetScene(schema);
@@ -45,6 +46,15 @@ public class ExampleDaoGenerator {
 	private static void addTestInfo(Schema schema) {
 		Entity history = schema.addEntity("Test");
 		history.addIntProperty("type").primaryKey();
+	}
+	
+	//version 1：添加常用素材素材类别
+	private static void addRecentFootageType(Schema schema) {
+		Entity entity = schema.addEntity("RecentFootage");
+		entity.addStringProperty("objectId").primaryKey();
+		entity.addLongProperty("accessTime");
+		entity.addIntProperty("footageType");
+		entity.addStringProperty("json");
 	}
 	
 	//version 1：添加素材类别

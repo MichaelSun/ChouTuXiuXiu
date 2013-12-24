@@ -265,8 +265,8 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 	private void startPhotoPicker() {
 		// TODO: 从相册选图
-		PickPhotoActivity.startForPhotoFromGallery(this, REQUEST_CODE_GALLERY);
-//		ImageCropActivity.start(this, REQUEST_CODE_GALLERY);
+//		PickPhotoActivity.startForPhotoFromGallery(this, REQUEST_CODE_GALLERY);
+		ImageCropActivity.start(this, REQUEST_CODE_GALLERY);
 		// TODO
 	}
 

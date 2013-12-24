@@ -19,11 +19,6 @@ public class HttpManager {
 	
 	private static final String TAG = "HttpManager";
 	
-	public static void query(CloudObj cloudObj, String objectId, GetCallback<AVObject> callback) {
-		AVQuery<AVObject> query = new AVQuery<AVObject>(cloudObj.getName());
-		query.getInBackground(objectId, callback);
- 	}
-	
 	private static void LOGD(String logMe) {
 		Logger.d(TAG, logMe);
 	}

@@ -1,8 +1,7 @@
 package com.canruoxingchen.uglypic.footage;
 
-import com.canruoxingchen.uglypic.http.CloudObj;
 
-public class FootAgeType implements CloudObj, Comparable<FootAgeType> {
+public class FootAgeType implements Comparable<FootAgeType> {
 	public static final String CLASS_NAME = "FootAgeType";
 	
 	public static final int TYPE_RECENT = 0;
@@ -87,11 +86,6 @@ public class FootAgeType implements CloudObj, Comparable<FootAgeType> {
 
 	public void setTypeTarget(int typeTarget) {
 		this.mTypeTarget = typeTarget;
-	}
-
-	@Override
-	public String getName() {
-		return CLASS_NAME;
 	}
 
 	@Override

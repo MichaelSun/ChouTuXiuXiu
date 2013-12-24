@@ -34,6 +34,7 @@ import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
 import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
@@ -41,6 +42,7 @@ import com.canruoxingchen.uglypic.footage.FootAge;
 import com.canruoxingchen.uglypic.footage.NetSence;
 import com.canruoxingchen.uglypic.footage.FootAgeType;
 import com.canruoxingchen.uglypic.footage.FootageManager;
+import com.canruoxingchen.uglypic.footage.RecentFootAge;
 import com.canruoxingchen.uglypic.overlay.EditorContainerView;
 import com.canruoxingchen.uglypic.overlay.IEditor;
 import com.canruoxingchen.uglypic.overlay.ImageWidgetOverlay;
@@ -63,11 +65,11 @@ import com.canruoxingchen.uglypic.view.HorizontalListView;
 public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener,
 		SceneSizeAquiredListener {
 	private static final String EXTRA_PHOTO_URI = "photo_uri";
-	
+
 	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
 
 	private static final int REQUEST_CODE_EDIT_TEXT = 1001;
-	
+
 	private static final int MSG_REGRET_STATUS_CHANGED = R.id.msg_editor_regret_status_change;
 
 	// 原始照片的uri
@@ -296,7 +298,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					if (msg.obj instanceof FootAge) {
 						FootAge footage = (FootAge) msg.obj;
 						for (Object obj : activity.mFootages) {
-							if (obj instanceof NetSence) {
+							if (obj instanceof NetSence || obj instanceof RecentFootAge) {
 								break;
 							}
 							FootAge f = (FootAge) obj;
@@ -309,7 +311,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					} else {
 						NetSence netScene = (NetSence) msg.obj;
 						for (Object obj : activity.mFootages) {
-							if (obj instanceof FootAge) {
+							if (obj instanceof FootAge || obj instanceof RecentFootAge) {
 								break;
 							}
 							NetSence ns = (NetSence) obj;
@@ -327,8 +329,20 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				break;
 			}
 			case MSG_REGRET_STATUS_CHANGED: {
-				if(activity.mEditorContainerView != null) {
+				if (activity.mEditorContainerView != null) {
 					activity.mEditorContainerView.onRegretStatusChanged();
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_RECENT_FOOTAGE_SUCCESS: {// 显示最近素材成功
+				if (msg.obj == null) {
+					break;
+				}
+				List<RecentFootAge> footages = (List<RecentFootAge>) msg.obj;
+				if (activity.mCurrentType == FootAgeType.RECENT_TYPE) {
+					activity.mFootages.clear();
+					activity.mFootages.addAll(footages);
+					activity.mFootageAdapter.notifyDataSetChanged();
 				}
 				break;
 			}
@@ -432,6 +446,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				switch (type.getTypeTarget()) {
 				case FootAgeType.TYPE_RECENT: // 最近使用
 					// TODO: 加载最近使用的素材
+					mFootageManager.loadRecentFootages();
 					break;
 				case FootAgeType.TYPE_IMAGE: // 图片
 					// TODO：加载footage
@@ -451,24 +466,19 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				final Object obj = mFootages.get(position);
 				if (obj instanceof FootAge) {
-					final FootAge footage = (FootAge) obj;
-					if (!TextUtils.isEmpty(footage.getIconUrl())) {
-						ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
-								.getIconUrl()));
-						addOverlay(overlay);
-					}
-				} else {
-					final NetSence netScene = (NetSence) obj;
-					if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
-						SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri.parse(netScene
-								.getSenceNetIcon()));
-						Rect inputRect = netScene.getInputRectBounds();
-						if (inputRect != null) {
-							builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
-							builder.setTextHint(netScene.getInputContent());
-							builder.setTextSize(netScene.getInputFontSize());
-						}
-						setSceneOverlay(builder.create());
+					FootAge footage = (FootAge) obj;
+					onFootAgeClick(footage, true);
+				} else if (obj instanceof NetSence) {
+					NetSence netScene = (NetSence) obj;
+					onSceneClick(netScene, true);
+				} else if (obj instanceof RecentFootAge) {
+					RecentFootAge recent = (RecentFootAge) obj;
+					if (recent.getType() == FootAgeType.TYPE_IMAGE) {
+						FootAge footage = JSON.parseObject(recent.getJson(), FootAge.class);
+						onFootAgeClick(footage, false);
+					} else if (recent.getType() == FootAgeType.TYPE_SCENE) {
+						NetSence netScene = JSON.parseObject(recent.getJson(), NetSence.class);
+						onSceneClick(netScene, false);
 					}
 				}
 			}
@@ -476,12 +486,39 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		});
 	}
 
+	private void onFootAgeClick(FootAge footage, boolean save) {
+		if (!TextUtils.isEmpty(footage.getIconUrl())) {
+			ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage.getIconUrl()));
+			addOverlay(overlay);
+			if (save) {
+				mFootageManager.saveRecentFootage(footage);
+			}
+		}
+	}
+
+	private void onSceneClick(NetSence netScene, boolean save) {
+		if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
+			SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri.parse(netScene
+					.getSenceNetIcon()));
+			Rect inputRect = netScene.getInputRectBounds();
+			if (inputRect != null) {
+				builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
+				builder.setTextHint(netScene.getInputContent());
+				builder.setTextSize(netScene.getInputFontSize());
+			}
+			setSceneOverlay(builder.create());
+			if (save) {
+				mFootageManager.saveRecentFootage(netScene);
+			}
+		}
+	}
+
 	@Override
 	protected void onResume() {
 		super.onResume();
 		registerAllFootageMsg();
-		
-		//注册编辑内容可回退状态改变的消息
+
+		// 注册编辑内容可回退状态改变的消息
 		MessageCenter.getInstance(this).registerMessage(R.id.msg_editor_regret_status_change, mHandler);
 	}
 
@@ -508,6 +545,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_SCENES_FAILURE, mHandler);
 		messageCenter.registerMessage(FootageManager.MSG_LOAD_SCENES_SUCCESS, mHandler);
 		messageCenter.registerMessage(FootageManager.MSG_LOAD_SCENES_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_RECENT_FOOTAGE_SUCCESS, mHandler);
 	}
 
 	private void unregisterAllFootageMsg() {
@@ -526,6 +564,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_SCENES_FAILURE, mHandler);
 		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_SCENES_SUCCESS, mHandler);
 		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_SCENES_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_RECENT_FOOTAGE_SUCCESS, mHandler);
 	}
 
 	// 重置所有效果
@@ -651,7 +690,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mTopContextMenu.setVisibility(View.GONE);
 				mViewModifyFinish.setVisibility(View.VISIBLE);
 				mViewBottomPanel.setVisibility(View.INVISIBLE);
-				
+
 				// 显示调整view
 				mVgContextMenuContainer.removeAllViews();
 				mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
@@ -803,7 +842,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		mTopContextMenu.setVisibility(View.GONE);
 	}
-	
+
 	private boolean isEditting() {
 		return mViewModifyFinish.getVisibility() == View.VISIBLE;
 	}
@@ -814,7 +853,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		switch (e.getAction()) {
 		case MotionEvent.ACTION_DOWN: {
-			if(isEditting()) { //正在编辑的过程中，直接将手势传递到子view
+			if (isEditting()) { // 正在编辑的过程中，直接将手势传递到子view
 				return false;
 			}
 			int size = mOverlays.size();
@@ -1086,44 +1125,29 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				final FootAge footage = (FootAge) obj;
 				if (!TextUtils.isEmpty(footage.getIconUrl())) {
 					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
-					viewHolder.aivIcon.setOnClickListener(new View.OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
-									.getIconUrl()));
-							addOverlay(overlay);
-						}
-					});
-				} else {
-					// 尚未下载图片，则先下载
-					viewHolder.aivIcon.setOnClickListener(null);
 				}
 				viewHolder.tvName.setText(footage.getIconName());
-			} else {
+			} else if (obj instanceof NetSence) {
 				final NetSence netScene = (NetSence) obj;
 				if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
 					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netScene.getSenceNetIcon()));
-					viewHolder.aivIcon.setOnClickListener(new View.OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri
-									.parse(netScene.getSenceNetIcon()));
-							Rect inputRect = netScene.getInputRectBounds();
-							if (inputRect != null) {
-								builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
-								builder.setTextHint(netScene.getInputContent());
-								builder.setTextSize(netScene.getInputFontSize());
-							}
-							setSceneOverlay(builder.create());
-						}
-					});
-				} else {
-					// 尚未下载图片
-					viewHolder.aivIcon.setOnClickListener(null);
 				}
 				viewHolder.tvName.setText(netScene.getSenceName());
+			} else if (obj instanceof RecentFootAge) {
+				RecentFootAge recent = (RecentFootAge) obj;
+				if (recent.getType() == FootAgeType.TYPE_IMAGE) {
+					FootAge footage = JSON.parseObject(recent.getJson(), FootAge.class);
+					if (!TextUtils.isEmpty(footage.getIconUrl())) {
+						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
+					}
+					viewHolder.tvName.setText(footage.getIconName());
+				} else if (recent.getType() == FootAgeType.TYPE_SCENE) {
+					NetSence netSence = JSON.parseObject(recent.getJson(), NetSence.class);
+					if (!TextUtils.isEmpty(netSence.getSenceNetIcon())) {
+						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netSence.getSenceNetIcon()));
+					}
+					viewHolder.tvName.setText(netSence.getSenceName());
+				}
 			}
 
 			return convertView;

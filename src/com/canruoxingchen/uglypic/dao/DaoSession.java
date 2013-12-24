@@ -9,10 +9,12 @@ import de.greenrobot.dao.AbstractDaoSession;
 import de.greenrobot.dao.identityscope.IdentityScopeType;
 import de.greenrobot.dao.internal.DaoConfig;
 
+import com.canruoxingchen.uglypic.dao.RecentFootage;
 import com.canruoxingchen.uglypic.dao.FootAgeType;
 import com.canruoxingchen.uglypic.dao.Footage;
 import com.canruoxingchen.uglypic.dao.NetSence;
 
+import com.canruoxingchen.uglypic.dao.RecentFootageDao;
 import com.canruoxingchen.uglypic.dao.FootAgeTypeDao;
 import com.canruoxingchen.uglypic.dao.FootageDao;
 import com.canruoxingchen.uglypic.dao.NetSenceDao;
@@ -26,10 +28,12 @@ import com.canruoxingchen.uglypic.dao.NetSenceDao;
  */
 public class DaoSession extends AbstractDaoSession {
 
+    private final DaoConfig recentFootageDaoConfig;
     private final DaoConfig footAgeTypeDaoConfig;
     private final DaoConfig footageDaoConfig;
     private final DaoConfig netSenceDaoConfig;
 
+    private final RecentFootageDao recentFootageDao;
     private final FootAgeTypeDao footAgeTypeDao;
     private final FootageDao footageDao;
     private final NetSenceDao netSenceDao;
@@ -37,6 +41,9 @@ public class DaoSession extends AbstractDaoSession {
     public DaoSession(SQLiteDatabase db, IdentityScopeType type, Map<Class<? extends AbstractDao<?, ?>>, DaoConfig>
             daoConfigMap) {
         super(db);
+
+        recentFootageDaoConfig = daoConfigMap.get(RecentFootageDao.class).clone();
+        recentFootageDaoConfig.initIdentityScope(type);
 
         footAgeTypeDaoConfig = daoConfigMap.get(FootAgeTypeDao.class).clone();
         footAgeTypeDaoConfig.initIdentityScope(type);
@@ -47,19 +54,26 @@ public class DaoSession extends AbstractDaoSession {
         netSenceDaoConfig = daoConfigMap.get(NetSenceDao.class).clone();
         netSenceDaoConfig.initIdentityScope(type);
 
+        recentFootageDao = new RecentFootageDao(recentFootageDaoConfig, this);
         footAgeTypeDao = new FootAgeTypeDao(footAgeTypeDaoConfig, this);
         footageDao = new FootageDao(footageDaoConfig, this);
         netSenceDao = new NetSenceDao(netSenceDaoConfig, this);
 
+        registerDao(RecentFootage.class, recentFootageDao);
         registerDao(FootAgeType.class, footAgeTypeDao);
         registerDao(Footage.class, footageDao);
         registerDao(NetSence.class, netSenceDao);
     }
     
     public void clear() {
+        recentFootageDaoConfig.getIdentityScope().clear();
         footAgeTypeDaoConfig.getIdentityScope().clear();
         footageDaoConfig.getIdentityScope().clear();
         netSenceDaoConfig.getIdentityScope().clear();
+    }
+
+    public RecentFootageDao getRecentFootageDao() {
+        return recentFootageDao;
     }
 
     public FootAgeTypeDao getFootAgeTypeDao() {

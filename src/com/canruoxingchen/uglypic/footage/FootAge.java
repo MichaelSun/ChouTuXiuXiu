@@ -3,13 +3,12 @@
  */
 package com.canruoxingchen.uglypic.footage;
 
-import com.canruoxingchen.uglypic.http.CloudObj;
 
 /**
  * @author wsf
  * 
  */
-public class FootAge implements CloudObj, Comparable<FootAge>{
+public class FootAge implements Comparable<FootAge>{
 	public static final String CLASS_NAME = "Footage";
 	public static final String COLUMN_FOOTAGE_ICON = "footageIcon";
 	public static final String COLUMN_FOOTAGE_PARENT_ID = "footageParentId";
@@ -35,7 +34,7 @@ public class FootAge implements CloudObj, Comparable<FootAge>{
 		return mParentId;
 	}
 
-	public void setPareintId(String parentId) {
+	public void setParentId(String parentId) {
 		this.mParentId = parentId;
 	}
 
@@ -80,11 +79,6 @@ public class FootAge implements CloudObj, Comparable<FootAge>{
 	public String toString() {
 		return "FootAge [mObjectId=" + mObjectId + ", mParentId=" + mParentId + ", mIconUrl=" + mIconUrl
 				+ ", mIconName=" + mIconName + ", mOrderNum=" + mOrderNum + "]";
-	}
-
-	@Override
-	public String getName() {
-		return CLASS_NAME;
 	}
 
 	@Override

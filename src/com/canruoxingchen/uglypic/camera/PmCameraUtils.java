@@ -18,6 +18,7 @@ import android.graphics.BitmapFactory.Options;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 
 public class PmCameraUtils {
     public static final int MAX_BITMAP_MEMORY = 1024 * 1024 * 8;
@@ -109,12 +110,11 @@ public class PmCameraUtils {
 
     public static String saveImageByUrl(Context context, Uri uri, String tempFileName) {
         String savePath = FileUtils.createSdCardFile(tempFileName);
-        File cacheDir = savePath == null ? context.getCacheDir() : new File(savePath);
-        if (!cacheDir.exists() || !cacheDir.canWrite()) {
+        if (TextUtils.isEmpty(savePath)) {
             return null;
         }
 
-        File f = new File(cacheDir, tempFileName);
+        File f = new File(savePath);
         if(f.exists()) {
         	f.delete();
         }

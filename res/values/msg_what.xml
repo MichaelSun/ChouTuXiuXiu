@@ -14,6 +14,8 @@
     <item name="msg_load_local_scenes_failure" type="id"></item>
     <item name="msg_load_scenes_success" type="id"/>
     <item name="msg_load_scenes_failure" type="id"></item>
+    <item name="msg_load_recent_footage_success" type="id"></item>
+    <item name="msg_load_recent_footage_failure" type="id"></item>
     
     <item name="msg_editor_regret_status_change" type="id"></item>
     
