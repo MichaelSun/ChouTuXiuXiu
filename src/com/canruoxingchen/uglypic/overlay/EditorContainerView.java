@@ -116,4 +116,17 @@ public class EditorContainerView extends LinearLayout implements View.OnClickLis
 			}
 		}
 	}
+	
+	public void onRegretStatusChanged() {
+		if(mEditor.hasMoreRedo()) {
+			mViewRedo.setEnabled(true);
+		} else {
+			mViewRedo.setEnabled(false);
+		}
+		if(mEditor.hasMoreRegret()) {
+			mViewRegret.setEnabled(true);
+		} else {
+			mViewRegret.setEnabled(false);
+		}
+	}
 }

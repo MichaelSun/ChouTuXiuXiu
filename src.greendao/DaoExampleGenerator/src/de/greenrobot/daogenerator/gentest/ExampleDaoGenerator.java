@@ -55,6 +55,7 @@ public class ExampleDaoGenerator {
 		entity.addStringProperty("oldName");
 		entity.addIntProperty("isDefault");
 		entity.addIntProperty("orderNum");
+		entity.addIntProperty("typeTarget");
 	}
 	
 	//version 1: 添加素材

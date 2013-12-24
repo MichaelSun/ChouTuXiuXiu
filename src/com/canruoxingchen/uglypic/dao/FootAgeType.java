@@ -11,6 +11,7 @@ public class FootAgeType {
     private String oldName;
     private Integer isDefault;
     private Integer orderNum;
+    private Integer typeTarget;
 
     public FootAgeType() {
     }
@@ -19,12 +20,13 @@ public class FootAgeType {
         this.objectId = objectId;
     }
 
-    public FootAgeType(String objectId, String typeName, String oldName, Integer isDefault, Integer orderNum) {
+    public FootAgeType(String objectId, String typeName, String oldName, Integer isDefault, Integer orderNum, Integer typeTarget) {
         this.objectId = objectId;
         this.typeName = typeName;
         this.oldName = oldName;
         this.isDefault = isDefault;
         this.orderNum = orderNum;
+        this.typeTarget = typeTarget;
     }
 
     public String getObjectId() {
@@ -65,6 +67,14 @@ public class FootAgeType {
 
     public void setOrderNum(Integer orderNum) {
         this.orderNum = orderNum;
+    }
+
+    public Integer getTypeTarget() {
+        return typeTarget;
+    }
+
+    public void setTypeTarget(Integer typeTarget) {
+        this.typeTarget = typeTarget;
     }
 
 }

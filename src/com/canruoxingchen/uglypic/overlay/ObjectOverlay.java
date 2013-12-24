@@ -91,6 +91,14 @@ public abstract class ObjectOverlay implements IOverlay {
 		return this.mEditorPanel;
 	}
 
+	public boolean isFlipable() {
+		return false;
+	}
+
+	public void flip() {
+
+	}
+
 	@Override
 	public Rect getInitialContentBounds() {
 		retrieveDensity();
@@ -107,11 +115,11 @@ public abstract class ObjectOverlay implements IOverlay {
 	 */
 	public abstract View getContextView();
 
-//	@Override
-//	public View getView() {
-//		return mContentView;
-//	}
-	
+	// @Override
+	// public View getView() {
+	// return mContentView;
+	// }
+
 	protected void retrieveDensity() {
 
 		if (mDensity < 0) {
@@ -130,23 +138,22 @@ public abstract class ObjectOverlay implements IOverlay {
 	public View getContainerView(Context context) {
 		if (mContainerView == null) {
 			mContainerView = new ContainerView(context);
-			if(getView() != null) {
+			if (getView() != null) {
 
-				RelativeLayout.LayoutParams params  = getDefaultParams();
-				if(params == null) {
-					params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 
-						LayoutParams.WRAP_CONTENT);
+				RelativeLayout.LayoutParams params = getDefaultParams();
+				if (params == null) {
+					params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 				}
 				mContainerView.addView(getView(), params);
 			}
 		}
-		if(getView() == null) {
+		if (getView() == null) {
 			return null;
 		}
 		return mContainerView;
 	}
-	
-	//添加到container view中的默认参数
+
+	// 添加到container view中的默认参数
 	protected RelativeLayout.LayoutParams getDefaultParams() {
 		retrieveDensity();
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
@@ -188,8 +195,7 @@ public abstract class ObjectOverlay implements IOverlay {
 			mMatrix.invert(matrix);
 			float[] pts = new float[] { x, y };
 			matrix.mapPoints(pts);
-			return rect.contains((int) (pts[0] - CONTROL_POINTS_RADIUS * mDensity),
-					(int) (pts[1] - CONTROL_POINTS_RADIUS * mDensity));
+			return rect.contains((int) (pts[0]), (int) (pts[1]));
 		}
 		return false;
 	}
@@ -324,7 +330,7 @@ public abstract class ObjectOverlay implements IOverlay {
 		float radius = CONTROL_POINTS_RADIUS * mDensity;
 
 		PointF point = getDeletePoint();
-		if (point != null && distance(point.x, point.y, x, y) < radius) {
+		if (point != null && distance(point.x, point.y, x, y) < radius && isFlipable()) {
 			mDeletePointSelected = true;
 		} else {
 			mDeletePointSelected = false;
@@ -365,7 +371,7 @@ public abstract class ObjectOverlay implements IOverlay {
 				return;
 			}
 			if (isOverlaySelected()) {
-				
+
 				mPaint.setColorFilter(null);
 				// 画线
 				mPaint.setStyle(Style.STROKE);
@@ -380,15 +386,17 @@ public abstract class ObjectOverlay implements IOverlay {
 				mPaint.setColor(Color.RED);
 
 				// 画删除键
-				canvas.drawCircle(leftTop.x, leftTop.y, padding, mPaint);
+				if (isFlipable()) {
+					canvas.drawCircle(leftTop.x, leftTop.y, padding, mPaint);
+				}
 				// 画移动键
 				canvas.drawCircle(rightBottom.x, rightBottom.y, padding, mPaint);
-				
+
 				LOGD("======= draw the container view =======");
 			}
 		}
 	}
-	
+
 	private static void LOGD(String logMe) {
 		Logger.d("ObjectOverlay", logMe);
 	}

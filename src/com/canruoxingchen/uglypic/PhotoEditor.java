@@ -3,7 +3,6 @@
  */
 package com.canruoxingchen.uglypic;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +38,7 @@ import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.footage.FootAge;
+import com.canruoxingchen.uglypic.footage.NetSence;
 import com.canruoxingchen.uglypic.footage.FootAgeType;
 import com.canruoxingchen.uglypic.footage.FootageManager;
 import com.canruoxingchen.uglypic.overlay.EditorContainerView;
@@ -48,7 +49,6 @@ import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay.SceneSizeAquiredListener;
 import com.canruoxingchen.uglypic.overlay.TextOverlay;
-import com.canruoxingchen.uglypic.util.FileUtils;
 import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.Logger;
 import com.canruoxingchen.uglypic.view.HorizontalListView;
@@ -63,10 +63,12 @@ import com.canruoxingchen.uglypic.view.HorizontalListView;
 public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener,
 		SceneSizeAquiredListener {
 	private static final String EXTRA_PHOTO_URI = "photo_uri";
-
+	
 	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
 
 	private static final int REQUEST_CODE_EDIT_TEXT = 1001;
+	
+	private static final int MSG_REGRET_STATUS_CHANGED = R.id.msg_editor_regret_status_change;
 
 	// 原始照片的uri
 	private Uri mPhotoUri;
@@ -84,6 +86,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private View mViewDelete;
 	private View mViewEraser;
 	private View mTopContextMenu;
+	private View mViewModifyFinish;
+	private View mViewBottomPanel;
 
 	/**
 	 * "分享"和"重置"
@@ -128,7 +132,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private ObjectOverlay mCurrentOverlay;
 
 	private List<FootAgeType> mFootageTypes = new ArrayList<FootAgeType>();
-	private List<FootAge> mFootages = new ArrayList<FootAge>();
+	private List<Object> mFootages = new ArrayList<Object>();
 	private TypeAdapter mTypeAdapter = new TypeAdapter();
 	private FootageAdapter mFootageAdapter = new FootageAdapter();
 
@@ -170,12 +174,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				List<FootAgeType> types = (List<FootAgeType>) msg.obj;
 				LOGD(">>>>>>>>>>> load types from local >>>>>>>>>> " + types);
 				if (types != null && types.size() > 0) {
+					activity.mFootageTypes.clear();
+					activity.mFootageTypes.add(FootAgeType.RECENT_TYPE);
 					activity.mFootageTypes.addAll(types);
 					activity.mTypeAdapter.notifyDataSetChanged();
 					// 如果尚无选中的类型，则选择第一个
 					if (activity.mCurrentType == null) {
-						activity.mCurrentType = activity.mFootageTypes.get(2);
-						activity.mFootageManager.loadLocalFootages(activity.mCurrentType.getObjectId());
+						activity.mCurrentType = activity.mFootageTypes.get(0);
 					}
 				} else {
 					activity.mFootageManager.loadFootageTypeFromServer();
@@ -191,12 +196,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				LOGD(">>>>>>>>>>> load types from server >>>>>>>>>> " + types);
 				// 如果从本地未取到素材类型列表，则显示服务器取到的数据
 				if (types != null && types.size() > 0 && activity.mFootageTypes.size() == 0) {
+					activity.mFootageTypes.clear();
+					activity.mFootageTypes.add(FootAgeType.RECENT_TYPE);
 					activity.mFootageTypes.addAll(types);
 					activity.mTypeAdapter.notifyDataSetChanged();
 					// 如果尚无选中的类型，则选择第一个
 					if (activity.mCurrentType == null) {
-						activity.mCurrentType = activity.mFootageTypes.get(2);
-						activity.mFootageManager.loadLocalFootages(activity.mCurrentType.getObjectId());
+						activity.mCurrentType = activity.mFootageTypes.get(0);
 					}
 				}
 				break;
@@ -213,10 +219,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						activity.mFootages.clear();
 						activity.mFootages.addAll(footages);
 						activity.mFootageAdapter.notifyDataSetChanged();
-					}
-				} else {
-					if (activity.mCurrentType != null) {
-						activity.mFootageManager.loadFootagesFromServer(activity.mCurrentType.getObjectId());
 					}
 				}
 				break;
@@ -248,20 +250,86 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				}
 				break;
 			}
+			case FootageManager.MSG_LOAD_SCENES_SUCCESS: {// 显示本地的场景
+				List<NetSence> scenes = (List<NetSence>) msg.obj;
+				LOGD("<<<<<<<<<<<<<<<<<<<load local scenes>>>>>>>>>>>>>>>>>>>" + scenes);
+				if (scenes != null && scenes.size() > 0 && activity.mCurrentType != null) {
+					// 判断当前的素材的id是否为当前选中的type
+					NetSence scene = scenes.get(0);
+					if (scene.getSenceParentId().equals(activity.mCurrentType.getObjectId())) {
+						activity.mFootages.clear();
+						activity.mFootages.addAll(scenes);
+						activity.mFootageAdapter.notifyDataSetChanged();
+					}
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_SCENES_FAILURE:
+				break;
+			case FootageManager.MSG_LOAD_LOCAL_SCENES_SUCCESS: {
+				List<NetSence> scenes = (List<NetSence>) msg.obj;
+				LOGD("<<<<<<<<<<<<<<<<<<<load local footages>>>>>>>>>>>>>>>>>>>" + scenes);
+				// 显示本地的素材
+				if (scenes != null && scenes.size() > 0 && activity.mCurrentType != null) {
+					// 判断当前的素材的id是否为当前选中的type
+					NetSence scene = scenes.get(0);
+					if (scene.getSenceParentId().equals(activity.mCurrentType.getObjectId())) {
+						activity.mFootages.clear();
+						activity.mFootages.addAll(scenes);
+						activity.mFootageAdapter.notifyDataSetChanged();
+					}
+				} else {
+					if (activity.mCurrentType != null) {
+						activity.mFootageManager.loadScenesFromServer(activity.mCurrentType.getObjectId());
+					}
+				}
+				break;
+			}
+			case FootageManager.MSG_LOAD_LOCAL_SCENES_FAILURE: {
+				if (activity.mCurrentType != null) {
+					activity.mFootageManager.loadScenesFromServer(activity.mCurrentType.getObjectId());
+				}
+				break;
+			}
 			case FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS: {
 				if (activity.mFootages != null) {
-					FootAge footage = (FootAge) msg.obj;
-					for (FootAge f : activity.mFootages) {
-						if (footage == null || footage.getObjectId().equals(f.getObjectId())) {
-							f.setIconUrl(footage.getIconUrl());
-							activity.mFootageAdapter.notifyDataSetChanged();
-							break;
+					if (msg.obj instanceof FootAge) {
+						FootAge footage = (FootAge) msg.obj;
+						for (Object obj : activity.mFootages) {
+							if (obj instanceof NetSence) {
+								break;
+							}
+							FootAge f = (FootAge) obj;
+							if (footage != null && footage.getObjectId().equals(f.getObjectId())) {
+								f.setIconUrl(footage.getIconUrl());
+								activity.mFootageAdapter.notifyDataSetChanged();
+								break;
+							}
+						}
+					} else {
+						NetSence netScene = (NetSence) msg.obj;
+						for (Object obj : activity.mFootages) {
+							if (obj instanceof FootAge) {
+								break;
+							}
+							NetSence ns = (NetSence) obj;
+							if (netScene != null && netScene.getObjectId().equals(ns.getObjectId())) {
+								ns.setSenceNetIcon(netScene.getSenceNetIcon());
+								activity.mFootageAdapter.notifyDataSetChanged();
+								break;
+							}
 						}
 					}
 				}
 				break;
 			}
 			case FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE: {
+				break;
+			}
+			case MSG_REGRET_STATUS_CHANGED: {
+				if(activity.mEditorContainerView != null) {
+					activity.mEditorContainerView.onRegretStatusChanged();
+				}
 				break;
 			}
 			}
@@ -315,12 +383,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		setContentView(R.layout.photo_editor);
 
 		mRootView = (RelativeLayout) findViewById(R.id.photo_editor_root_view);
-
+		mViewBottomPanel = findViewById(R.id.photo_editor_bottom_panel);
 		mPvPhoto = (PhotoView) findViewById(R.id.photo_editor_photo);
-		// mTabScene = findViewById(R.id.photo_editor_tab_scene);
-		// mTabWidget = findViewById(R.id.photo_editor_tab_widget);
-		// mTabText = findViewById(R.id.photo_editor_tab_text);
-		// mTabFinish = findViewById(R.id.photo_editor_tab_finish);
 
 		mTopContextMenu = findViewById(R.id.photo_editor_topbar_object_menu);
 		mViewModify = findViewById(R.id.photo_editor_top_bar_object_modify);
@@ -329,6 +393,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mViewContextBtn = (Button) findViewById(R.id.photo_editor_context_button);
 		mLvTypes = (HorizontalListView) findViewById(R.id.photo_editor_footage_types_list);
 		mLvFootages = (HorizontalListView) findViewById(R.id.photo_editor_footage_list);
+		mViewModifyFinish = findViewById(R.id.photo_editor_topbar_modify_finish);
 
 		mViewBackToCamera = findViewById(R.id.photo_editor_top_bar_camera);
 
@@ -348,29 +413,63 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	@Override
 	protected void initListers() {
-		// mTabScene.setOnClickListener(this);
-		// mTabWidget.setOnClickListener(this);
-		// mTabText.setOnClickListener(this);
-		// mTabFinish.setOnClickListener(this);
-
 		mViewModify.setOnClickListener(this);
 		mViewDelete.setOnClickListener(this);
 		mViewEraser.setOnClickListener(this);
 		mViewContextBtn.setOnClickListener(this);
+		mViewModifyFinish.setOnClickListener(this);
 
 		mViewBackToCamera.setOnClickListener(this);
 
 		mRlOverlayContainer.setOnTouchListener(this);
 
+		mLvTypes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				FootAgeType type = mFootageTypes.get(position);
+				mCurrentType = type;
+				switch (type.getTypeTarget()) {
+				case FootAgeType.TYPE_RECENT: // 最近使用
+					// TODO: 加载最近使用的素材
+					break;
+				case FootAgeType.TYPE_IMAGE: // 图片
+					// TODO：加载footage
+					mFootageManager.loadLocalFootages(type.getObjectId());
+					break;
+				case FootAgeType.TYPE_SCENE: // 场景
+					// TODO: 加载场景
+					mFootageManager.loadLocalScenes(type.getObjectId());
+					break;
+				}
+			}
+		});
+
 		mLvFootages.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				final FootAge footage = mFootages.get(position);
-				if (!TextUtils.isEmpty(footage.getIconUrl())) {
-					ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
-							.getIconUrl()));
-					addOverlay(overlay);
+				final Object obj = mFootages.get(position);
+				if (obj instanceof FootAge) {
+					final FootAge footage = (FootAge) obj;
+					if (!TextUtils.isEmpty(footage.getIconUrl())) {
+						ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
+								.getIconUrl()));
+						addOverlay(overlay);
+					}
+				} else {
+					final NetSence netScene = (NetSence) obj;
+					if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
+						SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri.parse(netScene
+								.getSenceNetIcon()));
+						Rect inputRect = netScene.getInputRectBounds();
+						if (inputRect != null) {
+							builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
+							builder.setTextHint(netScene.getInputContent());
+							builder.setTextSize(netScene.getInputFontSize());
+						}
+						setSceneOverlay(builder.create());
+					}
 				}
 			}
 
@@ -381,12 +480,16 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	protected void onResume() {
 		super.onResume();
 		registerAllFootageMsg();
+		
+		//注册编辑内容可回退状态改变的消息
+		MessageCenter.getInstance(this).registerMessage(R.id.msg_editor_regret_status_change, mHandler);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
 		unregisterAllFootageMsg();
+		MessageCenter.getInstance(this).unregisterMessage(R.id.msg_editor_regret_status_change, mHandler);
 	}
 
 	private void registerAllFootageMsg() {
@@ -401,20 +504,28 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_SUCCESS, mHandler);
 		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS, mHandler);
 		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_SCENES_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_SCENES_FAILURE, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_SCENES_SUCCESS, mHandler);
+		messageCenter.registerMessage(FootageManager.MSG_LOAD_SCENES_FAILURE, mHandler);
 	}
 
 	private void unregisterAllFootageMsg() {
 		MessageCenter messageCenter = MessageCenter.getInstance(this);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_FAILURE, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_SUCCESS, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_FAILURE, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_SUCCESS, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_FAILURE, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_SUCCESS, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_FAILURE, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_SUCCESS, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS, mHandler);
-		messageCenter.registerMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_FOOTAGE_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_FOOTAGE_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_FOOTAGE_TYPES_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_FOOTAGE_TYPES_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_SCENES_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_LOCAL_SCENES_FAILURE, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_SCENES_SUCCESS, mHandler);
+		messageCenter.unregisterMessage(FootageManager.MSG_LOAD_SCENES_FAILURE, mHandler);
 	}
 
 	// 重置所有效果
@@ -504,7 +615,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			if (mViewContextBtn.getText().equals(getString(R.string.photo_editor_context_btn_share))) {
 				saveCurrentImage();
 			} else { // 重置
-
+				if (mCurrentOverlay != null && mCurrentOverlay instanceof ImageWidgetOverlay) {
+					((ImageWidgetOverlay) mCurrentOverlay).reset();
+				}
 			}
 			break;
 		}
@@ -533,12 +646,45 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		// mDialog = builder.show();
 		// break;
 		// }
-		case R.id.photo_editor_top_bar_object_modify: // 调整
+		case R.id.photo_editor_top_bar_object_modify: {// 调整
+			if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
+				mTopContextMenu.setVisibility(View.GONE);
+				mViewModifyFinish.setVisibility(View.VISIBLE);
+				mViewBottomPanel.setVisibility(View.INVISIBLE);
+				
+				// 显示调整view
+				mVgContextMenuContainer.removeAllViews();
+				mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
+				mVgContextMenuContainer.setVisibility(View.VISIBLE);
+				mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
+				// 显示完成按钮
+
+				// 显示重置按钮
+				mViewContextBtn.setText(R.string.photo_editor_context_btn_reset);
+			} else {
+				mVgContextMenuContainer.setVisibility(View.GONE);
+			}
 			break;
-		case R.id.photo_editor_top_bar_object_delete: // 删除当前的ObjecOverlay
+		}
+		case R.id.photo_editor_top_bar_object_delete: { // 删除当前的ObjecOverlay
+			if (mCurrentOverlay != null) {
+				removeOverlay(mCurrentOverlay);
+			}
 			break;
-		case R.id.photo_editor_top_bar_object_eraser: // 擦除
+		}
+		case R.id.photo_editor_top_bar_object_eraser: { // 擦除
+			if (mCurrentOverlay != null && mCurrentOverlay instanceof ImageWidgetOverlay) {
+				((ImageWidgetOverlay) mCurrentOverlay).startErase();
+			}
 			break;
+		}
+		case R.id.photo_editor_topbar_modify_finish: // 编辑完成
+			if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
+				mVgContextMenuContainer.setVisibility(View.GONE);
+				mTopContextMenu.setVisibility(View.VISIBLE);
+				mViewModifyFinish.setVisibility(View.GONE);
+				mViewBottomPanel.setVisibility(View.VISIBLE);
+			}
 		}
 	}
 
@@ -618,12 +764,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			if (mCurrentOverlay != null) {
 				mCurrentOverlay.setOverlaySelected(false);
 				mCurrentOverlay.getContainerView(this).invalidate();
+				mCurrentOverlay = null;
+				mTopContextMenu.setVisibility(View.GONE);
 			}
 			mVgContextMenuContainer.setVisibility(View.GONE);
-			mCurrentOverlay = overlay;
-			mCurrentOverlay.setOverlaySelected(true);
-			mCurrentOverlay.setEditorContainerView(mEditorContainerView);
-			mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 		}
 	}
 
@@ -646,11 +790,22 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	// }
 	// }
 
+	private void flipOverlay(ObjectOverlay overlay) {
+		if (overlay.isFlipable()) {
+			overlay.flip();
+		}
+	}
+
 	private void removeOverlay(ObjectOverlay overlay) {
 		mOverlays.remove(overlay);
 		if (overlay.getContainerView(PhotoEditor.this) != null) {
 			mRlOverlayContainer.removeView(overlay.getContainerView(PhotoEditor.this));
 		}
+		mTopContextMenu.setVisibility(View.GONE);
+	}
+	
+	private boolean isEditting() {
+		return mViewModifyFinish.getVisibility() == View.VISIBLE;
 	}
 
 	@Override
@@ -659,6 +814,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		switch (e.getAction()) {
 		case MotionEvent.ACTION_DOWN: {
+			if(isEditting()) { //正在编辑的过程中，直接将手势传递到子view
+				return false;
+			}
 			int size = mOverlays.size();
 			if (mCurrentOverlay != null) {
 				mCurrentOverlay.checkKeyPointsSelectionStatus((int) e.getX(), (int) e.getY());
@@ -666,14 +824,19 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isDeletePointSelected()) {
 					// 是否点中了删除按钮
 					if (mCurrentOverlay.isDeletePointSelected()) {
-						removeOverlay(mCurrentOverlay);
-						mCurrentOverlay = null;
+						// removeOverlay(mCurrentOverlay);
+						// TODO: flip
+						flipOverlay(mCurrentOverlay);
+						// mCurrentOverlay = null;
+						return true;
 					}
+
 					if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
-						mVgContextMenuContainer.removeAllViews();
-						mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
-						mVgContextMenuContainer.setVisibility(View.VISIBLE);
-						mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
+						mTopContextMenu.setVisibility(View.VISIBLE);
+						// mVgContextMenuContainer.removeAllViews();
+						// mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
+						// mVgContextMenuContainer.setVisibility(View.VISIBLE);
+						// mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
 					} else {
 						mVgContextMenuContainer.setVisibility(View.GONE);
 					}
@@ -709,22 +872,29 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			// 选中了一个浮层
 			if (mCurrentOverlay != null) {
 				if (mCurrentOverlay.isDeletePointSelected()) {
-					removeOverlay(mCurrentOverlay);
-					mCurrentOverlay = null;
-					mVgContextMenuContainer.removeAllViews();
-					mVgContextMenuContainer.setVisibility(View.GONE);
+					// removeOverlay(mCurrentOverlay);
+					// mCurrentOverlay = null;
+					// mVgContextMenuContainer.removeAllViews();
+					// mVgContextMenuContainer.setVisibility(View.GONE);
+					flipOverlay(mCurrentOverlay);
 				} else {
-					if (mCurrentOverlay.getContextView() != null) {
-						mVgContextMenuContainer.removeAllViews();
-						mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
-						mVgContextMenuContainer.setVisibility(View.VISIBLE);
-					} else {
-						mVgContextMenuContainer.setVisibility(View.GONE);
-					}
-					mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
+					mCurrentOverlay.setEditorContainerView(mEditorContainerView);
+					mTopContextMenu.setVisibility(View.VISIBLE);
+
+					// if (mCurrentOverlay.getContextView() != null) {
+					// mVgContextMenuContainer.removeAllViews();
+					// mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
+					// mVgContextMenuContainer.setVisibility(View.VISIBLE);
+					// } else {
+					// mVgContextMenuContainer.setVisibility(View.GONE);
+					// }
+					// mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
 				}
 				return true;
 			}
+
+			mTopContextMenu.setVisibility(View.GONE);
+			mViewModifyFinish.setVisibility(View.GONE);
 			break;
 		}
 		}
@@ -911,23 +1081,50 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				convertView.setTag(viewHolder);
 			}
 			viewHolder = (ViewHolder) convertView.getTag();
-			final FootAge footage = mFootages.get(position);
-			if (!TextUtils.isEmpty(footage.getIconUrl())) {
-				viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
-				viewHolder.aivIcon.setOnClickListener(new View.OnClickListener() {
+			final Object obj = mFootages.get(position);
+			if (obj instanceof FootAge) {
+				final FootAge footage = (FootAge) obj;
+				if (!TextUtils.isEmpty(footage.getIconUrl())) {
+					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
+					viewHolder.aivIcon.setOnClickListener(new View.OnClickListener() {
 
-					@Override
-					public void onClick(View v) {
-						ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
-								.getIconUrl()));
-						addOverlay(overlay);
-					}
-				});
+						@Override
+						public void onClick(View v) {
+							ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage
+									.getIconUrl()));
+							addOverlay(overlay);
+						}
+					});
+				} else {
+					// 尚未下载图片，则先下载
+					viewHolder.aivIcon.setOnClickListener(null);
+				}
+				viewHolder.tvName.setText(footage.getIconName());
 			} else {
-				// 尚未下载图片，则先下载
-				viewHolder.aivIcon.setOnClickListener(null);
+				final NetSence netScene = (NetSence) obj;
+				if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
+					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netScene.getSenceNetIcon()));
+					viewHolder.aivIcon.setOnClickListener(new View.OnClickListener() {
+
+						@Override
+						public void onClick(View v) {
+							SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri
+									.parse(netScene.getSenceNetIcon()));
+							Rect inputRect = netScene.getInputRectBounds();
+							if (inputRect != null) {
+								builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
+								builder.setTextHint(netScene.getInputContent());
+								builder.setTextSize(netScene.getInputFontSize());
+							}
+							setSceneOverlay(builder.create());
+						}
+					});
+				} else {
+					// 尚未下载图片
+					viewHolder.aivIcon.setOnClickListener(null);
+				}
+				viewHolder.tvName.setText(netScene.getSenceName());
 			}
-			viewHolder.tvName.setText(footage.getIconName());
 
 			return convertView;
 		}

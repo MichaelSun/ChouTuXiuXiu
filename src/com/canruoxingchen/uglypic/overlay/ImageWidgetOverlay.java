@@ -14,7 +14,6 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
@@ -32,6 +31,7 @@ import android.widget.GridView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 
+import com.canruoxingchen.uglypic.MessageCenter;
 import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
@@ -88,8 +88,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	@Override
 	public Rect getInitialContentBounds() {
-//		super.getInitialContentBounds();
-//		return mAivImage.getDrawable() == null ? null : mAivImage.getDrawable().getBounds();
+		// super.getInitialContentBounds();
+		// return mAivImage.getDrawable() == null ? null :
+		// mAivImage.getDrawable().getBounds();
 
 		retrieveDensity();
 		// float density = mDensity > 0 ? mDensity : 1.0f;
@@ -105,7 +106,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void translate(int dx, int dy) {
 		super.translate(dx, dy);
 		if (mAivImage.getDrawable() != null) {
-//			mAivImage.setImageMatrix(getMatrix());
+			// mAivImage.setImageMatrix(getMatrix());
 			mTranslateX += dx;
 			mTranslateY += dy;
 			mAivImage.setTranslationX(mTranslateX);
@@ -117,7 +118,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void scale(float sx, float sy) {
 		super.scale(sx, sy);
 		if (mAivImage.getDrawable() != null) {
-//			mAivImage.setImageMatrix(getMatrix());
+			// mAivImage.setImageMatrix(getMatrix());
 			mScaleX *= sx;
 			mScaleY *= sy;
 			mAivImage.setScaleX(mScaleX);
@@ -129,7 +130,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void rotate(float degrees) {
 		super.rotate(degrees);
 		if (mAivImage.getDrawable() != null) {
-//			mAivImage.setImageMatrix(getMatrix());
+			// mAivImage.setImageMatrix(getMatrix());
 			mRotate += degrees;
 			mAivImage.setRotation(mRotate);
 		}
@@ -143,6 +144,18 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	@Override
 	public boolean isOverlaySelected() {
 		return mSelected;
+	}
+
+	@Override
+	public void flip() {
+		if (mAivImage != null) {
+			mAivImage.flip();
+		}
+	}
+
+	@Override
+	public boolean isFlipable() {
+		return true;
 	}
 
 	/**
@@ -282,7 +295,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	private class CopyOnWriteImageView extends AsyncImageView {
 
-		private static final int CONTROL_POINTS_RADIS = 20;
+		// private static final int CONTROL_POINTS_RADIS = 20;
 		private float mDensity = 1.0f;
 		private Paint mPaint;
 
@@ -295,7 +308,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		private int mCurrentStrokeWidth = 5;
 		// 橡皮记录
 		private List<EraseRecord> mRecords = new LinkedList<EraseRecord>();
-		private int mPathIndex = 0;
+		private int mPathIndex = -1;
 
 		// 附加操作，不包含亮度、对比度、饱和度
 		private List<IImageOperation> mOperations = new LinkedList<IImageOperation>();
@@ -317,9 +330,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			DisplayMetrics dm = new DisplayMetrics();
 			wm.getDefaultDisplay().getMetrics(dm);
 			mDensity = dm.density;
-//			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
-//			setPadding(padding, padding, padding, padding);
-			
+			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+			// setPadding(padding, padding, padding, padding);
+
 			setIllumination(IlluminationImageOperation.DEFAULT);
 			setSatuation(SatuationImageOperation.DEFAULT);
 			setContrast(ContrastImageOperation.DEFAULT);
@@ -356,11 +369,8 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 
 		private void reset() {
-			mOperations.clear();
-			mIllumination = IlluminationImageOperation.DEFAULT;
-			mSatuation = SatuationImageOperation.DEFAULT;
-			mContrast = ContrastImageOperation.DEFAULT;
 			mEraserMode = false;
+			mSatuationMatrix.reset();
 			if (mImage != null && !mImage.isRecycled()) {
 				setImageDrawable(null);
 				setImageInfo(ImageInfo.obtain(mUri.toString()));
@@ -369,6 +379,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			} else {
 				setImageInfo(ImageInfo.obtain(mUri.toString()));
 			}
+			invalidate();
+			setSatuation(IlluminationImageOperation.DEFAULT);
+			setContrast(SatuationImageOperation.DEFAULT);
+			setIllumination(ContrastImageOperation.DEFAULT);
 		}
 
 		private void setContrast(int contrast) {
@@ -393,6 +407,26 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			// 调整亮度参数到 [-1, 1]区间
 			mIllumination = (illumination - IlluminationImageOperation.DEFAULT)
 					/ (1.0f * IlluminationImageOperation.DEFAULT);
+			invalidate();
+		}
+
+		private void flip() {
+			copyImage();
+			int width = mImage.getWidth();
+			int height = mImage.getHeight();
+			int middle = width / 2;
+			int[] pixels = new int[mImage.getWidth() * mImage.getHeight()];
+			mImage.getPixels(pixels, 0, width, 0, 0, width, height);
+			// TODO: 可以在JNI实现
+			for (int i = 0; i < height; i++) {
+				int start = i * width;
+				for (int j = 0; j < middle; j++) {
+					int temp = pixels[start + j];
+					pixels[start + j] = pixels[start + width - j - 1];
+					pixels[start + width - j - 1] = temp;
+				}
+			}
+			mImage.setPixels(pixels, 0, width, 0, 0, width, height);
 			invalidate();
 		}
 
@@ -466,7 +500,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 		/*-橡皮相关*/
 		private boolean hasMoreRegret() {
-			return (mPathIndex > 0 ? true : mRecords.size() > 0);
+			return (mPathIndex >= 0 ? true : mRecords.size() > 0);
 		}
 
 		private boolean hasMoreRedo() {
@@ -478,7 +512,8 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 
 		private void regret() {
-			if (mPathIndex > 0) {
+			mCurrentPath = null;
+			if (mPathIndex >= 0) {
 				mPathIndex = mPathIndex - 1;
 			} else {
 				mRecords.clear();
@@ -518,11 +553,14 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		private void touchUp(float x, float y) {
 			if (mCurrentPath != null) {
 				mCurrentPath.lineTo(x, y);
-				if (mPathIndex < mRecords.size() - 1) {
-					mRecords = mRecords.subList(0, mPathIndex);
+				while (mPathIndex >= 0 && mPathIndex < mRecords.size() - 1) {
+					mRecords.remove(mRecords.size() - 1);
 				}
 				mRecords.add(new EraseRecord(mCurrentPath, mCurrentStrokeWidth));
 				mPathIndex = mRecords.size() - 1;
+				//通知容器，可回退状态已改变
+				MessageCenter.getInstance(getContext())
+						.notifyHandlers(R.id.msg_editor_regret_status_change, 0, 0, null);
 			}
 		}
 
@@ -532,15 +570,15 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 			Canvas canvas = new Canvas(mImage);
 			if (mPathIndex < mRecords.size() - 1 && mPathIndex >= 0) {
-				mRecords = mRecords.subList(0, mPathIndex);
+				mRecords = mRecords.subList(0, mPathIndex + 1);
 			}
-			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 			int saveCount = canvas.getSaveCount();
 			canvas.save();
 			android.graphics.Matrix matrix = new Matrix();
 			getImageMatrix().invert(matrix);
 			canvas.concat(matrix);
-			canvas.translate(-padding, -padding);
+			// canvas.translate(-padding, -padding);
 			for (EraseRecord record : mRecords) {
 				mEraserPaint.setStrokeWidth(record.strokeWidth);
 				canvas.drawPath(record.path, mEraserPaint);
@@ -556,17 +594,19 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			if (mEraseableCanvas == null) {
 				mEraseableCanvas = new Canvas(mEraseableImage);
 			}
+			
+			List<EraseRecord> records = new ArrayList<ImageWidgetOverlay.EraseRecord>();
 			if (mPathIndex < mRecords.size() - 1 && mPathIndex >= 0) {
-				mRecords = mRecords.subList(0, mPathIndex);
+				records = mRecords.subList(0, mPathIndex + 1);
 			}
-			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 			int saveCount = mEraseableCanvas.getSaveCount();
 			mEraseableCanvas.save();
 			android.graphics.Matrix matrix = new Matrix();
 			getImageMatrix().invert(matrix);
 			mEraseableCanvas.concat(matrix);
-			mEraseableCanvas.translate(-padding, -padding);
-			for (EraseRecord record : mRecords) {
+			// mEraseableCanvas.translate(-padding, -padding);
+			for (EraseRecord record : records) {
 				mEraserPaint.setStrokeWidth(record.strokeWidth);
 				mEraseableCanvas.drawPath(record.path, mEraserPaint);
 			}
@@ -606,48 +646,48 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			return true;
 		}
 
-//		@Override
-//		protected void onDraw(Canvas canvas) {
-//			// 先调整亮度、对比度、饱和度
-//			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
-//			// 通过对比度和亮度计算一个参数
-//			// y = [x - 127.5 * (1 - B)] * k + 127.5 * (1 + B);
-//
-//			float factor = mContrast;
-//			float addon = -127.5f * (1 - mIllumination) * mContrast + 127.5f * (1 + mIllumination);
-//			// 叠加饱和度，参照了setSatuation源码
-//
-//			// m[0] = R + sat; m[1≤] = G; m[2] = B;
-//			// m[5] = R; m[6] = G + sat; m[7] = B;
-//			// m[10] = R; m[11] = G; m[12] = B + sat;
-//			mSatuationMatrix.setSaturation(mSatuation);
-//			mColorMatrix.set(new float[] { factor, 0, 0, 0, addon, // 1
-//					0, factor, 0, 0, addon, // 1
-//					0, 0, factor, 0, addon, // 2
-//					0, 0, 0, 1, 0 }); // 4
-//			mColorMatrix.postConcat(mSatuationMatrix);
-//
-//			int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
-//			if (mPaint == null) {
-//				mPaint = new Paint();
-//			}
-//
-//			Bitmap image = mEraserMode ? mEraseableImage : mImage;
-//
-//			if (image != null) {
-//				LOGD("<<<<<<<<< draw with color matrix >>>>>>>>>>>>");
-//				int saveCount = canvas.getSaveCount();
-//				canvas.save();
-//				canvas.translate(padding, padding);
-//				canvas.concat(getImageMatrix());
-//				ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(mColorMatrix);
-//				mPaint.setColorFilter(colorFilter);
-//				canvas.drawBitmap(image, 0, 0, mPaint);
-//				canvas.restoreToCount(saveCount);
-//			} else {
-//				super.onDraw(canvas);
-//			}
-//		}
+		@Override
+		protected void onDraw(Canvas canvas) {
+			// 先调整亮度、对比度、饱和度
+			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
+			// 通过对比度和亮度计算一个参数
+			// y = [x - 127.5 * (1 - B)] * k + 127.5 * (1 + B);
+
+			float factor = mContrast;
+			float addon = -127.5f * (1 - mIllumination) * mContrast + 127.5f * (1 + mIllumination);
+			// 叠加饱和度，参照了setSatuation源码
+
+			// m[0] = R + sat; m[1≤] = G; m[2] = B;
+			// m[5] = R; m[6] = G + sat; m[7] = B;
+			// m[10] = R; m[11] = G; m[12] = B + sat;
+			mSatuationMatrix.setSaturation(mSatuation);
+			mColorMatrix.set(new float[] { factor, 0, 0, 0, addon, // 1
+					0, factor, 0, 0, addon, // 1
+					0, 0, factor, 0, addon, // 2
+					0, 0, 0, 1, 0 }); // 4
+			mColorMatrix.postConcat(mSatuationMatrix);
+
+			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
+			if (mPaint == null) {
+				mPaint = new Paint();
+			}
+
+			Bitmap image = mEraserMode ? mEraseableImage : mImage;
+
+			if (image != null) {
+				LOGD("<<<<<<<<< draw with color matrix >>>>>>>>>>>>");
+				int saveCount = canvas.getSaveCount();
+				canvas.save();
+				// canvas.translate(padding, padding);
+				canvas.concat(getImageMatrix());
+				ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(mColorMatrix);
+				mPaint.setColorFilter(colorFilter);
+				canvas.drawBitmap(image, 0, 0, mPaint);
+				canvas.restoreToCount(saveCount);
+			} else {
+				super.onDraw(canvas);
+			}
+		}
 	}
 
 	private static void LOGD(String logMe) {
@@ -662,8 +702,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			mContextView.setIlluminationChangedListener(this);
 			mContextView.setContrastChangedListener(this);
 			mContextView.setSatuationChangedListener(this);
-			mContextView.setResetListener(this);
-			mContextView.setEraseListener(this);
 		}
 		return mContextView;
 	}
@@ -733,6 +771,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	@Override
 	public void onErased(ImageOverlayContextView view) {
+
+	}
+
+	public void startErase() {
 		if (getEditorContainerView().getVisibility() != View.VISIBLE) {
 			EraseImageEditorView eraseImageEditorView = new EraseImageEditorView(mContext);
 			getEditorContainerView().setEditorView(eraseImageEditorView);
@@ -742,6 +784,13 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			if (mContextView != null) {
 				mContextView.setVisibility(View.GONE);
 			}
+		}
+	}
+
+	public void reset() {
+		mAivImage.reset();
+		if (mContextView != null) {
+			mContextView.reset();
 		}
 	}
 
@@ -757,9 +806,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 		setOverlaySelected(false);
 		View container = getContainerView(mContext);
-		if(container != null) {
+		if (container != null) {
 			container.invalidate();
 		}
+		mAivImage.setAlpha(0.7f);
 	}
 
 	private void disableEraseMode() {
@@ -771,9 +821,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 		setOverlaySelected(true);
 		View container = getContainerView(mContext);
-		if(container != null) {
+		if (container != null) {
 			container.invalidate();
 		}
+		mAivImage.setAlpha(1.0f);
 	}
 
 	@Override

@@ -4,32 +4,40 @@ import com.canruoxingchen.uglypic.http.CloudObj;
 
 public class FootAgeType implements CloudObj, Comparable<FootAgeType> {
 	public static final String CLASS_NAME = "FootAgeType";
+	
+	public static final int TYPE_RECENT = 0;
+	public static final int TYPE_IMAGE = 1;
+	public static final int TYPE_SCENE = 3;
 
 	public static final String COLUMN_OBJECT_ID = "objectId";
 	public static final String COLUMN_TYPE_NAME = "typeName";
 	public static final String COLUMN_OLD_NAME = "oldName";
 	public static final String COLUMN_IS_DEFAULT = "isDefault";
 	public static final String COLUMN_ORDER_NUM = "orderNum";
+	public static final String COLUMN_TYPE_TARGET = "typeTarget";
 	
-	public static FootAgeType RECENT_TYPE = new FootAgeType("recent", "常用", "", 1, -1);
+	public static FootAgeType RECENT_TYPE = new FootAgeType("recent", "常用", "", 1, -1, 0);
 
 	private String mObjectId;
 	private String mTypeName;
 	private String mOldName;
 	private int mIsDefault;
 	private int mOrderNum;
+	private int mTypeTarget;
 	
 	public FootAgeType() {
 		
 	}
 
-	public FootAgeType(String mObjectId, String mTypeName, String mOldName, int mIsDefault, int mOrderNum) {
+	public FootAgeType(String mObjectId, String mTypeName, String mOldName, int mIsDefault, int mOrderNum,
+			int typeTarget) {
 		super();
 		this.mObjectId = mObjectId;
 		this.mTypeName = mTypeName;
 		this.mOldName = mOldName;
 		this.mIsDefault = mIsDefault;
 		this.mOrderNum = mOrderNum;
+		this.mTypeTarget = typeTarget;
 	}
 
 	public String getObjectId() {
@@ -72,10 +80,13 @@ public class FootAgeType implements CloudObj, Comparable<FootAgeType> {
 		this.mOrderNum = orderNum;
 	}
 
-	@Override
-	public String toString() {
-		return "FootAgeType [mObjectId=" + mObjectId + ", mTypeName=" + mTypeName + ", mOldName=" + mOldName
-				+ ", mIsDefault=" + mIsDefault + ", mOrderNum=" + mOrderNum + "]";
+
+	public int getTypeTarget() {
+		return mTypeTarget;
+	}
+
+	public void setTypeTarget(int typeTarget) {
+		this.mTypeTarget = typeTarget;
 	}
 
 	@Override

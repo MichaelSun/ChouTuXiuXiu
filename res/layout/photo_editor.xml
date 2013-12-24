@@ -50,6 +50,7 @@
         <TextView android:id="@+id/photo_editor_topbar_modify_finish"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
             android:visibility="gone"
             android:text="@string/photo_editor_top_bar_finish"
             android:layout_marginRight="10dp"></TextView>

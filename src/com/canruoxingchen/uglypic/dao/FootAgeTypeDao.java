@@ -28,6 +28,7 @@ public class FootAgeTypeDao extends AbstractDao<FootAgeType, String> {
         public final static Property OldName = new Property(2, String.class, "oldName", false, "OLD_NAME");
         public final static Property IsDefault = new Property(3, Integer.class, "isDefault", false, "IS_DEFAULT");
         public final static Property OrderNum = new Property(4, Integer.class, "orderNum", false, "ORDER_NUM");
+        public final static Property TypeTarget = new Property(5, Integer.class, "typeTarget", false, "TYPE_TARGET");
     };
 
 
@@ -47,7 +48,8 @@ public class FootAgeTypeDao extends AbstractDao<FootAgeType, String> {
                 "'TYPE_NAME' TEXT," + // 1: typeName
                 "'OLD_NAME' TEXT," + // 2: oldName
                 "'IS_DEFAULT' INTEGER," + // 3: isDefault
-                "'ORDER_NUM' INTEGER);"); // 4: orderNum
+                "'ORDER_NUM' INTEGER," + // 4: orderNum
+                "'TYPE_TARGET' INTEGER);"); // 5: typeTarget
     }
 
     /** Drops the underlying database table. */
@@ -85,6 +87,11 @@ public class FootAgeTypeDao extends AbstractDao<FootAgeType, String> {
         if (orderNum != null) {
             stmt.bindLong(5, orderNum);
         }
+ 
+        Integer typeTarget = entity.getTypeTarget();
+        if (typeTarget != null) {
+            stmt.bindLong(6, typeTarget);
+        }
     }
 
     /** @inheritdoc */
@@ -101,7 +108,8 @@ public class FootAgeTypeDao extends AbstractDao<FootAgeType, String> {
             cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // typeName
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // oldName
             cursor.isNull(offset + 3) ? null : cursor.getInt(offset + 3), // isDefault
-            cursor.isNull(offset + 4) ? null : cursor.getInt(offset + 4) // orderNum
+            cursor.isNull(offset + 4) ? null : cursor.getInt(offset + 4), // orderNum
+            cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5) // typeTarget
         );
         return entity;
     }
@@ -114,6 +122,7 @@ public class FootAgeTypeDao extends AbstractDao<FootAgeType, String> {
         entity.setOldName(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setIsDefault(cursor.isNull(offset + 3) ? null : cursor.getInt(offset + 3));
         entity.setOrderNum(cursor.isNull(offset + 4) ? null : cursor.getInt(offset + 4));
+        entity.setTypeTarget(cursor.isNull(offset + 5) ? null : cursor.getInt(offset + 5));
      }
     
     /** @inheritdoc */

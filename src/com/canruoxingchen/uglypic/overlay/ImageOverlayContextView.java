@@ -10,30 +10,25 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.view.VerticalSeekBar;
-import com.canruoxingchen.uglypic.view.VerticalSeekBar.FingerLeaveListener;
 
 /**
  * 贴图的上下文菜单
  * 
  * @author wsf
  */
-public class ImageOverlayContextView extends FrameLayout implements View.OnClickListener, OnSeekBarChangeListener, FingerLeaveListener {
+public class ImageOverlayContextView extends FrameLayout implements View.OnClickListener, OnSeekBarChangeListener {
 	
 	private Button mBtnIllumination;
 	private Button mBtnContrast;
 	private Button mBtnSatuation;
-	private Button mBtnErase;
-	private Button mBtnReset;
 	
-	private VerticalSeekBar mSbIllumination;
-	private VerticalSeekBar mSbContrast;
-	private VerticalSeekBar mSbSatuation;
+	private SeekBar mSbIllumination;
+	private SeekBar mSbContrast;
+	private SeekBar mSbSatuation;
 	
 	private IlluminationChangedListener mIlluminationListener;
 	private ContrastChangedListener mContrastListener;
 	private SatuationChangedListener mSatuationListner;
-	private EraseListener mEraseListener;
-	private ResetListener mResetListener;
 	
 	private SingleParamImageOperation mIllumination;
 	private SingleParamImageOperation mContrast;
@@ -75,12 +70,10 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		mBtnIllumination = (Button) view.findViewById(R.id.image_illumination);
 		mBtnContrast = (Button) view.findViewById(R.id.image_contrast);
 		mBtnSatuation = (Button) view.findViewById(R.id.image_satuation);
-		mBtnErase = (Button) view.findViewById(R.id.image_erase);
-		mBtnReset = (Button) view.findViewById(R.id.image_reset);
 		
-		mSbIllumination = (VerticalSeekBar) view.findViewById(R.id.image_seekbar_illumination);
-		mSbContrast = (VerticalSeekBar)  view.findViewById(R.id.image_seekbar_contrast);
-		mSbSatuation = (VerticalSeekBar) view.findViewById(R.id.image_seekbar_satuation);
+		mSbIllumination = (SeekBar) view.findViewById(R.id.image_seekbar_illumination);
+		mSbContrast = (SeekBar)  view.findViewById(R.id.image_seekbar_contrast);
+		mSbSatuation = (SeekBar) view.findViewById(R.id.image_seekbar_satuation);
 		
 		mSbIllumination.setMax(mIllumination.getMax());
 		mSbIllumination.setProgress(mIllumination.getValue());
@@ -88,20 +81,16 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		mSbContrast.setProgress(mContrast.getValue());
 		mSbSatuation.setMax(mSatuation.getMax());
 		mSbSatuation.setProgress(mSatuation.getValue());
+		mSbIllumination.setVisibility(View.VISIBLE);
 		
 		mBtnIllumination.setOnClickListener(this);
 		mBtnContrast.setOnClickListener(this);
 		mBtnSatuation.setOnClickListener(this);
-		mBtnReset.setOnClickListener(this);
-		mBtnErase.setOnClickListener(this);
 		
 		mSbIllumination.setOnSeekBarChangeListener(this);
 		mSbContrast.setOnSeekBarChangeListener(this);
 		mSbSatuation.setOnSeekBarChangeListener(this);
 		
-		mSbIllumination.setFingerLeaveListener(this);
-		mSbContrast.setFingerLeaveListener(this);
-		mSbSatuation.setFingerLeaveListener(this);
 	}
 	
 	public void setIlluminationChangedListener(IlluminationChangedListener listener) {
@@ -115,14 +104,6 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 	public void setSatuationChangedListener(SatuationChangedListener listener) {
 		this.mSatuationListner = listener;
 	}
-	
-	public void setEraseListener(EraseListener listener) {
-		this.mEraseListener = listener;
-	}
-	
-	public void setResetListener(ResetListener listener) {
-		this.mResetListener = listener;
-	}
 
 	@Override
 	public void onClick(View v) {
@@ -130,30 +111,23 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		switch(v.getId()) {
 		case R.id.image_contrast:
 			resetAllBtnAndSeekbars();	
-			mBtnContrast.setVisibility(View.GONE);
 			mSbContrast.setVisibility(View.VISIBLE);
 			break;
 		case R.id.image_illumination:
 			resetAllBtnAndSeekbars();
-			mBtnIllumination.setVisibility(View.GONE);
 			mSbIllumination.setVisibility(View.VISIBLE);
 			break;
 		case R.id.image_satuation:
 			resetAllBtnAndSeekbars();
-			mBtnSatuation.setVisibility(View.GONE);
 			mSbSatuation.setVisibility(View.VISIBLE);
 			break;
-		case R.id.image_reset:
-			if(mResetListener != null) {
-				mResetListener.onReset(this);
-			}
-			break;
-		case R.id.image_erase:
-			if(mEraseListener != null) {
-				mEraseListener.onErased(this);
-			}
-			break;
 		}
+	}
+	
+	void reset() {
+		mSbContrast.setProgress(ContrastImageOperation.DEFAULT);
+		mSbIllumination.setProgress(IlluminationImageOperation.DEFAULT);
+		mSbSatuation.setProgress(SatuationImageOperation.DEFAULT);
 	}
 
 	@Override
@@ -183,39 +157,22 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 
 	@Override
 	public void onStopTrackingTouch(SeekBar seekBar) {
-		if(seekBar == mSbIllumination) {
-			mSbIllumination.setVisibility(View.GONE);
-			mBtnIllumination.setVisibility(View.VISIBLE);
-		} else if(seekBar == mSbContrast) {
-			mSbContrast.setVisibility(View.GONE);
-			mBtnContrast.setVisibility(View.VISIBLE);
-		} else if(seekBar == mSbSatuation) {
-			mSbSatuation.setVisibility(View.GONE);
-			mBtnSatuation.setVisibility(View.VISIBLE);
-		}
+//		if(seekBar == mSbIllumination) {
+//			mSbIllumination.setVisibility(View.GONE);
+//			mBtnIllumination.setVisibility(View.VISIBLE);
+//		} else if(seekBar == mSbContrast) {
+//			mSbContrast.setVisibility(View.GONE);
+//			mBtnContrast.setVisibility(View.VISIBLE);
+//		} else if(seekBar == mSbSatuation) {
+//			mSbSatuation.setVisibility(View.GONE);
+//			mBtnSatuation.setVisibility(View.VISIBLE);
+//		}
 	}
 	
 	private void resetAllBtnAndSeekbars() {
 		mSbIllumination.setVisibility(View.GONE);
 		mSbContrast.setVisibility(View.GONE);
 		mSbSatuation.setVisibility(View.GONE);
-		mBtnIllumination.setVisibility(View.VISIBLE);
-		mBtnContrast.setVisibility(View.VISIBLE);
-		mBtnSatuation.setVisibility(View.VISIBLE);
-	}
-
-	@Override
-	public void onFingerLeave(VerticalSeekBar seekBar) {
-		if(seekBar == mSbIllumination) {
-			mSbIllumination.setVisibility(View.GONE);
-			mBtnIllumination.setVisibility(View.VISIBLE);
-		} else if(seekBar == mSbContrast) {
-			mSbContrast.setVisibility(View.GONE);
-			mBtnContrast.setVisibility(View.VISIBLE);
-		} else if(seekBar == mSbSatuation) {
-			mSbSatuation.setVisibility(View.GONE);
-			mBtnSatuation.setVisibility(View.VISIBLE);
-		}
 	}
 
 }
