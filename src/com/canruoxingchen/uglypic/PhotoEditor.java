@@ -385,6 +385,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mFootageManager = FootageManager.getInstance(this);
 		// 先从本地加载数据
 		mFootageManager.loadFootageTypeFromLocal();
+		
+		//设置一个空场景
+		mSceneOverlay = new SceneOverlay.Builder(this, null).create();
 	}
 
 	@Override
@@ -438,7 +441,19 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mViewBackToCamera.setOnClickListener(this);
 
 		mRlOverlayContainer.setOnTouchListener(this);
-
+		mEditorContainerView.setVisibilityChangeListener(new EditorContainerView.VisibilityChangeListener() {
+			
+			@Override
+			public void onVisible() {
+				mViewContextBtn.setVisibility(View.GONE);
+			}
+			
+			@Override
+			public void onInvisible() {
+				mViewContextBtn.setVisibility(View.VISIBLE);
+			}
+		});
+		
 		mLvTypes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
@@ -477,10 +492,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					RecentFootAge recent = (RecentFootAge) obj;
 					if (recent.getType() == FootAgeType.TYPE_IMAGE) {
 						FootAge footage = JSON.parseObject(recent.getJson(), FootAge.class);
-						onFootAgeClick(footage, false);
+						onFootAgeClick(footage, true);
 					} else if (recent.getType() == FootAgeType.TYPE_SCENE) {
 						NetSence netScene = JSON.parseObject(recent.getJson(), NetSence.class);
-						onSceneClick(netScene, false);
+						onSceneClick(netScene, true);
 					}
 				}
 			}

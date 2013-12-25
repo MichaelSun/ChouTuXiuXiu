@@ -3,14 +3,13 @@
  */
 package com.canruoxingchen.uglypic.overlay;
 
-import com.canruoxingchen.uglypic.R;
-
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
+
+import com.canruoxingchen.uglypic.R;
 
 /**
  * 编辑View的容器
@@ -33,6 +32,31 @@ public class EditorContainerView extends LinearLayout implements View.OnClickLis
 		super(context, attrs);
 
 		initView();
+	}
+	
+	public interface VisibilityChangeListener {
+		public void onVisible();
+		public void onInvisible();
+	}
+	
+	private VisibilityChangeListener mVisibilityChangeListener;
+	
+	public void setVisibilityChangeListener(VisibilityChangeListener listener) {
+		mVisibilityChangeListener = listener;
+	}
+	
+	@Override
+	public void setVisibility(int visibility) {
+		super.setVisibility(visibility);
+		if(visibility == View.VISIBLE) {
+			if(mVisibilityChangeListener != null) {
+				mVisibilityChangeListener.onVisible();
+			} 
+		} else {
+			if(mVisibilityChangeListener != null) {
+				mVisibilityChangeListener.onInvisible();
+			}
+		}
 	}
 
 	private void initView() {
@@ -76,6 +100,16 @@ public class EditorContainerView extends LinearLayout implements View.OnClickLis
 		mVgEditorContainer.addView(editorView, params);
 		mEditorView = editorView;
 		mEditor = (IEditor) editorView;
+		if(mEditor.hasMoreRedo()) {
+			mViewRedo.setEnabled(true);
+		} else {
+			mViewRedo.setEnabled(false);
+		}
+		if(mEditor.hasMoreRegret()) {
+			mViewRegret.setEnabled(true);
+		} else {
+			mViewRegret.setEnabled(false);
+		}
 	}
 	
 	public IEditor getEditor() {

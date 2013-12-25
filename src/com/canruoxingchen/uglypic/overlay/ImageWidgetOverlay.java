@@ -358,7 +358,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 				mEraseableImage = mImage.copy(Config.ARGB_8888, true);
 			} else {
 				mRecords.clear();
-				mPathIndex = 0;
 				if (mEraseableImage != null && !mEraseableImage.isRecycled()) {
 					mEraseableImage.recycle();
 					mEraseableImage = null;
@@ -500,11 +499,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 		/*-橡皮相关*/
 		private boolean hasMoreRegret() {
-			return (mPathIndex >= 0 ? true : mRecords.size() > 0);
+			return (mRecords.size() > 0 && mPathIndex >= 0 && mPathIndex < mRecords.size());
 		}
 
 		private boolean hasMoreRedo() {
-			return (mRecords.size() - mPathIndex > 1);
+			return (mRecords.size() > 0 && mPathIndex + 1 >= 0 && mPathIndex + 1 < mRecords.size());
 		}
 
 		private void setCurrentStrokeWidth(int strokeWidth) {
@@ -512,7 +511,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 
 		private void regret() {
-			mCurrentPath = null;
 			if (mPathIndex >= 0) {
 				mPathIndex = mPathIndex - 1;
 			} else {
@@ -530,6 +528,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 		private void redo() {
 			mPathIndex = mPathIndex < (mRecords.size() - 1) ? (mPathIndex + 1) : mPathIndex;
+			drawOnErasableImage();
 			invalidate();
 		}
 
@@ -553,14 +552,17 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		private void touchUp(float x, float y) {
 			if (mCurrentPath != null) {
 				mCurrentPath.lineTo(x, y);
-				while (mPathIndex >= 0 && mPathIndex < mRecords.size() - 1) {
-					mRecords.remove(mRecords.size() - 1);
+				if(mPathIndex >= 0 && mPathIndex < mRecords.size()) {
+					mRecords = mRecords.subList(0, mPathIndex + 1);
+				} else {
+					mRecords.clear();
 				}
 				mRecords.add(new EraseRecord(mCurrentPath, mCurrentStrokeWidth));
 				mPathIndex = mRecords.size() - 1;
 				//通知容器，可回退状态已改变
 				MessageCenter.getInstance(getContext())
 						.notifyHandlers(R.id.msg_editor_regret_status_change, 0, 0, null);
+				mCurrentPath = null;
 			}
 		}
 
@@ -596,7 +598,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 			
 			List<EraseRecord> records = new ArrayList<ImageWidgetOverlay.EraseRecord>();
-			if (mPathIndex < mRecords.size() - 1 && mPathIndex >= 0) {
+			if (mPathIndex < mRecords.size() && mPathIndex >= 0) {
 				records = mRecords.subList(0, mPathIndex + 1);
 			}
 			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);

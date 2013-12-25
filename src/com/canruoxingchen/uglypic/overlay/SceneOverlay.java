@@ -43,8 +43,11 @@ public class SceneOverlay implements IOverlay {
 	private static final int ALIGNMENT_LEFT = 0;
 	private static final int ALIGNMENT_CENTER = 1;
 	private static final int ALIGNMENT_RIGHT = 2;
-	
+
 	private static final float IPHONE_SCREEN_SIZE = 320.0f;
+
+	private static final int NULL_SCENE_WIDTH = 100;
+	private static final int NULL_SCENE_HEIGHT = 100;
 
 	// 场景图片
 	private Uri mSceneUri = null;
@@ -321,7 +324,7 @@ public class SceneOverlay implements IOverlay {
 						addView(mAivScene, params);
 					}
 				}
-				
+
 				retrieveDensity();
 
 				// 添加或修改EditText的位置
@@ -330,13 +333,13 @@ public class SceneOverlay implements IOverlay {
 					int viewHeight = getHeight();
 					mEtText = new EditText(mContext);
 					float etWidth = (overlay.mTextViewRight - overlay.mTextViewLeft);
-					float etHeight = (overlay.mTextViewBottom - overlay.mTextViewTop) ;
+					float etHeight = (overlay.mTextViewBottom - overlay.mTextViewTop);
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					float scale = Math.min(scaleX, scaleY);
 
-					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int)(etWidth * scale),
-							 LayoutParams.WRAP_CONTENT);
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scale),
+							LayoutParams.WRAP_CONTENT);
 					params.leftMargin = (int) (overlay.mTextViewLeft * scale);
 					params.topMargin = (int) (overlay.mTextViewTop * scale);
 					mEtText.setTextColor(overlay.mTextColor);
@@ -368,8 +371,8 @@ public class SceneOverlay implements IOverlay {
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					float scale = Math.min(scaleX, scaleY);
 
-					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-							(int) (etWidth * scale), LayoutParams.WRAP_CONTENT);
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scale),
+							LayoutParams.WRAP_CONTENT);
 					params.leftMargin = (int) (overlay.mTimeLeft * scale);
 					params.topMargin = (int) (overlay.mTimeTop * scale);
 					mTvTime.setTextColor(overlay.mTimeColor);
@@ -412,6 +415,7 @@ public class SceneOverlay implements IOverlay {
 	}
 
 	private static class GetSceneSizeTask implements Runnable {
+
 		WeakReference<SceneLayout> wSceneLayout;
 		Uri mUri;
 
@@ -422,8 +426,14 @@ public class SceneOverlay implements IOverlay {
 
 		@Override
 		public void run() {
-			final BitmapFactory.Options opts = ImageUtils.getImageInfo(UglyPicApp.getAppExContext(), mUri);
 			final SceneLayout sceneLayout = wSceneLayout == null ? null : wSceneLayout.get();
+			if (mUri == null) {
+				if (sceneLayout != null) {
+					sceneLayout.setSceneSize(NULL_SCENE_WIDTH, NULL_SCENE_HEIGHT);
+					return;
+				}
+			}
+			final BitmapFactory.Options opts = ImageUtils.getImageInfo(UglyPicApp.getAppExContext(), mUri);
 			if (opts != null && sceneLayout != null) {
 				sceneLayout.setSceneSize(opts.outWidth, opts.outHeight);
 			}
