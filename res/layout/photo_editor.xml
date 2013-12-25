@@ -75,7 +75,7 @@
         android:layout_above="@id/photo_editor_bottom_panel"
         android:layout_below="@id/photo_editor_top_bar"></View>
 
-    <com.canruoxingchen.uglypic.view.SquareRelativeLayout
+    <RelativeLayout
         android:id="@+id/photo_editor_edit_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -95,7 +95,7 @@
             android:layout_height="match_parent" 
             android:background="@color/transparent">
         </RelativeLayout>
-    </com.canruoxingchen.uglypic.view.SquareRelativeLayout>   
+    </RelativeLayout>   
     
     <Button android:id="@+id/photo_editor_context_button"
         android:layout_width="wrap_content"

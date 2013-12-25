@@ -4,18 +4,25 @@
 package com.canruoxingchen.uglypic.overlay;
 
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.net.Uri;
+import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
@@ -32,6 +39,12 @@ import com.canruoxingchen.uglypic.util.Logger;
  * 
  */
 public class SceneOverlay implements IOverlay {
+
+	private static final int ALIGNMENT_LEFT = 0;
+	private static final int ALIGNMENT_CENTER = 1;
+	private static final int ALIGNMENT_RIGHT = 2;
+	
+	private static final float IPHONE_SCREEN_SIZE = 320.0f;
 
 	// 场景图片
 	private Uri mSceneUri = null;
@@ -53,12 +66,24 @@ public class SceneOverlay implements IOverlay {
 	private String mTextHint = "";
 	private int mTextColor = Color.WHITE;
 	private int mTextGravity = Gravity.LEFT;
+	private String mTextFontName = "";
+
+	// 是否包含时间
+	private boolean mHasTime = false;
+	private float mTimeLeft = 0.0f;
+	private float mTimeTop = 0.0f;
+	private float mTimeRight = 0.0f;
+	private float mTimeBottom = 0.0f;
+	private int mTimeSize = 16;
+	private int mTimeColor = Color.WHITE;
+	private int mTimeGravity = Gravity.LEFT;
+	private String mTimeFontName = "";
 
 	// 放缩的倍数
 	private float mSreenScale = 1.0f;
 
 	private SceneSizeAquiredListener mSceneSizeAquiredListener = null;
-	
+
 	private SceneLayout mSceneLayout = null;
 
 	private SceneOverlay(Context context, Uri uri) {
@@ -97,6 +122,70 @@ public class SceneOverlay implements IOverlay {
 			return this;
 		}
 
+		public Builder setTextFontName(String fontName) {
+			scene.mTextFontName = fontName;
+			return this;
+		}
+
+		public Builder setTextColor(int color) {
+			scene.mTextColor = 0xFF000000 + color;
+			return this;
+		}
+
+		public Builder setTextAlignment(int alignment) {
+			switch (alignment) {
+			case ALIGNMENT_LEFT:
+				scene.mTextGravity = Gravity.LEFT;
+				break;
+			case ALIGNMENT_CENTER:
+				scene.mTextGravity = Gravity.CENTER;
+				break;
+			case ALIGNMENT_RIGHT:
+				scene.mTextGravity = Gravity.RIGHT;
+				break;
+			}
+			return this;
+		}
+
+		public Builder setTimeBounds(int left, int top, int right, int bottom) {
+			scene.mHasTime = true;
+			scene.mTimeLeft = left;
+			scene.mTimeTop = top;
+			scene.mTimeRight = right;
+			scene.mTimeBottom = bottom;
+			return this;
+		}
+
+		public Builder setTimeSize(int size) {
+			scene.mTimeSize = size;
+			return this;
+		}
+
+		public Builder setTimeFontName(String timeFontName) {
+			scene.mTimeFontName = timeFontName;
+			return this;
+		}
+
+		public Builder setTimeColor(int color) {
+			scene.mTimeColor = 0xFF000000 + color;
+			return this;
+		}
+
+		public Builder setTimeAlignment(int alignment) {
+			switch (alignment) {
+			case ALIGNMENT_LEFT:
+				scene.mTextGravity = Gravity.LEFT;
+				break;
+			case ALIGNMENT_CENTER:
+				scene.mTextGravity = Gravity.CENTER;
+				break;
+			case ALIGNMENT_RIGHT:
+				scene.mTextGravity = Gravity.RIGHT;
+				break;
+			}
+			return this;
+		}
+
 		public SceneOverlay create() {
 			return scene;
 		}
@@ -109,7 +198,7 @@ public class SceneOverlay implements IOverlay {
 	 */
 	@Override
 	public View getView() {
-		if(mSceneLayout == null) {
+		if (mSceneLayout == null) {
 			mSceneLayout = new SceneLayout(mContext);
 			mSceneLayout.setSceneOverlay(this);
 		}
@@ -170,6 +259,7 @@ public class SceneOverlay implements IOverlay {
 
 		private AsyncImageView mAivScene = null;
 		private EditText mEtText = null;
+		private TextView mTvTime = null;
 		private WeakReference<SceneOverlay> mOverlay = null;
 		private Context mContext = null;
 		private boolean mViewAdded = false;
@@ -177,6 +267,8 @@ public class SceneOverlay implements IOverlay {
 		private boolean mSceneSizeAquired = false;
 		private float mSceneWidth = 0.0f;
 		private float mSceneHeight = 0.0f;
+
+		private float mDensity = -1.0f;
 
 		public SceneLayout(Context context) {
 			super(context);
@@ -193,16 +285,26 @@ public class SceneOverlay implements IOverlay {
 		protected void onLayout(boolean changed, int l, int t, int r, int b) {
 			super.onLayout(changed, l, t, r, b);
 			mLayoutFinished = true;
-			LOGD(">>>>>>>>> onLayout >>>>>>>>> width=" + (r - l) + ", height=" + (b - t)
-					+ ", l=" + l + ", t=" + t + ", r=" + r + ", b=" + b);
 			// 可以获得宽高之后，再添加背景以及文字，通过post方式调用，防止造成layout的递归调用
-			UglyPicApp.getUiHander().post(new Runnable() {
+			if (!mViewAdded) {
+				UglyPicApp.getUiHander().post(new Runnable() {
 
-				@Override
-				public void run() {
-					addViews();
-				}
-			});
+					@Override
+					public void run() {
+						addViews();
+					}
+				});
+			}
+		}
+
+		protected void retrieveDensity() {
+			if (mDensity < 0) {
+				WindowManager wm = (WindowManager) UglyPicApp.getAppExContext()
+						.getSystemService(Context.WINDOW_SERVICE);
+				DisplayMetrics dm = new DisplayMetrics();
+				wm.getDefaultDisplay().getMetrics(dm);
+				mDensity = dm.density;
+			}
 		}
 
 		private void addViews() {
@@ -219,37 +321,75 @@ public class SceneOverlay implements IOverlay {
 						addView(mAivScene, params);
 					}
 				}
+				
+				retrieveDensity();
 
 				// 添加或修改EditText的位置
-				if (overlay != null && overlay.mHasText) {
+				if (overlay != null && overlay.mHasText && mDensity > 0) {
 					int viewWidth = getWidth();
 					int viewHeight = getHeight();
-					LOGD(">>>>>> addViews >>>>>> viewWidth=" + viewWidth + ", viewHeight=" + viewHeight);
 					mEtText = new EditText(mContext);
-					float etWidth = overlay.mTextViewRight - overlay.mTextViewLeft;
-					float etHeight = overlay.mTextViewBottom - overlay.mTextViewTop;
-					float scaleX = viewWidth / mSceneWidth;
-					float scaleY = viewHeight / mSceneHeight;
+					float etWidth = (overlay.mTextViewRight - overlay.mTextViewLeft);
+					float etHeight = (overlay.mTextViewBottom - overlay.mTextViewTop) ;
+					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
+					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					float scale = Math.min(scaleX, scaleY);
 
-					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scale),
-							(int) (etHeight * scale));
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int)(etWidth * scale),
+							 LayoutParams.WRAP_CONTENT);
 					params.leftMargin = (int) (overlay.mTextViewLeft * scale);
 					params.topMargin = (int) (overlay.mTextViewTop * scale);
 					mEtText.setTextColor(overlay.mTextColor);
 					mEtText.setHintTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);
-					mEtText.setTextSize(overlay.mTextSize * scale);
+					mEtText.setTextSize(overlay.mTextSize * scale / 2);
 					mEtText.setLayoutParams(params);
 					mEtText.setHint(overlay.mTextHint == null ? "" : overlay.mTextHint);
-					mEtText.setMaxLines(1);
-					mEtText.setGravity(overlay.mTextGravity);
-					//如果尚未添加EditText，则将其加入到Layout中
+					mEtText.setLines(1);
+					mEtText.setGravity(overlay.mTextGravity | Gravity.CENTER_VERTICAL);
+					if (!TextUtils.isEmpty(overlay.mTextFontName)
+							&& overlay.mTextFontName.toLowerCase().contains("bold")) {
+						mEtText.setTypeface(null, Typeface.BOLD);
+					}
+					// 如果尚未添加EditText，则将其加入到Layout中
 					if (!mViewAdded) {
 						addView(mEtText);
 					}
 				}
-				
+
+				// 添加或修改EditText的位置
+				if (overlay != null && overlay.mHasTime && mDensity > 0) {
+					int viewWidth = getWidth();
+					int viewHeight = getHeight();
+					mTvTime = new TextView(mContext);
+					float etWidth = overlay.mTimeRight - overlay.mTimeLeft;
+					float etHeight = overlay.mTimeBottom - overlay.mTimeTop;
+					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
+					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
+					float scale = Math.min(scaleX, scaleY);
+
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+							(int) (etWidth * scale), LayoutParams.WRAP_CONTENT);
+					params.leftMargin = (int) (overlay.mTimeLeft * scale);
+					params.topMargin = (int) (overlay.mTimeTop * scale);
+					mTvTime.setTextColor(overlay.mTimeColor);
+					mTvTime.setBackgroundDrawable(null);
+					mTvTime.setTextSize(overlay.mTimeSize * scale / 2);
+					mTvTime.setLayoutParams(params);
+					mTvTime.setLines(1);
+					mTvTime.setGravity(overlay.mTimeGravity | Gravity.CENTER_VERTICAL);
+					SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+					mTvTime.setText(dateFormat.format(new Date(System.currentTimeMillis())));
+					if (!TextUtils.isEmpty(overlay.mTimeFontName)
+							&& overlay.mTimeFontName.toLowerCase().contains("bold")) {
+						mTvTime.setTypeface(null, Typeface.BOLD);
+					}
+					// 如果尚未添加EditText，则将其加入到Layout中
+					if (!mViewAdded) {
+						addView(mTvTime);
+					}
+				}
+
 				mViewAdded = true;
 			}
 		}
@@ -290,7 +430,7 @@ public class SceneOverlay implements IOverlay {
 			LOGD(">>>>>>>>> getSceneSize >>>>>>>>> width=" + opts.outWidth + ", height=" + opts.outHeight);
 		}
 	}
-	
+
 	private static void LOGD(String logMe) {
 		Logger.d(SceneOverlay.class.getSimpleName(), logMe);
 	}

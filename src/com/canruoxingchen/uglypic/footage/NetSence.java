@@ -223,7 +223,9 @@ public class NetSence implements Comparable<NetSence> {
 			return null;
 		}
 
-		Rect rect = new Rect(Integer.parseInt(pts[0]), Integer.parseInt(pts[1]), Integer.parseInt(pts[2]),
+		int left = Integer.parseInt(pts[0]);
+		int top = Integer.parseInt(pts[1]);
+		Rect rect = new Rect(left, top, left + Integer.parseInt(pts[2]), top +
 				Integer.parseInt(pts[3]));
 		return rect;
 	}

@@ -182,7 +182,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					activity.mTypeAdapter.notifyDataSetChanged();
 					// 如果尚无选中的类型，则选择第一个
 					if (activity.mCurrentType == null) {
-						activity.mCurrentType = activity.mFootageTypes.get(0);
+						activity.mCurrentType = FootAgeType.RECENT_TYPE;
+						activity.mFootageManager.loadRecentFootages();
 					}
 				} else {
 					activity.mFootageManager.loadFootageTypeFromServer();
@@ -204,7 +205,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					activity.mTypeAdapter.notifyDataSetChanged();
 					// 如果尚无选中的类型，则选择第一个
 					if (activity.mCurrentType == null) {
-						activity.mCurrentType = activity.mFootageTypes.get(0);
+						activity.mCurrentType = FootAgeType.RECENT_TYPE;
+						activity.mFootageManager.loadRecentFootages();
 					}
 				}
 				break;
@@ -505,6 +507,18 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
 				builder.setTextHint(netScene.getInputContent());
 				builder.setTextSize(netScene.getInputFontSize());
+				builder.setTextAlignment(netScene.getInputFontAlignment());
+				builder.setTextColor(netScene.getInputFontColor());
+				builder.setTextFontName(netScene.getInputFontName());
+			}
+			
+			Rect timeRect = netScene.getTimeRectBounds();
+			if(timeRect != null) {
+				builder.setTimeBounds(timeRect.left, timeRect.top, timeRect.right, timeRect.bottom);
+				builder.setTimeSize(netScene.getTimeFontSize());
+				builder.setTimeAlignment(netScene.getTimeFontAlignment());
+				builder.setTimeColor(netScene.getTimeFontColor());
+				builder.setTimeFontName(netScene.getTimeFontName());
 			}
 			setSceneOverlay(builder.create());
 			if (save) {
@@ -517,7 +531,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	protected void onResume() {
 		super.onResume();
 		registerAllFootageMsg();
-
 		// 注册编辑内容可回退状态改变的消息
 		MessageCenter.getInstance(this).registerMessage(R.id.msg_editor_regret_status_change, mHandler);
 	}
@@ -809,25 +822,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mVgContextMenuContainer.setVisibility(View.GONE);
 		}
 	}
-
-	// private void addOverlay(ObjectOverlay overlay,
-	// RelativeLayout.LayoutParams params) {
-	// mOverlays.add(overlay);
-	// if (overlay.getContainerView(PhotoEditor.this) != null) {
-	// overlay.getContainerView(PhotoEditor.this).setLayoutParams(params);
-	// overlay.setOperationListener(this);
-	// overlay.setEditorPanel(mEditorPanel);
-	// mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
-	// if (mCurrentOverlay != null) {
-	// mCurrentOverlay.setOverlaySelected(false);
-	// }
-	// mVgContextMenuContainer.setVisibility(View.GONE);
-	// mCurrentOverlay = overlay;
-	// mCurrentOverlay.setOverlaySelected(true);
-	// mCurrentOverlay.setEditorContainerView(mEditorContainerView);
-	// mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
-	// }
-	// }
 
 	private void flipOverlay(ObjectOverlay overlay) {
 		if (overlay.isFlipable()) {
