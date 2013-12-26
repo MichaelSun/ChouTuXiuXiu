@@ -210,12 +210,15 @@ public class ImageLoadTask extends
 	protected void onPostExecute(CacheableBitmapDrawable result) {
 		super.onPostExecute(result);
 
+		AsyncImageView iv = (mImageView == null ? null : mImageView.get());
 		if (isCancelled()) {
+			if(iv != null) {
+				iv.notifyFailure();
+			}
 			return;
 		}
 
 		if (result != null) {
-			AsyncImageView iv = (mImageView == null ? null : mImageView.get());
 			if (iv != null && iv.mImgInfo != null) {
 				ImageInfo info = ImageInfo.obtain(mCategory, mImageUri);
 				// 判断是否为当前所需的图片，防止前一张没下载完就更新了所需的图片
@@ -237,8 +240,13 @@ public class ImageLoadTask extends
 				int imageHeight = result.getBitmap() == null ? 0 : result.getBitmap().getHeight();
 				iv.setImageWidth(imageWidth);
 				iv.setImageHeight(imageHeight);
+				if(iv != null) {
+					iv.notifyComplete();
+				}
+				return;
 			}
 		}
+		iv.notifyFailure();
 	}
 
 	@Override

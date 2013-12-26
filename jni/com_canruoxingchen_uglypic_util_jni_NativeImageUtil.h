@@ -49,6 +49,14 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 
 /*
  * Class:     com_canruoxingchen_uglypic_util_jni_NativeImageUtil
+ * Method:    mergePhoto
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IIII)I
+ */
+JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_mergePhoto
+  (JNIEnv *, jobject, jstring, jstring, jstring, jint, jint, jint, jint);
+
+/*
+ * Class:     com_canruoxingchen_uglypic_util_jni_NativeImageUtil
  * Method:    processGaussianBlur
  * Signature: (Landroid/graphics/Bitmap;)I
  */
@@ -78,14 +86,6 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
  */
 JNIEXPORT void JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_test
   (JNIEnv *, jobject);
-
-/*
- * Class:     com_canruoxingchen_uglypic_util_jni_NativeImageUtil
- * Method:    mergePhoto
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IIII)I
- */
-JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_mergePhoto
-  (JNIEnv *, jobject, jstring, jstring, jstring, jint, jint, jint, jint);
 
 #ifdef __cplusplus
 }

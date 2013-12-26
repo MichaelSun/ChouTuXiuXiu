@@ -203,7 +203,12 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 		@SuppressLint("DefaultLocale")
 		@Override
 		public void run() {
-			String savePath = FileUtils.createSdCardFile(System.currentTimeMillis() + ".jpg");
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTimeInMillis(System.currentTimeMillis());
+			String pictureName = String.format("PmCamera_%d%02d%02d_%02d%02d%02d", calendar.get(Calendar.YEAR),
+					calendar.get(Calendar.MONTH) + (1 - Calendar.JANUARY), calendar.get(Calendar.DATE),
+					calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND));
+			String savePath = FileUtils.createSdCardFile(pictureName+ ".jpg");
 			File filePath = savePath == null ? getCacheDir() : new File(savePath);
 
 			if (!filePath.exists() || !filePath.canWrite()) {
@@ -212,13 +217,7 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 				return;
 			}
 
-			Calendar calendar = Calendar.getInstance();
-			calendar.setTimeInMillis(System.currentTimeMillis());
-			String pictureName = String.format("PmCamera_%d%02d%02d_%02d%02d%02d", calendar.get(Calendar.YEAR),
-					calendar.get(Calendar.MONTH) + (1 - Calendar.JANUARY), calendar.get(Calendar.DATE),
-					calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), calendar.get(Calendar.SECOND));
-			final File outFile = new File(filePath, pictureName + ".JPEG");
-			final String outFilePath = outFile.getAbsolutePath();
+			final String outFilePath = filePath.getAbsolutePath();
 
 			if (mNeedCrop) {
 				Rect rect = mCropView.getCropArea();
@@ -235,8 +234,8 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 				@Override
 				public void run() {
 					// startPublisher(outFilePath);
-					PhotoEditor.start(ImageCropActivity.this, Uri.fromFile(new File(mImagePath)));
 					finish();
+					PhotoEditor.start(ImageCropActivity.this, outFilePath);
 				}
 			});
 		}

@@ -8,12 +8,14 @@ import java.io.File;
 import com.actionbarsherlock.view.MenuItem;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
+import com.canruoxingchen.uglypic.view.SlipButton;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
 
 /**
@@ -31,15 +33,22 @@ public class PublishActivity extends BaseSherlockActivity{
 	public static final String KEY_ORIGIN = EXTRA_ORIGIN;
 	public static final String KEY_RESULT = EXTRA_RESULT;
 	
-	private Uri mOriginUri;
+	private String mOriginPath;
 	private String mResultPath;
 	
 	private AsyncImageView mAivImage;
 	private EditText mEtDesc;
 	
-	public static void start(Context context, Uri originUri, String resultPath) {
+	private SlipButton mSlipBtn = null;
+	private View mViewToWeibo;
+	private View mViewToWeixin;
+	private View mViewToFriends;
+	
+	private boolean mIsOrig = false;
+	
+	public static void start(Context context, String originPath, String resultPath) {
 		Intent intent = new Intent(context, PublishActivity.class);
-		intent.putExtra(EXTRA_ORIGIN, originUri);
+		intent.putExtra(EXTRA_ORIGIN, originPath);
 		intent.putExtra(EXTRA_RESULT, resultPath);
 		context.startActivity(intent);
 	}
@@ -50,12 +59,12 @@ public class PublishActivity extends BaseSherlockActivity{
 		
 		Intent intent = getIntent();
 		if(intent != null) {
-			mOriginUri = intent.getParcelableExtra(EXTRA_ORIGIN);
+			mOriginPath = intent.getStringExtra(EXTRA_ORIGIN);
 			mResultPath = intent.getStringExtra(EXTRA_RESULT);
 		}
 		
 		if(savedInstanceState != null) {
-			mOriginUri = savedInstanceState.getParcelable(KEY_ORIGIN);
+			mOriginPath = savedInstanceState.getString(KEY_ORIGIN);
 			mResultPath = savedInstanceState.getString(KEY_RESULT);
 		}
 		
@@ -69,7 +78,7 @@ public class PublishActivity extends BaseSherlockActivity{
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putParcelable(KEY_ORIGIN, mOriginUri);
+		outState.putString(KEY_ORIGIN, mOriginPath);
 		outState.putString(KEY_RESULT, mResultPath);
 	}
 
@@ -90,11 +99,27 @@ public class PublishActivity extends BaseSherlockActivity{
 		
 		mAivImage = (AsyncImageView) findViewById(R.id.share_pic);
 		mEtDesc = (EditText) findViewById(R.id.share_desc);
+		mSlipBtn = (SlipButton) findViewById(R.id.publish_slip_btn);
+		mViewToWeibo = findViewById(R.id.publish_share_to_weibo);
+		mViewToWeixin = findViewById(R.id.publish_share_to_weixin);
+		mViewToFriends = findViewById(R.id.publish_share_to_friends);
 	}
 
 	@Override
 	protected void initListers() {
-		
+		mSlipBtn.SetOnChangedListener(new SlipButton.OnChangedListener() {
+			
+			@Override
+			public void OnChanged(View v, boolean checkState) {
+				if(checkState) {
+					mIsOrig = true;
+					mAivImage.setImageInfo(ImageInfo.obtain(Uri.fromFile(new File(mOriginPath)).toString()));
+				} else {
+					mIsOrig = false;
+					mAivImage.setImageInfo(ImageInfo.obtain(Uri.fromFile(new File(mResultPath)).toString()));
+				}
+			}
+		});
 	}
 
 }

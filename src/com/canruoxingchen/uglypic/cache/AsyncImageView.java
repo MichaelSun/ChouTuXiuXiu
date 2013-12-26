@@ -53,11 +53,34 @@ public class AsyncImageView extends CacheableImageView {
 	
 	private int mImageWidth = 0;
 	private int mImageHeight = 0;
-
+	
 	/**
 	 * 是否需要展示默认的动画
 	 */
 	boolean mNeedProgressDrawable = true;
+	
+	public interface ImageLoadedListener {
+		public void onComplete();
+		public void onFailure();
+	}
+	
+	private ImageLoadedListener mListener;
+	
+	public void setImageLoadedListener(ImageLoadedListener listener) {
+		this.mListener = listener;
+	}
+	
+	public void notifyComplete() {
+		if(mListener != null) {
+			mListener.onComplete();
+		}
+	}
+	
+	public void notifyFailure() {
+		if(mListener != null) {
+			mListener.onFailure();
+		}
+	}
 
 	public AsyncImageView(Context context) {
 		super(context);

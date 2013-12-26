@@ -3,6 +3,8 @@
  */
 package com.canruoxingchen.uglypic;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,9 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -32,16 +37,16 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
+import com.canruoxingchen.uglypic.concurrent.ThreadPoolManager;
 import com.canruoxingchen.uglypic.footage.FootAge;
-import com.canruoxingchen.uglypic.footage.NetSence;
 import com.canruoxingchen.uglypic.footage.FootAgeType;
 import com.canruoxingchen.uglypic.footage.FootageManager;
+import com.canruoxingchen.uglypic.footage.NetSence;
 import com.canruoxingchen.uglypic.footage.RecentFootAge;
 import com.canruoxingchen.uglypic.overlay.EditorContainerView;
 import com.canruoxingchen.uglypic.overlay.IEditor;
@@ -51,8 +56,10 @@ import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay.SceneSizeAquiredListener;
 import com.canruoxingchen.uglypic.overlay.TextOverlay;
+import com.canruoxingchen.uglypic.util.FileUtils;
 import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.Logger;
+import com.canruoxingchen.uglypic.util.UiUtils;
 import com.canruoxingchen.uglypic.view.HorizontalListView;
 
 /**
@@ -64,16 +71,19 @@ import com.canruoxingchen.uglypic.view.HorizontalListView;
  */
 public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener,
 		SceneSizeAquiredListener {
-	private static final String EXTRA_PHOTO_URI = "photo_uri";
+	private static final String EXTRA_PHOTO_PATH = "photo_uri";
 
-	private static final String KEY_PHOTO_URI = EXTRA_PHOTO_URI;
+	private static final String KEY_PHOTO_PATH = EXTRA_PHOTO_PATH;
 
 	private static final int REQUEST_CODE_EDIT_TEXT = 1001;
 
 	private static final int MSG_REGRET_STATUS_CHANGED = R.id.msg_editor_regret_status_change;
+	private static final int MSG_ORIGIN_IMAGE_SAVED = R.id.msg_editor_origin_image_saved;
 
 	// 原始照片的uri
 	private Uri mPhotoUri;
+	private String mImagePath;
+	private String mCroppedPath;
 
 	/*-
 	 * 各种View
@@ -148,9 +158,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	 * @param context
 	 * @param photoUri
 	 */
-	public static void start(Context context, Uri photoUri) {
+	public static void start(Context context, String photoPath) {
 		Intent intent = new Intent(context, PhotoEditor.class);
-		intent.putExtra(EXTRA_PHOTO_URI, photoUri);
+		intent.putExtra(EXTRA_PHOTO_PATH, photoPath);
 		context.startActivity(intent);
 	}
 
@@ -359,11 +369,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		Intent intent = getIntent();
 		if (intent != null) {
-			mPhotoUri = intent.getParcelableExtra(EXTRA_PHOTO_URI);
+			mImagePath = intent.getStringExtra(EXTRA_PHOTO_PATH);
+			mPhotoUri = Uri.fromFile(new File(mImagePath));
 		}
 
 		if (savedInstanceState != null) {
-			mPhotoUri = savedInstanceState.getParcelable(KEY_PHOTO_URI);
+			mImagePath = savedInstanceState.getString(KEY_PHOTO_PATH);
+			mPhotoUri = Uri.fromFile(new File(mImagePath));
 		}
 
 		initUI();
@@ -385,9 +397,17 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mFootageManager = FootageManager.getInstance(this);
 		// 先从本地加载数据
 		mFootageManager.loadFootageTypeFromLocal();
-		
-		//设置一个空场景
+
+		// 设置一个空场景
 		mSceneOverlay = new SceneOverlay.Builder(this, null).create();
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		if (outState != null) {
+			outState.putString(KEY_PHOTO_PATH, mImagePath);
+		}
 	}
 
 	@Override
@@ -442,18 +462,18 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		mRlOverlayContainer.setOnTouchListener(this);
 		mEditorContainerView.setVisibilityChangeListener(new EditorContainerView.VisibilityChangeListener() {
-			
+
 			@Override
 			public void onVisible() {
 				mViewContextBtn.setVisibility(View.GONE);
 			}
-			
+
 			@Override
 			public void onInvisible() {
 				mViewContextBtn.setVisibility(View.VISIBLE);
 			}
 		});
-		
+
 		mLvTypes.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 			@Override
@@ -526,9 +546,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				builder.setTextColor(netScene.getInputFontColor());
 				builder.setTextFontName(netScene.getInputFontName());
 			}
-			
+
 			Rect timeRect = netScene.getTimeRectBounds();
-			if(timeRect != null) {
+			if (timeRect != null) {
 				builder.setTimeBounds(timeRect.left, timeRect.top, timeRect.right, timeRect.bottom);
 				builder.setTimeSize(netScene.getTimeFontSize());
 				builder.setTimeAlignment(netScene.getTimeFontAlignment());
@@ -690,8 +710,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		case R.id.photo_editor_top_bar_camera: { // 返回照相页面
 			finish();
-			Intent intent = new Intent(this, CameraActivity.class);
-			startActivity(intent);
 			break;
 		}
 		// case R.id.photo_editor_top_bar_reset: { // 重置所有素材
@@ -755,25 +773,118 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 	}
 
+//	private void saveOriginImage() {
+//		String savePath = FileUtils.createSdCardFile("photo_editor_origin.jpg");
+//		if (TextUtils.isEmpty(savePath)) {
+//			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+//			return;
+//		}
+//		File file = new File(savePath);
+//		if (file.exists()) {
+//			file.delete();
+//		}
+//		try {
+//			file.createNewFile();
+//		} catch (IOException e) {
+//			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+//			return;
+//		}
+//
+//		mPvPhoto.buildDrawingCache();
+//		final Bitmap image = mPvPhoto.getDrawingCache();
+//		mPvPhoto.destroyDrawingCache();
+//		ThreadPoolManager.getInstance().execute(new Runnable() {
+//
+//			@Override
+//			public void run() {
+//				String path = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), image, 0, true);
+//				if (TextUtils.isEmpty(path)) {
+//					UglyPicApp.getUiHander().post(new Runnable() {
+//
+//						@Override
+//						public void run() {
+//							UiUtils.toastMessage(PhotoEditor.this, R.string.photo_editor_save_failure);
+//							return;
+//						}
+//					});
+//				} else {
+//					if (mHandler != null) {
+//						Message msg = Message.obtain(mHandler, MSG_ORIGIN_IMAGE_SAVED, path);
+//						msg.sendToTarget();
+//					}
+//				}
+//			}
+//		});
+//	}
+
 	// 保存当前图片
 	private void saveCurrentImage() {
-		// TODO: 测试，暂时写在了主线程中
-		mEditorPanel.buildDrawingCache();
-		Bitmap image = mEditorPanel.getDrawingCache();
-		if (image != null && !image.isRecycled()) {
-			String path = ImageUtils.saveBitmapForLocalPath(this, image, 0, true);
-			if (path != null) {
-				PublishActivity.start(this, mPhotoUri, path);
-			} else {
-				// TODO: 如果保存失败
-			}
-			image.recycle();
-			Toast.makeText(this, "success", Toast.LENGTH_SHORT).show();
-		} else {
-			Toast.makeText(this, "fail", Toast.LENGTH_SHORT).show();
+		String savePath = FileUtils.createSdCardFile("photo_editor_origin.jpg");
+		if (TextUtils.isEmpty(savePath)) {
+			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+			return;
 		}
-		mEditorPanel.destroyDrawingCache();
-		// TODO:
+		File file = new File(savePath);
+		if (file.exists()) {
+			file.delete();
+		}
+		try {
+			file.createNewFile();
+		} catch (IOException e) {
+			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+			return;
+		}
+		mPvPhoto.buildDrawingCache();
+		final Bitmap origin = mPvPhoto.getDrawingCache();
+		if(origin == null) {
+			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+			return;
+		}
+		int height = origin.getHeight();
+		final Bitmap mergedImage = Bitmap.createBitmap(origin.getWidth(), 2 * origin.getHeight(), Config.ARGB_8888);
+		Canvas canvas = new Canvas(mergedImage);
+		Paint paint = new Paint();
+		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
+		canvas.drawBitmap(origin, 0, 0, paint);
+		mPvPhoto.destroyDrawingCache();
+		
+		mEditorPanel.buildDrawingCache();
+		final Bitmap processedImage = mEditorPanel.getDrawingCache();
+//		mEditorPanel.destroyDrawingCache();
+		canvas.drawBitmap(processedImage, 0, height, paint);
+		if(processedImage == null) {
+			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+			if(mergedImage != null && !mergedImage.isRecycled()) {
+				mergedImage.recycle();
+			}
+			return;
+		}
+		ThreadPoolManager.getInstance().execute(new Runnable() {
+
+			@Override
+			public void run() {
+				String mergedPath =  ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), mergedImage, 0, true);
+				if(mergedImage != null && !mergedImage.isRecycled()) {
+					mergedImage.recycle();
+				}
+				String processedPath = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), processedImage, 0, true);
+				if(processedImage != null && !processedImage.isRecycled()) {
+					processedImage.recycle();
+				}
+				if (TextUtils.isEmpty(mergedPath) || TextUtils.isEmpty(processedPath)) {
+					UglyPicApp.getUiHander().post(new Runnable() {
+
+						@Override
+						public void run() {
+							UiUtils.toastMessage(PhotoEditor.this, R.string.photo_editor_save_failure);
+							return;
+						}
+					});
+				} else {
+					PublishActivity.start(PhotoEditor.this, mergedPath, processedPath);
+				}
+			}
+		});
 	}
 
 	@Override

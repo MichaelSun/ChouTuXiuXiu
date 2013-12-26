@@ -33,6 +33,7 @@
 	<string name="photo_editor_delete_all_widgets">确定删除所有素材吗?</string>
 	<string name="photo_editor_cancel">取消</string>
 	<string name="photo_editor_confirm">确定</string>
+	<string name="photo_editor_save_failure">保存图片失败</string>
 	
 	<!-- 贴图相关操作 -->
 	<string name="image_menu_illumination">亮度</string>
@@ -53,4 +54,9 @@
     <string name="tips_photo_loading">正在加载中</string>
     <string name="tips_no_sdcard">未发现SD卡!</string>
     
+    <!-- 发布页面 -->
+    <string name="publish_include_origin_image">是否包含原图做对比</string>
+    <string name="publish_share_to_weixin">分享到微信</string>
+    <string name="publish_share_to_weibo">分享到微博</string>
+    <string name="publish_share_to_friends">分享到朋友圈</string>
 </resources>

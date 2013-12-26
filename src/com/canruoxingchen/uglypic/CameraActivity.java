@@ -239,30 +239,6 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		return true;
 	}
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		if (resultCode == RESULT_FIRST_USER) {
-			if (requestCode == REQUEST_CODE_GALLERY) {
-				mHandler.postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						TipsDialog.getInstance().show(CameraActivity.this, R.drawable.tips_fail,
-								R.string.tips_photo_size_invalid, true);
-					}
-				}, 1000);
-			}
-		} else if (resultCode == RESULT_OK) {
-			if (requestCode == REQUEST_CODE_GALLERY) {
-				// setResult(RESULT_OK, data);
-				finish();
-				PhotoEditor.start(this, data.getData());
-			}
-		} else if (resultCode == RESULT_CANCELED) {
-
-		}
-	}
-
 	private void startPhotoPicker() {
 		// TODO: 从相册选图
 //		PickPhotoActivity.startForPhotoFromGallery(this, REQUEST_CODE_GALLERY);
@@ -373,7 +349,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		// setResult(RESULT_OK, intent);
 		// finish();
 		finish();
-		PhotoEditor.start(this, Uri.fromFile(new File(filePath)));
+		PhotoEditor.start(this, filePath);
 	}
 
 	public enum FlashMode {

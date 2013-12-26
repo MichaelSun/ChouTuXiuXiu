@@ -1000,3 +1000,15 @@ JNIEXPORT void JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 	LOGD("%d, %d, %d", data->width, data->height, data->channels);
 	write_image("/sdcard/1.jpg", data);
 }
+
+/*
+ * Class:     com_canruoxingchen_uglypic_util_jni_NativeImageUtil
+ * Method:    mergePhoto
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IIII)I
+ */
+JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_mergePhoto
+  (JNIEnv *env, jobject object, jstring origPath, jstring processedPath, jstring outPath,
+		  jint origWidth, jint origHeight, jint processedWidth, jint processedWidth) {
+
+}
+}

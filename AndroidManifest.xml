@@ -65,8 +65,7 @@
         </activity>
         <activity 
             android:name=".ImageCropActivity"
-            android:screenOrientation="portrait"
-			android:theme="@style/Transparent"></activity>
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

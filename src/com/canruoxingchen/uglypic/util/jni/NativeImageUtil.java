@@ -104,7 +104,7 @@ public class NativeImageUtil {
      */
     public native int saveCameraPhotoWithoutGL(String inFilePath, String outFilePath, int orientation, int mirror, int left, int top, int width, int height,
             int minWidth);
-
+    
     /**
      * 裁剪放缩图片
      * 
@@ -126,6 +126,8 @@ public class NativeImageUtil {
      * @return
      */
     public native int cropPhoto(String inFilePath, String outFilePath, float[] mAspectRatio, float[] mTranslate, float mScale, int minWidth, int isSquare);
+    
+    public native int mergePhoto(String origPath, String processedPath, String outFilePath, int origWidth, int origHeight, int processedWidth, int processedHeight);
 
     /**
      * 将传入的bitmap做高斯模糊处理，会改变传入的图

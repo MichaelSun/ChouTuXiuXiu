@@ -18,5 +18,6 @@
     <item name="msg_load_recent_footage_failure" type="id"></item>
     
     <item name="msg_editor_regret_status_change" type="id"></item>
+    <item name="msg_editor_origin_image_saved" type="id"></item>
     
 </resources>

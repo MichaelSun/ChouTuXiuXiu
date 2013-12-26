@@ -19,6 +19,7 @@ import android.util.AttributeSet;
 import android.util.FloatMath;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.camera.ImageProcessConstants;
@@ -105,6 +106,7 @@ public class CropImageView extends View {
         }
 
         // 用CacheManager会有缓存问题，有OOM再优化。
+        final CropImageView imageView = this;
         ThreadPoolManager.getInstance().execute(new Runnable() {
 			
 			@Override
@@ -115,6 +117,7 @@ public class CropImageView extends View {
 					@Override
 					public void run() {
 				        mDrawable = new BitmapDrawable(mContext.getResources(), bitmap);
+				        imageView.postInvalidate();
 					}
 				});
 			}
