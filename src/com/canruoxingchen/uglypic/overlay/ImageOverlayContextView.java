@@ -82,6 +82,7 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		mSbSatuation.setMax(mSatuation.getMax());
 		mSbSatuation.setProgress(mSatuation.getValue());
 		mSbIllumination.setVisibility(View.VISIBLE);
+		mBtnIllumination.setSelected(true);
 		
 		mBtnIllumination.setOnClickListener(this);
 		mBtnContrast.setOnClickListener(this);
@@ -111,14 +112,17 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		switch(v.getId()) {
 		case R.id.image_contrast:
 			resetAllBtnAndSeekbars();	
+			mBtnContrast.setSelected(true);
 			mSbContrast.setVisibility(View.VISIBLE);
 			break;
 		case R.id.image_illumination:
 			resetAllBtnAndSeekbars();
+			mBtnIllumination.setSelected(true);
 			mSbIllumination.setVisibility(View.VISIBLE);
 			break;
 		case R.id.image_satuation:
 			resetAllBtnAndSeekbars();
+			mBtnSatuation.setSelected(true);
 			mSbSatuation.setVisibility(View.VISIBLE);
 			break;
 		}
@@ -173,6 +177,10 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		mSbIllumination.setVisibility(View.GONE);
 		mSbContrast.setVisibility(View.GONE);
 		mSbSatuation.setVisibility(View.GONE);
+		
+		mBtnContrast.setSelected(false);
+		mBtnIllumination.setSelected(false);
+		mBtnSatuation.setSelected(false);
 	}
 
 }

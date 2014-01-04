@@ -1,41 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <LinearLayout android:orientation="horizontal"
+    <LinearLayout
+        android:id="@+id/image_params"
         android:layout_width="match_parent"
-        android:layout_height="40dp" >
+        android:layout_height="40dp"
+        android:background="#FDEA6A"
+        android:orientation="horizontal" >
 
         <Button
             android:id="@+id/image_illumination"
-            android:layout_width="0dp"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
-        android:layout_weight="1"
-            android:text="@string/image_menu_illumination" >
+            android:background="@null"
+            android:text="@string/image_menu_illumination"
+            android:textColor="@color/default_text_color" >
         </Button>
 
         <Button
             android:id="@+id/image_contrast"
-            android:layout_width="0dp"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
-       	 android:layout_weight="1"
+            android:background="@null"
+			android:textColor="@color/default_text_color"
             android:text="@string/image_menu_contrast" >
         </Button>
+
         <Button
             android:id="@+id/image_satuation"
-            android:layout_width="0dp"
+            android:layout_width="80dp"
             android:layout_height="wrap_content"
-        android:layout_weight="1"
+            android:background="@null"
+			android:textColor="@color/default_text_color"
             android:text="@string/image_menu_satuation" >
         </Button>
     </LinearLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:layout_weight="1" >
+        android:layout_height="match_parent"
+        android:layout_below="@id/image_params"
+        android:background="#1DB32A">
 
         <SeekBar
             android:id="@+id/image_seekbar_illumination"
@@ -58,8 +66,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:visibility="gone">
+            android:visibility="gone" >
         </SeekBar>
-   </RelativeLayout>
+    </RelativeLayout>
 
-</LinearLayout>
+</RelativeLayout>

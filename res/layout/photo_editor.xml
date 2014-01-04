@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/photo_editor_root_view"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" 
-    android:id="@+id/photo_editor_root_view">
+    android:layout_height="match_parent"
+    android:background="@color/default_background" >
 
     <RelativeLayout
         android:id="@+id/photo_editor_top_bar"
@@ -15,72 +16,81 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
+            android:textColor="@color/default_text_color"
+            android:background="@null"
             android:text="@string/photo_editor_top_bar_camera" >
         </Button>
 
-       <!--  <Button
+        <!--
+        <Button
             android:id="@+id/photo_editor_top_bar_reset"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:text="@string/photo_editor_top_bar_reset" >
-        </Button> -->
-        <LinearLayout android:id="@+id/photo_editor_topbar_object_menu"
+        </Button>
+        -->
+
+        <LinearLayout
+            android:id="@+id/photo_editor_topbar_object_menu"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
-            android:visibility="gone"
-            android:orientation="horizontal">
-            <TextView android:id="@+id/photo_editor_top_bar_object_modify"
+            android:orientation="horizontal"
+            android:visibility="gone" >
+
+            <TextView
+                android:id="@+id/photo_editor_top_bar_object_modify"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:text="@string/photo_editor_top_bar_modify"
-                android:layout_margin="5dp"></TextView>
-            <TextView android:id="@+id/photo_editor_top_bar_object_delete"
+                android:textColor="@color/default_text_color" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/photo_editor_top_bar_object_delete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:text="@string/photo_editor_top_bar_delete"
-                android:layout_margin="5dp"></TextView>
-            <TextView android:id="@+id/photo_editor_top_bar_object_eraser"
+                android:textColor="@color/default_text_color" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/photo_editor_top_bar_object_eraser"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:text="@string/photo_editor_top_bar_eraser"
-                android:layout_margin="5dp"></TextView>
+                android:textColor="@color/default_text_color" >
+            </TextView>
         </LinearLayout>
-        <TextView android:id="@+id/photo_editor_topbar_modify_finish"
+
+        <TextView
+            android:id="@+id/photo_editor_topbar_modify_finish"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
-            android:visibility="gone"
+            android:layout_marginRight="10dp"
             android:text="@string/photo_editor_top_bar_finish"
-            android:layout_marginRight="10dp"></TextView>
+            android:textColor="@color/default_text_color"
+            android:visibility="gone" >
+        </TextView>
     </RelativeLayout>
 
-    <LinearLayout android:id="@+id/photo_editor_bottom_panel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:orientation="vertical">
-        <com.canruoxingchen.uglypic.view.HorizontalListView android:id="@+id/photo_editor_footage_types_list"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"></com.canruoxingchen.uglypic.view.HorizontalListView>
-        <com.canruoxingchen.uglypic.view.HorizontalListView android:id="@+id/photo_editor_footage_list"
-            android:layout_width="match_parent"
-            android:layout_height="70dp"></com.canruoxingchen.uglypic.view.HorizontalListView>
-    </LinearLayout>
-    
-    <View android:id="@+id/photo_editor_edit_panel_ref_view"
+    <View
+        android:id="@+id/photo_editor_edit_panel_ref_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/photo_editor_bottom_panel"
-        android:layout_below="@id/photo_editor_top_bar"></View>
+        android:layout_below="@id/photo_editor_top_bar" >
+    </View>
 
     <RelativeLayout
         android:id="@+id/photo_editor_edit_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/photo_editor_bottom_panel"
-        android:layout_below="@id/photo_editor_top_bar">
+        android:layout_below="@id/photo_editor_top_bar" >
 
         <uk.co.senab.photoview.PhotoView
             android:id="@+id/photo_editor_photo"
@@ -92,24 +102,55 @@
         <RelativeLayout
             android:id="@+id/photo_editor_overlay_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" 
-            android:background="@color/transparent">
+            android:layout_height="match_parent"
+            android:background="@color/transparent" >
         </RelativeLayout>
-    </RelativeLayout>   
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/photo_editor_bottom_panel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/photo_editor_edit_panel"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical" >
+
+        <com.canruoxingchen.uglypic.view.HorizontalListView
+            android:id="@+id/photo_editor_footage_types_list"
+            android:layout_width="match_parent"
+            android:layout_height="40dp" >
+        </com.canruoxingchen.uglypic.view.HorizontalListView>
+	
+        <View android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/white"></View>
+        
+        <com.canruoxingchen.uglypic.view.HorizontalListView
+            android:id="@+id/photo_editor_footage_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+        </com.canruoxingchen.uglypic.view.HorizontalListView>
+    </LinearLayout>
     
-    <Button android:id="@+id/photo_editor_context_button"
+    <Button
+        android:id="@+id/photo_editor_context_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/photo_editor_context_btn_share"
         android:layout_above="@id/photo_editor_bottom_panel"
         android:layout_alignParentRight="true"
+        android:layout_marginBottom="12dp"
         android:layout_marginRight="12dp"
-        android:layout_marginBottom="12dp"></Button>
-    
-   <FrameLayout android:id="@+id/photo_editor_context_menu_container"
+        android:text="@string/photo_editor_context_btn_share"
+        android:textColor="@color/default_text_color" >
+    </Button>
+
+    <FrameLayout
+        android:id="@+id/photo_editor_context_menu_container"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
+        android:layout_height="match_parent"
+        android:layout_below="@id/photo_editor_edit_panel"
         android:layout_alignParentBottom="true"
-        android:visibility="gone"></FrameLayout>
-  
+        android:visibility="gone" >
+    </FrameLayout>
+
 </RelativeLayout>

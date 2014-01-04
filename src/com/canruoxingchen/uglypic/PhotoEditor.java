@@ -399,7 +399,14 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mFootageManager.loadFootageTypeFromLocal();
 
 		// 设置一个空场景
-		mSceneOverlay = new SceneOverlay.Builder(this, null).create();
+		mEditorPanel.requestLayout();
+		mHandler.postDelayed(new Runnable() {
+
+			@Override
+			public void run() {
+				setSceneOverlay(new SceneOverlay.Builder(PhotoEditor.this, null).create());
+			}
+		}, 100);
 	}
 
 	@Override
@@ -466,11 +473,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			@Override
 			public void onVisible() {
 				mViewContextBtn.setVisibility(View.GONE);
+				mViewBottomPanel.setVisibility(View.GONE);
 			}
 
 			@Override
 			public void onInvisible() {
 				mViewContextBtn.setVisibility(View.VISIBLE);
+				mViewBottomPanel.setVisibility(View.VISIBLE);
 			}
 		});
 
@@ -480,6 +489,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				FootAgeType type = mFootageTypes.get(position);
 				mCurrentType = type;
+				mTypeAdapter.notifyDataSetChanged();
 				switch (type.getTypeTarget()) {
 				case FootAgeType.TYPE_RECENT: // 最近使用
 					// TODO: 加载最近使用的素材
@@ -773,49 +783,52 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 	}
 
-//	private void saveOriginImage() {
-//		String savePath = FileUtils.createSdCardFile("photo_editor_origin.jpg");
-//		if (TextUtils.isEmpty(savePath)) {
-//			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
-//			return;
-//		}
-//		File file = new File(savePath);
-//		if (file.exists()) {
-//			file.delete();
-//		}
-//		try {
-//			file.createNewFile();
-//		} catch (IOException e) {
-//			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
-//			return;
-//		}
-//
-//		mPvPhoto.buildDrawingCache();
-//		final Bitmap image = mPvPhoto.getDrawingCache();
-//		mPvPhoto.destroyDrawingCache();
-//		ThreadPoolManager.getInstance().execute(new Runnable() {
-//
-//			@Override
-//			public void run() {
-//				String path = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), image, 0, true);
-//				if (TextUtils.isEmpty(path)) {
-//					UglyPicApp.getUiHander().post(new Runnable() {
-//
-//						@Override
-//						public void run() {
-//							UiUtils.toastMessage(PhotoEditor.this, R.string.photo_editor_save_failure);
-//							return;
-//						}
-//					});
-//				} else {
-//					if (mHandler != null) {
-//						Message msg = Message.obtain(mHandler, MSG_ORIGIN_IMAGE_SAVED, path);
-//						msg.sendToTarget();
-//					}
-//				}
-//			}
-//		});
-//	}
+	// private void saveOriginImage() {
+	// String savePath = FileUtils.createSdCardFile("photo_editor_origin.jpg");
+	// if (TextUtils.isEmpty(savePath)) {
+	// UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+	// return;
+	// }
+	// File file = new File(savePath);
+	// if (file.exists()) {
+	// file.delete();
+	// }
+	// try {
+	// file.createNewFile();
+	// } catch (IOException e) {
+	// UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
+	// return;
+	// }
+	//
+	// mPvPhoto.buildDrawingCache();
+	// final Bitmap image = mPvPhoto.getDrawingCache();
+	// mPvPhoto.destroyDrawingCache();
+	// ThreadPoolManager.getInstance().execute(new Runnable() {
+	//
+	// @Override
+	// public void run() {
+	// String path =
+	// ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), image, 0,
+	// true);
+	// if (TextUtils.isEmpty(path)) {
+	// UglyPicApp.getUiHander().post(new Runnable() {
+	//
+	// @Override
+	// public void run() {
+	// UiUtils.toastMessage(PhotoEditor.this,
+	// R.string.photo_editor_save_failure);
+	// return;
+	// }
+	// });
+	// } else {
+	// if (mHandler != null) {
+	// Message msg = Message.obtain(mHandler, MSG_ORIGIN_IMAGE_SAVED, path);
+	// msg.sendToTarget();
+	// }
+	// }
+	// }
+	// });
+	// }
 
 	// 保存当前图片
 	private void saveCurrentImage() {
@@ -836,7 +849,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		mPvPhoto.buildDrawingCache();
 		final Bitmap origin = mPvPhoto.getDrawingCache();
-		if(origin == null) {
+		if (origin == null) {
 			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
 			return;
 		}
@@ -847,14 +860,14 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		paint.setFlags(Paint.ANTI_ALIAS_FLAG);
 		canvas.drawBitmap(origin, 0, 0, paint);
 		mPvPhoto.destroyDrawingCache();
-		
+
 		mEditorPanel.buildDrawingCache();
 		final Bitmap processedImage = mEditorPanel.getDrawingCache();
-//		mEditorPanel.destroyDrawingCache();
+		// mEditorPanel.destroyDrawingCache();
 		canvas.drawBitmap(processedImage, 0, height, paint);
-		if(processedImage == null) {
+		if (processedImage == null) {
 			UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
-			if(mergedImage != null && !mergedImage.isRecycled()) {
+			if (mergedImage != null && !mergedImage.isRecycled()) {
 				mergedImage.recycle();
 			}
 			return;
@@ -863,12 +876,14 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 			@Override
 			public void run() {
-				String mergedPath =  ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), mergedImage, 0, true);
-				if(mergedImage != null && !mergedImage.isRecycled()) {
+				String mergedPath = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), mergedImage, 0,
+						true);
+				if (mergedImage != null && !mergedImage.isRecycled()) {
 					mergedImage.recycle();
 				}
-				String processedPath = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), processedImage, 0, true);
-				if(processedImage != null && !processedImage.isRecycled()) {
+				String processedPath = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), processedImage,
+						0, true);
+				if (processedImage != null && !processedImage.isRecycled()) {
 					processedImage.recycle();
 				}
 				if (TextUtils.isEmpty(mergedPath) || TextUtils.isEmpty(processedPath)) {
@@ -973,16 +988,16 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		switch (e.getAction()) {
 		case MotionEvent.ACTION_DOWN: {
-			if (isEditting()) { // 正在编辑的过程中，直接将手势传递到子view
-				return false;
+			if (isEditting()) { // 正在编辑的过程中，直接将手势吞掉不处理
+				return true;
 			}
 			int size = mOverlays.size();
 			if (mCurrentOverlay != null) {
 				mCurrentOverlay.checkKeyPointsSelectionStatus((int) e.getX(), (int) e.getY());
 				if (mCurrentOverlay.contains((int) e.getX(), (int) e.getY())
-						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isDeletePointSelected()) {
+						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isFlipPointSelected()) {
 					// 是否点中了删除按钮
-					if (mCurrentOverlay.isDeletePointSelected()) {
+					if (mCurrentOverlay.isFlipPointSelected()) {
 						// removeOverlay(mCurrentOverlay);
 						// TODO: flip
 						flipOverlay(mCurrentOverlay);
@@ -1030,7 +1045,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 			// 选中了一个浮层
 			if (mCurrentOverlay != null) {
-				if (mCurrentOverlay.isDeletePointSelected()) {
+				if (mCurrentOverlay.isFlipPointSelected()) {
 					// removeOverlay(mCurrentOverlay);
 					// mCurrentOverlay = null;
 					// mVgContextMenuContainer.removeAllViews();
@@ -1092,8 +1107,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		public boolean onMove(MoveGestureDetector detector) {
 			PointF d = detector.getFocusDelta();
 
-			LOGD("onMove >>>>>> " + detector.getFocusX() + ", " + detector.getFocusY() + "  <<<<<< with delta " + d.x
-					+ ", " + d.y);
 			if (mCurrentOverlay != null && mCurrentOverlay.isOverlaySelected()) {
 
 				// 如果选中的是控制点，则需要计算旋转和放缩
@@ -1128,8 +1141,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				} else { // 平移
 					mCurrentOverlay.translate((int) d.x, (int) d.y);
 					mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
-
-					LOGD("Translate Overlay >>>>>> " + (d.x) + ", " + (d.y));
 				}
 			}
 
@@ -1152,12 +1163,11 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			params.leftMargin = margin;
 			params.rightMargin = margin;
 		} else {
-			params.leftMargin = 0;
-			params.rightMargin = 0;
-			int margin = (int) ((editorPanelHeight - height * scaleX) / 2);
-			params.topMargin = margin;
-			params.bottomMargin = margin;
+			params.height = (int) (height * scaleX);
 		}
+		
+		mTypeAdapter.notifyDataSetChanged();
+		mFootageAdapter.notifyDataSetChanged();
 	}
 
 	private class TypeAdapter extends BaseAdapter {
@@ -1188,6 +1198,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			FootAgeType footageType = mFootageTypes.get(position);
 			tvName.setText(footageType.getTypeName());
 
+			final FootAgeType type = mFootageTypes.get(position);
+
+			if (type != mCurrentType) {
+				tvName.setSelected(false);
+			} else {
+				tvName.setSelected(true);
+			}
 			tvName.setOnClickListener(new View.OnClickListener() {
 
 				@Override
@@ -1195,7 +1212,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					if (position == 0) { // 常用的素材
 
 					} else {
-						FootAgeType type = mFootageTypes.get(position);
 						if (type != null && mCurrentType != type) {
 							mCurrentType = type;
 							// 加载素材列表

@@ -41,7 +41,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	// 控制点是否被选中
 	private boolean mControlPointSelected = false;
 	// 是否选中了删除键
-	private boolean mDeletePointSelected = false;
+	private boolean mFlipPointSelected = false;
 
 	// 删除按钮的中心坐标
 	private PointF mDeletePoint;
@@ -287,7 +287,7 @@ public abstract class ObjectOverlay implements IOverlay {
 		return null;
 	}
 
-	public PointF getRightTop() {
+	public PointF getFlipButton() {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.top };
@@ -303,11 +303,11 @@ public abstract class ObjectOverlay implements IOverlay {
 	}
 
 	public boolean isDeletePointSelected() {
-		return mDeletePointSelected;
+		return false;
 	}
 
 	public boolean isFlipPointSelected() {
-		return false;
+		return mFlipPointSelected;
 	}
 
 	private float distance(float x1, float y1, float x2, float y2) {
@@ -329,11 +329,11 @@ public abstract class ObjectOverlay implements IOverlay {
 		}
 		float radius = CONTROL_POINTS_RADIUS * mDensity;
 
-		PointF point = getDeletePoint();
+		PointF point = getFlipButton();
 		if (point != null && distance(point.x, point.y, x, y) < radius && isFlipable()) {
-			mDeletePointSelected = true;
+			mFlipPointSelected = true;
 		} else {
-			mDeletePointSelected = false;
+			mFlipPointSelected = false;
 		}
 
 		point = getControlPoint();
@@ -356,7 +356,6 @@ public abstract class ObjectOverlay implements IOverlay {
 		@Override
 		protected void dispatchDraw(Canvas canvas) {
 			super.dispatchDraw(canvas);
-			LOGD("======= dispatchDraw in containerView =======");
 			drawBtns(canvas);
 		}
 
@@ -364,7 +363,7 @@ public abstract class ObjectOverlay implements IOverlay {
 			PointF leftTop = getDeletePoint();
 			PointF rightBottom = getControlPoint();
 			PointF leftBottom = getLeftBottom();
-			PointF rightTop = getRightTop();
+			PointF rightTop = getFlipButton();
 			int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
 
 			if (leftTop == null || rightBottom == null || leftBottom == null || rightTop == null) {
@@ -387,12 +386,11 @@ public abstract class ObjectOverlay implements IOverlay {
 
 				// 画删除键
 				if (isFlipable()) {
-					canvas.drawCircle(leftTop.x, leftTop.y, padding, mPaint);
+					canvas.drawCircle(rightTop.x, rightTop.y, padding, mPaint);
 				}
 				// 画移动键
 				canvas.drawCircle(rightBottom.x, rightBottom.y, padding, mPaint);
 
-				LOGD("======= draw the container view =======");
 			}
 		}
 	}

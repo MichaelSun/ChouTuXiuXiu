@@ -23,16 +23,20 @@ import android.net.Uri;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.canruoxingchen.uglypic.MessageCenter;
 import com.canruoxingchen.uglypic.R;
+import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.overlay.ImageOverlayContextView.ContrastChangedListener;
@@ -45,7 +49,7 @@ import com.canruoxingchen.uglypic.util.Logger;
 public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationChangedListener, ContrastChangedListener,
 		SatuationChangedListener, ResetListener, EraseListener {
 
-	private static final int[] ERASER_WIDTH = new int[] { 3, 5, 10, 20, 32, 48, 64 };
+	private static final int[] ERASER_WIDTH = new int[] {16, 20, 24, 28, 32, 36, 40 };
 	private static final int TOUCH_SPAN_THREASHOLD = 4;
 	private static final String TAG = "ImageWidgetOverlay";
 
@@ -133,6 +137,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			// mAivImage.setImageMatrix(getMatrix());
 			mRotate += degrees;
 			mAivImage.setRotation(mRotate);
+			LOGD("<<<<<<<<<rotate widget object >>>>>>>>> degree=" + mRotate);
 		}
 	}
 
@@ -158,6 +163,74 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		return true;
 	}
 
+	
+	private static class EraseWidthViewHolder {
+		TextView tvWidth;
+	}
+	
+	private static class EraseWidthAdapter extends BaseAdapter {
+		
+		private int[] mWidths;
+		
+		private int mCurrentWidth = 0;
+		
+		private float mDensity = -1.0f;
+		
+		public EraseWidthAdapter(int[] widths) {
+			this.mWidths = widths;
+			mCurrentWidth = widths[0];
+		}
+
+		@Override
+		public int getCount() {
+			return mWidths.length;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mWidths[position];
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			EraseWidthViewHolder viewHolder = new EraseWidthViewHolder();
+			if(convertView == null) {
+				convertView = View.inflate(UglyPicApp.getAppExContext(), 
+						R.layout.image_erase_width_panel_item, null);
+				viewHolder.tvWidth = (TextView) convertView.findViewById(R.id.image_erase_width);
+				convertView.setTag(viewHolder);
+			}
+			viewHolder = (EraseWidthViewHolder) convertView.getTag();
+			
+			if(mDensity < 0) {
+				WindowManager wm = (WindowManager) UglyPicApp.getAppExContext().getSystemService(Context.WINDOW_SERVICE);
+				DisplayMetrics dm = new DisplayMetrics();
+				wm.getDefaultDisplay().getMetrics(dm);
+				mDensity = dm.density;
+			}
+			
+			int width = mWidths[position];
+			viewHolder.tvWidth.setText("" + width);
+			float density = mDensity < 0 ? 1.0f : mDensity;
+			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.tvWidth.getLayoutParams();
+			params.width = (int) (width * density);
+			params.height = (int) (width * density);
+			if(width == mCurrentWidth) {
+				viewHolder.tvWidth.setSelected(true);
+			} else {
+				viewHolder.tvWidth.setSelected(false);
+			}
+		
+			return convertView;
+		}
+		
+	}
+	
 	/**
 	 * 擦除照片的View
 	 * 
@@ -165,34 +238,34 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	 * 
 	 */
 	public class EraseImageEditorView extends RelativeLayout implements IEditor {
+		
+		private EraseWidthAdapter mAdapter;
 
 		public EraseImageEditorView(Context context) {
 			super(context);
+			mAdapter = new EraseWidthAdapter(ERASER_WIDTH);
 			initView();
 		}
 
 		private void initView() {
 			GridView gv = new GridView(getContext());
+			gv.setBackgroundColor(getResources().getColor(R.color.default_background));
 			int height = (int) getResources().getDimension(R.dimen.photo_editor_bottom_bar_height);
 			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+			gv.setAdapter(mAdapter);
 			addView(gv, params);
 			gv.setNumColumns(ERASER_WIDTH.length);
-			List<Integer> widths = new ArrayList<Integer>(ERASER_WIDTH.length);
-			for (int width : ERASER_WIDTH) {
-				widths.add(width);
-			}
-			gv.setAdapter(new ArrayAdapter<Integer>(getContext(), R.layout.image_erase_width_panel_item,
-					R.id.image_erase_width, widths));
+			gv.setDuplicateParentStateEnabled(true);
 			gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
 				@Override
 				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 					mAivImage.setCurrentStrokeWidth(ERASER_WIDTH[position]);
+					mAdapter.mCurrentWidth = ERASER_WIDTH[position];
+					mAdapter.notifyDataSetChanged();
 				}
 			});
-
-			gv.setBackgroundColor(Color.WHITE);
 		}
 
 		@Override
@@ -213,11 +286,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see com.canruoxingchen.uglypic.overlay.IEditor#onRegret()
-		 */
 		@Override
 		public void onRegret() {
 			if (mAivImage.hasMoreRegret()) {
@@ -225,11 +293,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see com.canruoxingchen.uglypic.overlay.IEditor#onRedo()
-		 */
 		@Override
 		public void onRedo() {
 			if (mAivImage.hasMoreRedo()) {
@@ -237,11 +300,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see com.canruoxingchen.uglypic.overlay.IEditor#onFinish()
-		 */
 		@Override
 		public void onFinish() {
 			// 传回擦除的结果
@@ -266,11 +324,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			return mAivImage.hasMoreRedo();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see com.canruoxingchen.uglypic.overlay.IEditor#canRegret()
-		 */
 		@Override
 		public boolean canRegret() {
 			return true;
@@ -723,7 +776,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		EraseModeParams params = new EraseModeParams();
 		// 首先找到当前overlay所处的方形区域
 		PointF leftTop = getDeletePoint();
-		PointF rightTop = getRightTop();
+		PointF rightTop = getFlipButton();
 		PointF leftBottom = getLeftBottom();
 		PointF rightBottom = getControlPoint();
 		if (leftTop == null || rightTop == null || leftBottom == null || rightBottom == null) {

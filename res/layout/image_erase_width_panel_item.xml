@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal" >
+    android:background="@color/default_background">
+    
     <TextView android:id="@+id/image_erase_width"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"></TextView>
+        android:background="@drawable/erase_width_bg"
+        android:layout_centerInParent="true"></TextView>
 
-</LinearLayout>
+</RelativeLayout>

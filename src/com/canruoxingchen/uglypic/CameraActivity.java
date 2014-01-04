@@ -269,7 +269,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		if (mIsPreviewSquare) {
 			mPictureRatio = 1.0f;
 			mBottomBarRL.getLayoutParams().height = height - topBarHeight - width;
-			mBottomBarRL.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+			mBottomBarRL.setBackgroundColor(getResources().getColor(R.color.default_background));
 		} else {
 			mBottomBarRL.setBackgroundColor(Color.parseColor("#00000000"));
 			mBottomBarRL.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
@@ -348,7 +348,6 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		// intent.putExtra(ImageProcessConstants.TAG_IMAGE_PATH, filePath);
 		// setResult(RESULT_OK, intent);
 		// finish();
-		finish();
 		PhotoEditor.start(this, filePath);
 	}
 
@@ -407,12 +406,12 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		@Override
 		public void onOrientationChanged(int orientation) {
 			orientation = (((orientation + 45) / 90) * 90) % 360;
-			mPmCameraData.mDeviceOrientation = orientation;
-
-			mCapturePhotoIB.setRotation(-orientation);
-			mCameraNextIB.setRotation(-orientation);
-			mFlashOnOffIB.setRotation(-orientation);
-			mChoosePhotoAiv.setRotation(-orientation);
+//			mPmCameraData.mDeviceOrientation = orientation;
+//
+//			mCapturePhotoIB.setRotation(-orientation);
+//			mCameraNextIB.setRotation(-orientation);
+//			mFlashOnOffIB.setRotation(-orientation);
+//			mChoosePhotoAiv.setRotation(-orientation);
 		}
 	}
 

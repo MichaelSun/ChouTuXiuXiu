@@ -21,7 +21,7 @@
     
     <string name="photo_editor_top_bar_finish">完成</string>
     
-    <string name="photo_editor_top_bar_camera">选择照片</string>
+    <string name="photo_editor_top_bar_camera">重新拍摄</string>
     <string name="photo_editor_top_bar_reset">重置</string>
     <string name="photo_editor_top_bar_modify">调整</string>
     <string name="photo_editor_top_bar_delete">删除</string>

@@ -236,8 +236,9 @@ public class ImageLoadTask extends
 					iv.setImageDrawable(result);
 				}
 				
-				int imageWidth = result.getBitmap() == null ? 0 : result.getBitmap().getWidth();
-				int imageHeight = result.getBitmap() == null ? 0 : result.getBitmap().getHeight();
+				Bitmap bmp = result.getBitmap();
+				int imageWidth = bmp == null ? 0 : bmp.getWidth();
+				int imageHeight = bmp == null ? 0 : bmp.getHeight();
 				iv.setImageWidth(imageWidth);
 				iv.setImageHeight(imageHeight);
 				if(iv != null) {
