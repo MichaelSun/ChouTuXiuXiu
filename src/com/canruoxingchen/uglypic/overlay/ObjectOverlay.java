@@ -30,8 +30,6 @@ import com.canruoxingchen.uglypic.util.Logger;
  */
 public abstract class ObjectOverlay implements IOverlay {
 
-	private static final int SIZE_CONTORL_VIEW = 30;
-
 	public static final int CONTROL_POINTS_RADIUS = 20;
 
 	protected float mDensity = -1.0f;
@@ -42,12 +40,6 @@ public abstract class ObjectOverlay implements IOverlay {
 	private boolean mControlPointSelected = false;
 	// 是否选中了删除键
 	private boolean mFlipPointSelected = false;
-
-	// 删除按钮的中心坐标
-	private PointF mDeletePoint;
-
-	// 控制按钮的中心坐标
-	private PointF mCtrlPoint;
 
 	private View mEditorPanel;
 
@@ -374,8 +366,8 @@ public abstract class ObjectOverlay implements IOverlay {
 				mPaint.setColorFilter(null);
 				// 画线
 				mPaint.setStyle(Style.STROKE);
-				mPaint.setColor(Color.BLACK);
-				mPaint.setStrokeWidth(2);
+				mPaint.setColor(Color.WHITE);
+				mPaint.setStrokeWidth(3);
 				float[] pts = new float[] { leftTop.x, leftTop.y, rightTop.x, rightTop.y, rightTop.x, rightTop.y,
 						rightBottom.x, rightBottom.y, rightBottom.x, rightBottom.y, leftBottom.x, leftBottom.y,
 						leftBottom.x, leftBottom.y, leftTop.x, leftTop.y };

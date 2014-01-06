@@ -14,5 +14,7 @@
     <color name="default_background">#2F2C22</color>
     <color name="default_text_pressed">#E26E26</color>
     <color name="default_text_normal">#FFFFFF</color>
+    <color name="publish_topbar_background">#FB7537</color>
+    <color name="publish_splitter">#CCCCCC</color>
     
 </resources>

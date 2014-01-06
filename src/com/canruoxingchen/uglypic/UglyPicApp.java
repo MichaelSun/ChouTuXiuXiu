@@ -14,11 +14,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.avos.avoscloud.AVException;
 import com.avos.avoscloud.AVOSCloud;
-import com.avos.sns.SNS;
-import com.avos.sns.SNSSinaWeibo;
-import com.avos.sns.SNSType;
 import com.canruoxingchen.uglypic.footage.FootageManager;
 import com.canruoxingchen.uglypic.util.Logger;
 
@@ -69,13 +65,6 @@ public class UglyPicApp extends Application {
 		AVOSCloud.initialize(this, "aawgg77nu8r9ore93ak5gc7lxgx3krb8y2rdo1e9nljpp8dw",
 				"217pymwx0ndt4f67gqzj4nuy5zf6q1i142shmnhianu6gobu");
 
-		// 设置微博信息
-		try {
-			SNS.setupPlatform(SNSType.AVOSCloudSNSSinaWeibo, "431566928", "1b3523a86e8eee65bed679f545dc43c6",
-					"connect://sina_call_back_url");
-		} catch (AVException e) {
-			
-		}
 
 		// 初始化素材类型列表
 		long lastLoadTypesTimeStamp = SettingManager.getInstance().getLastLoadTypesTime();

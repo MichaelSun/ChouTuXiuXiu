@@ -42,4 +42,13 @@ public class SettingManager {
     	return mSharedPreferences.getLong(mContext.getString(R.string.pref_last_load_footage_type_time), 0L);
     }
     
+    public void saveWeiboTokenInfo(String tokenString) {
+    	mEditor.putString(mContext.getString(R.string.pref_weibo_access_token), tokenString);
+    	mEditor.commit();
+    }
+    
+    
+    public String getAccessToken() {
+    	return mSharedPreferences.getString(mContext.getString(R.string.pref_weibo_access_token), "");
+    }    
 }

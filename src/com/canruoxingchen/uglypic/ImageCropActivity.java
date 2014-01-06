@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -34,17 +33,16 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 
 	private static final int REQUEST_CODE_CHOOSE_POHTO = 0x001;
 
-	CropImageView mCropView;
-	RelativeLayout mExitRL;
-	TextView mDoneTv;
+	private CropImageView mCropView;
+	private RelativeLayout mExitRL;
+	private TextView mDoneTv;
+	private View mViewTopbar;
+	
+	private volatile String mImagePath;
+	private boolean mNeedCrop = true;
+	private int mMinPictureSize = ImageProcessConstants.PICTURE_MIN_SIZE_LARGE;
 
-	volatile String mImagePath;
-	boolean mNeedCrop = true;
-	int mMinPictureSize = ImageProcessConstants.PICTURE_MIN_SIZE_LARGE;
-
-	CropHandler mHandler;
-
-	String mPublisherText;
+	private CropHandler mHandler;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,11 +59,13 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 		mCropView = (CropImageView) findViewById(R.id.iv_crop);
 		mCropView.setIsCrop(true);
 
+		mViewTopbar = findViewById(R.id.rl_topbar);
 		mExitRL = (RelativeLayout) findViewById(R.id.rl_exit);
 		mDoneTv = (TextView) findViewById(R.id.tv_accept_crop);
 		mExitRL.setOnClickListener(this);
 		mDoneTv.setOnClickListener(this);
 
+		mViewTopbar.setVisibility(View.GONE);
 		startPhotoPicker();
 	}
 
@@ -94,6 +94,7 @@ public class ImageCropActivity extends BaseActivity implements OnClickListener {
 					setResult(RESULT_CANCELED);
 					finish();
 				} else if (isFileSizeInvalid(mImagePath)) {
+					mViewTopbar.setVisibility(View.VISIBLE);
 					mHandler.sendEmptyMessage(MESSAGE_FINISH_CHOOSE_PHOTO);
 				} else {
 					// file size invalid

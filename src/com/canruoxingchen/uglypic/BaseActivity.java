@@ -3,6 +3,8 @@
  */
 package com.canruoxingchen.uglypic;
 
+import com.umeng.analytics.MobclickAgent;
+
 import android.app.Activity;
 
 /**
@@ -19,4 +21,18 @@ public abstract class BaseActivity extends Activity{
 	 * 初始化事件
 	 */
 	protected abstract void initListers();
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+	
+	
 }

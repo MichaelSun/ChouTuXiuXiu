@@ -3,9 +3,9 @@
  */
 package com.canruoxingchen.uglypic;
 
-import com.canruoxingchen.uglypic.util.FileUtils;
-
 import android.os.Environment;
+
+import com.canruoxingchen.uglypic.util.FileUtils;
 
 
 /**

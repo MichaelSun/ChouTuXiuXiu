@@ -9,7 +9,6 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import com.canruoxingchen.uglypic.R;
-import com.canruoxingchen.uglypic.view.VerticalSeekBar;
 
 /**
  * 贴图的上下文菜单

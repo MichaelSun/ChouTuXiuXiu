@@ -34,6 +34,7 @@
 	<string name="photo_editor_cancel">取消</string>
 	<string name="photo_editor_confirm">确定</string>
 	<string name="photo_editor_save_failure">保存图片失败</string>
+	<string name="photo_editor_saving">正在处理图片</string>
 	
 	<!-- 贴图相关操作 -->
 	<string name="image_menu_illumination">亮度</string>
@@ -59,4 +60,11 @@
     <string name="publish_share_to_weixin">分享到微信</string>
     <string name="publish_share_to_weibo">分享到微博</string>
     <string name="publish_share_to_friends">分享到朋友圈</string>
+    <string name="publish_sns_section">分享至社交网络:</string>
+    <string name="publish_finish">完成</string>
+    <string name="publish_share_to_weibo_success">分享到微博成功</string>
+    <string name="publish_share_to_weibo_failure">分享到微博失败</string>
+    <string name="publish_exporting">正在导出图片</string>
+    <string name="publish_exporting_failure">导出图片失败</string>
+    <string name="publish_desc_hint">在此输入照片说明</string>
 </resources>

@@ -3,10 +3,6 @@ package com.canruoxingchen.uglypic.cache;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 
-import com.canruoxingchen.uglypic.R;
-import com.canruoxingchen.uglypic.util.ImageUtils;
-import com.canruoxingchen.uglypic.util.Logger;
-
 import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
@@ -20,6 +16,10 @@ import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 import android.view.ViewGroup;
 
+import com.canruoxingchen.uglypic.R;
+import com.canruoxingchen.uglypic.util.ImageUtils;
+import com.canruoxingchen.uglypic.util.Logger;
+
 /**
  * 
  * @Description 向{@link AsyncImageView}加载图片
@@ -29,8 +29,7 @@ import android.view.ViewGroup;
  * @time 2013-11-1 下午4:41:30
  * 
  */
-public class ImageLoadTask extends
-		AsyncTask<Void, Void, CacheableBitmapDrawable> {
+public class ImageLoadTask extends AsyncTask<Void, Void, CacheableBitmapDrawable> {
 	public static final String TAG = "ImageLoadTask";
 
 	/**
@@ -70,12 +69,10 @@ public class ImageLoadTask extends
 	private static final int MIN_DEST_WIDTH = 512;
 	private static final int MIN_DEST_HEIGHT = 512;
 
-	public ImageLoadTask(Context context, ImageInfo imageInfo,
-			AsyncImageView imgView, boolean needReSample) {
+	public ImageLoadTask(Context context, ImageInfo imageInfo, AsyncImageView imgView, boolean needReSample) {
 		this.mCategory = imageInfo.getCategory();
 		this.mImageUri = imageInfo.getUrl();
-		this.mContentResolver = new WeakReference<ContentResolver>(imgView
-				.getContext().getContentResolver());
+		this.mContentResolver = new WeakReference<ContentResolver>(imgView.getContext().getContentResolver());
 		this.mImageView = new WeakReference<AsyncImageView>(imgView);
 		this.mImageCacheManager = ImageCacheManager.getInstance(context);
 
@@ -114,8 +111,7 @@ public class ImageLoadTask extends
 
 			if (mImageUri != null && !mImageUri.startsWith("http")) {
 				ContentResolver resolver = mContentResolver.get();
-				opts = ImageUtils.getDecodeOptions(resolver,
-						Uri.parse(mImageUri), mDestWidth, mDestHeight);
+				opts = ImageUtils.getDecodeOptions(resolver, Uri.parse(mImageUri), mDestWidth, mDestHeight);
 			} else {// 如果本地没有，则设置一个默认的opts
 				opts.inDensity = DisplayMetrics.DENSITY_XHIGH;
 			}
@@ -126,9 +122,8 @@ public class ImageLoadTask extends
 			return null;
 		}
 
-		CacheableBitmapDrawable result = mImageCacheManager
-				.getBitmapByCategoryAndUrl(mCategory, mImageUri, opts,
-						imageView.getSuffix());
+		CacheableBitmapDrawable result = mImageCacheManager.getBitmapByCategoryAndUrl(mCategory, mImageUri, opts,
+				imageView.getSuffix());
 		if (result != null) {
 			result = getAndCreateAndPutSpecialBitmap(imageView, result);
 			if (result != null)
@@ -142,8 +137,7 @@ public class ImageLoadTask extends
 		// 如果给的Url为本地uri，则先从本地加载
 		if (mImageUri != null && !mImageUri.startsWith("http")) {
 			ContentResolver resolver = mContentResolver.get();
-			Bitmap bmp = ImageUtils.scaleDecode(resolver, Uri.parse(mImageUri),
-					mDestWidth, mDestHeight, 1);
+			Bitmap bmp = ImageUtils.scaleDecode(resolver, Uri.parse(mImageUri), mDestWidth, mDestHeight, 1);
 			if (bmp != null) {
 				// 如果为本地图片，则只加载到内存缓存中，否则将该图片存入缓存中
 				result = mImageCacheManager.putToMem(bmp, mCategory, mImageUri);
@@ -169,8 +163,7 @@ public class ImageLoadTask extends
 		if (mImageUri != null && mImageUri.startsWith("http")) {
 			InputStream is = ImageDownloader.open(mImageUri);
 			if (is != null) {
-				result = mImageCacheManager.putBitmapByCategoryAndUrl(is, opts,
-						mCategory, mImageUri);
+				result = mImageCacheManager.putBitmapByCategoryAndUrl(is, opts, mCategory, mImageUri);
 				if (result != null) {
 					result = getAndCreateAndPutSpecialBitmap(imageView, result);
 				}
@@ -182,19 +175,16 @@ public class ImageLoadTask extends
 		return result;
 	}
 
-	private CacheableBitmapDrawable getAndCreateAndPutSpecialBitmap(
-			AsyncImageView imageView, CacheableBitmapDrawable wrapper) {
+	private CacheableBitmapDrawable getAndCreateAndPutSpecialBitmap(AsyncImageView imageView,
+			CacheableBitmapDrawable wrapper) {
 		Bitmap specialBitmap = null;
 		if (wrapper != null && wrapper.hasValidBitmap()) {
 			specialBitmap = imageView.createSpecialBitmap(wrapper.getBitmap());
-			if (imageView.getSuffix() == null
-					|| imageView.getSuffix().equalsIgnoreCase(
-							ImageCategories.NULL_SUFFIX)) {
+			if (imageView.getSuffix() == null || imageView.getSuffix().equalsIgnoreCase(ImageCategories.NULL_SUFFIX)) {
 				return wrapper;
 			} else {
 				if (specialBitmap != null) {
-					return this.mImageCacheManager.putBitmapByCategoryAndUrl(
-							specialBitmap, mCategory, mImageUri,
+					return this.mImageCacheManager.putBitmapByCategoryAndUrl(specialBitmap, mCategory, mImageUri,
 							imageView.getSuffix());
 				} else {
 					return null;
@@ -212,7 +202,7 @@ public class ImageLoadTask extends
 
 		AsyncImageView iv = (mImageView == null ? null : mImageView.get());
 		if (isCancelled()) {
-			if(iv != null) {
+			if (iv != null) {
 				iv.notifyFailure();
 			}
 			return;
@@ -235,19 +225,21 @@ public class ImageLoadTask extends
 					}
 					iv.setImageDrawable(result);
 				}
-				
+
 				Bitmap bmp = result.getBitmap();
 				int imageWidth = bmp == null ? 0 : bmp.getWidth();
 				int imageHeight = bmp == null ? 0 : bmp.getHeight();
 				iv.setImageWidth(imageWidth);
 				iv.setImageHeight(imageHeight);
-				if(iv != null) {
+				if (iv != null) {
 					iv.notifyComplete();
 				}
 				return;
 			}
 		}
-		iv.notifyFailure();
+		if (iv != null) {
+			iv.notifyFailure();
+		}
 	}
 
 	@Override

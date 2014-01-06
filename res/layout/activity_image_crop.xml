@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dip"
         android:layout_alignParentTop="true"
-        android:background="#FFFFFFFF"
+        android:background="@color/default_background"
         android:paddingLeft="5dip"
         android:paddingRight="5dip"
         android:contentDescription="image_crop_rl_topbar">
@@ -20,7 +20,6 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
-            android:background="@drawable/camera_titlebar_bg"
             android:clickable="true"
             android:paddingLeft="5dip"
             android:paddingRight="5dip"
@@ -45,7 +44,7 @@
                 android:layout_toRightOf="@id/iv_exit"
                 android:background="@null"
                 android:text="@string/camera_btn_crop_back"
-                android:textColor="@color/camera_button_text"
+                android:textColor="@color/default_text_color"
                 android:textSize="16sp"
                 android:contentDescription="image_crop_tv_exit"/>
         </RelativeLayout>
@@ -56,13 +55,13 @@
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/camera_titlebar_bg"
+            android:background="@null"
             android:clickable="true"
             android:gravity="center"
             android:paddingLeft="5dip"
             android:paddingRight="5dip"
             android:text="@string/camera_btn_crop_done"
-            android:textColor="@color/camera_button_text"
+            android:textColor="@color/default_text_color"
             android:textSize="16sp"
             android:contentDescription="image_crop_tc_accept_crop"/>
     </RelativeLayout>

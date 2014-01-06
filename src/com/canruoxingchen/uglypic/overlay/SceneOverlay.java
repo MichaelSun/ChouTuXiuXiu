@@ -342,6 +342,7 @@ public class SceneOverlay implements IOverlay {
 							LayoutParams.WRAP_CONTENT);
 					params.leftMargin = (int) (overlay.mTextViewLeft * scale);
 					params.topMargin = (int) (overlay.mTextViewTop * scale);
+					mEtText.setCursorVisible(false);
 					mEtText.setTextColor(overlay.mTextColor);
 					mEtText.setHintTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);

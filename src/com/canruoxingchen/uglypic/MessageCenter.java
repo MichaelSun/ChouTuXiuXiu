@@ -95,4 +95,8 @@ public class MessageCenter {
 			}
 		}
 	}
+	
+	public synchronized void notifyHandlers(int what) {
+		notifyHandlers(what, 0, 0, null);
+	}
 }

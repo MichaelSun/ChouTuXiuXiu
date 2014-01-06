@@ -20,4 +20,13 @@
     <item name="msg_editor_regret_status_change" type="id"></item>
     <item name="msg_editor_origin_image_saved" type="id"></item>
     
+    <item name="msg_weibo_auth_success" type="id"></item>
+    <item name="msg_weibo_auth_failure" type="id"></item>
+    <item name="msg_weibo_share_failure" type="id"></item>
+    <item name="msg_weibo_share_success" type="id"></item>
+    
+    <item name="msg_photo_export_success" type="id"></item>
+    <item name="msg_photo_export_failure" type="id"></item>
+    <item name="msg_photo_merge_thumbnail_success" type="id"></item>
+    
 </resources>

@@ -598,7 +598,7 @@ public class ImageUtils {
 
 	public static String saveBitmapForLocalPath(Context context, Bitmap bmp, int orientation, boolean saveToGallery) {
 		long dateTaken = System.currentTimeMillis();
-		String name = "dbn" + System.currentTimeMillis() + ".jpg";
+		String name = "ugly" + System.currentTimeMillis() + ".jpg";
 		File file = getTempImageFile(name);
 		if (file != null) {
 			FileOutputStream fos = null;
@@ -630,6 +630,40 @@ public class ImageUtils {
 
 		return file.getAbsolutePath();
 	}
+	
+	public static String saveBitmapForLocalPath(Context context, Bitmap bmp, String fileName, int orientation, boolean saveToGallery) {
+		String name = "ugly" + fileName + ".jpg";
+		File file = getTempImageFile(name);
+		if (file != null) {
+			FileOutputStream fos = null;
+			try {
+				fos = new FileOutputStream(file);
+				boolean result = bmp.compress(CompressFormat.JPEG, 100, fos);
+				// 保存至图库
+				if (result && saveToGallery) {
+					ContentValues values = new ContentValues(7);
+
+					values.put(Images.Media.TITLE, Config.IMAGE_TITLE);
+					values.put(Images.Media.DISPLAY_NAME, name);
+					values.put(Images.Media.DATE_TAKEN, System.currentTimeMillis());
+					values.put(Images.Media.MIME_TYPE, "image/jpg");
+					values.put(Images.Media.ORIENTATION, orientation);
+					values.put(Images.Media.DATA, file.getAbsolutePath());
+					values.put(Images.Media.SIZE, file.length());
+
+					context.getContentResolver().insert(Images.Media.EXTERNAL_CONTENT_URI, values);
+				}
+			} catch (FileNotFoundException e) {
+				return null;
+			} finally {
+				FileUtils.closeQuietly(fos);
+			}
+		} else {
+			return null;
+		}
+
+		return file.getAbsolutePath();
+	}
 
 	public static Uri saveBitmapToGallery(Context context, Uri uri, int orientation) {
 		if (uri == null) {
@@ -637,7 +671,7 @@ public class ImageUtils {
 		}
 
 		long dateTaken = System.currentTimeMillis();
-		String name = "dbn" + System.currentTimeMillis() + ".jpg";
+		String name = "ugly" + System.currentTimeMillis() + ".jpg";
 		File file = getTempImageFile(name);
 		String uriStr = uri.toString();
 		DataInputStream dis = null;
