@@ -227,6 +227,12 @@ public class SceneOverlay implements IOverlay {
 	public void resetOverlay() {
 
 	}
+	
+	public void setCursorVisable(boolean visible) {
+		if(mSceneLayout != null && mSceneLayout.mEtText != null) {
+			mSceneLayout.mEtText.setCursorVisible(visible);
+		}
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -342,9 +348,8 @@ public class SceneOverlay implements IOverlay {
 							LayoutParams.WRAP_CONTENT);
 					params.leftMargin = (int) (overlay.mTextViewLeft * scale);
 					params.topMargin = (int) (overlay.mTextViewTop * scale);
-					mEtText.setCursorVisible(false);
 					mEtText.setTextColor(overlay.mTextColor);
-					mEtText.setHintTextColor(overlay.mTextColor);
+//					mEtText.setHintTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);
 					mEtText.setTextSize(overlay.mTextSize * scale / 2);
 					mEtText.setLayoutParams(params);
@@ -366,13 +371,11 @@ public class SceneOverlay implements IOverlay {
 					int viewWidth = getWidth();
 					int viewHeight = getHeight();
 					mTvTime = new TextView(mContext);
-					float etWidth = overlay.mTimeRight - overlay.mTimeLeft;
-					float etHeight = overlay.mTimeBottom - overlay.mTimeTop;
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					float scale = Math.min(scaleX, scaleY);
 
-					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scale),
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
 							LayoutParams.WRAP_CONTENT);
 					params.leftMargin = (int) (overlay.mTimeLeft * scale);
 					params.topMargin = (int) (overlay.mTimeTop * scale);
@@ -382,7 +385,7 @@ public class SceneOverlay implements IOverlay {
 					mTvTime.setLayoutParams(params);
 					mTvTime.setLines(1);
 					mTvTime.setGravity(overlay.mTimeGravity | Gravity.CENTER_VERTICAL);
-					SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+					SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 					mTvTime.setText(dateFormat.format(new Date(System.currentTimeMillis())));
 					if (!TextUtils.isEmpty(overlay.mTimeFontName)
 							&& overlay.mTimeFontName.toLowerCase().contains("bold")) {

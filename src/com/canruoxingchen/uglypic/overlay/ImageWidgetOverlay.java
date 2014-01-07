@@ -31,6 +31,7 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
 import com.canruoxingchen.uglypic.MessageCenter;
@@ -48,7 +49,7 @@ import com.canruoxingchen.uglypic.util.Logger;
 public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationChangedListener, ContrastChangedListener,
 		SatuationChangedListener, ResetListener, EraseListener {
 
-	private static final int[] ERASER_WIDTH = new int[] {16, 20, 24, 28, 32, 36, 40 };
+	private static final int[] ERASER_WIDTH = new int[] { 16, 20, 24, 28, 32, 36, 40 };
 	private static final int TOUCH_SPAN_THREASHOLD = 4;
 	private static final String TAG = "ImageWidgetOverlay";
 
@@ -74,9 +75,22 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		if (uri != null) {
 			mUri = uri;
 			mAivImage.setImageInfo(ImageInfo.obtain(uri.toString()));
-			mAivImage.setScaleType(ScaleType.CENTER_INSIDE);
+			mAivImage.setScaleType(ScaleType.FIT_CENTER);
 		}
 	}
+	
+	
+
+	@Override
+	protected LayoutParams getDefaultParams() {
+		retrieveDensity();
+		float density = mDensity > 0 ? mDensity : 1.0f;
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int)(150 * density), (int)(150 * density));
+		params.addRule(RelativeLayout.CENTER_IN_PARENT);
+		return params;
+	}
+
+
 
 	@Override
 	public View getView() {
@@ -162,19 +176,18 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		return true;
 	}
 
-	
 	private static class EraseWidthViewHolder {
 		TextView tvWidth;
 	}
-	
+
 	private static class EraseWidthAdapter extends BaseAdapter {
-		
+
 		private int[] mWidths;
-		
+
 		private int mCurrentWidth = 0;
-		
+
 		private float mDensity = -1.0f;
-		
+
 		public EraseWidthAdapter(int[] widths) {
 			this.mWidths = widths;
 			mCurrentWidth = widths[0];
@@ -198,38 +211,38 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			EraseWidthViewHolder viewHolder = new EraseWidthViewHolder();
-			if(convertView == null) {
-				convertView = View.inflate(UglyPicApp.getAppExContext(), 
-						R.layout.image_erase_width_panel_item, null);
+			if (convertView == null) {
+				convertView = View.inflate(UglyPicApp.getAppExContext(), R.layout.image_erase_width_panel_item, null);
 				viewHolder.tvWidth = (TextView) convertView.findViewById(R.id.image_erase_width);
 				convertView.setTag(viewHolder);
 			}
 			viewHolder = (EraseWidthViewHolder) convertView.getTag();
-			
-			if(mDensity < 0) {
-				WindowManager wm = (WindowManager) UglyPicApp.getAppExContext().getSystemService(Context.WINDOW_SERVICE);
+
+			if (mDensity < 0) {
+				WindowManager wm = (WindowManager) UglyPicApp.getAppExContext()
+						.getSystemService(Context.WINDOW_SERVICE);
 				DisplayMetrics dm = new DisplayMetrics();
 				wm.getDefaultDisplay().getMetrics(dm);
 				mDensity = dm.density;
 			}
-			
+
 			int width = mWidths[position];
 			viewHolder.tvWidth.setText("" + width);
 			float density = mDensity < 0 ? 1.0f : mDensity;
 			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.tvWidth.getLayoutParams();
 			params.width = (int) (width * density);
 			params.height = (int) (width * density);
-			if(width == mCurrentWidth) {
+			if (width == mCurrentWidth) {
 				viewHolder.tvWidth.setSelected(true);
 			} else {
 				viewHolder.tvWidth.setSelected(false);
 			}
-		
+
 			return convertView;
 		}
-		
+
 	}
-	
+
 	/**
 	 * 擦除照片的View
 	 * 
@@ -237,7 +250,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	 * 
 	 */
 	public class EraseImageEditorView extends RelativeLayout implements IEditor {
-		
+
 		private EraseWidthAdapter mAdapter;
 
 		public EraseImageEditorView(Context context) {
@@ -407,7 +420,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			if (mEraserMode) {
 				copyImage();
 				mEraseableCanvas = null;
-				mEraseableImage = mImage.copy(Config.ARGB_8888, true);
+				if (mImage != null) {
+					mEraseableImage = mImage.copy(Config.ARGB_8888, true);
+				}
 			} else {
 				mRecords.clear();
 				if (mEraseableImage != null && !mEraseableImage.isRecycled()) {
@@ -604,14 +619,14 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		private void touchUp(float x, float y) {
 			if (mCurrentPath != null) {
 				mCurrentPath.lineTo(x, y);
-				if(mPathIndex >= 0 && mPathIndex < mRecords.size()) {
+				if (mPathIndex >= 0 && mPathIndex < mRecords.size()) {
 					mRecords = mRecords.subList(0, mPathIndex + 1);
 				} else {
 					mRecords.clear();
 				}
 				mRecords.add(new EraseRecord(mCurrentPath, mCurrentStrokeWidth));
 				mPathIndex = mRecords.size() - 1;
-				//通知容器，可回退状态已改变
+				// 通知容器，可回退状态已改变
 				MessageCenter.getInstance(getContext())
 						.notifyHandlers(R.id.msg_editor_regret_status_change, 0, 0, null);
 				mCurrentPath = null;
@@ -648,7 +663,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			if (mEraseableCanvas == null) {
 				mEraseableCanvas = new Canvas(mEraseableImage);
 			}
-			
+
 			List<EraseRecord> records = new ArrayList<ImageWidgetOverlay.EraseRecord>();
 			if (mPathIndex < mRecords.size() && mPathIndex >= 0) {
 				records = mRecords.subList(0, mPathIndex + 1);
@@ -774,10 +789,10 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	private EraseModeParams getEraseModeParams() {
 		EraseModeParams params = new EraseModeParams();
 		// 首先找到当前overlay所处的方形区域
-		PointF leftTop = getDeletePoint();
-		PointF rightTop = getFlipButton();
+		PointF leftTop = getFlipButton();
+		PointF rightTop = getRightTop();
 		PointF leftBottom = getLeftBottom();
-		PointF rightBottom = getControlPoint();
+		PointF rightBottom = getControlButton();
 		if (leftTop == null || rightTop == null || leftBottom == null || rightBottom == null) {
 			return null;
 		}

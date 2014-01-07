@@ -73,7 +73,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private static final int MSG_REGRET_STATUS_CHANGED = R.id.msg_editor_regret_status_change;
 	private static final int MSG_ORIGIN_IMAGE_SAVED = R.id.msg_editor_origin_image_saved;
-	
+
 	private static final int REQUEST_CODE_PUBLISH = 1;
 
 	// 原始照片的uri
@@ -139,6 +139,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	 * 当前被选中的浮层
 	 */
 	private ObjectOverlay mCurrentOverlay;
+	private ObjectOverlay mLastOverlay;
 
 	private List<FootAgeType> mFootageTypes = new ArrayList<FootAgeType>();
 	private List<Object> mFootages = new ArrayList<Object>();
@@ -269,6 +270,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					NetSence scene = scenes.get(0);
 					if (scene.getSenceParentId().equals(activity.mCurrentType.getObjectId())) {
 						activity.mFootages.clear();
+						// 在队首增加一个空场景
+						activity.mFootages.add(NetSence.DEFAULT);
 						activity.mFootages.addAll(scenes);
 						activity.mFootageAdapter.notifyDataSetChanged();
 					}
@@ -286,6 +289,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					NetSence scene = scenes.get(0);
 					if (scene.getSenceParentId().equals(activity.mCurrentType.getObjectId())) {
 						activity.mFootages.clear();
+						// 在队首增加一个空场景
+						activity.mFootages.add(NetSence.DEFAULT);
 						activity.mFootages.addAll(scenes);
 						activity.mFootageAdapter.notifyDataSetChanged();
 					}
@@ -376,12 +381,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		initUI();
 		initListers();
+		mHandler = new MyHandler(this);
+		registerAllFootageMsg();
+
 		mTypeAdapter = new TypeAdapter();
 		mFootageAdapter = new FootageAdapter();
 		mLvTypes.setAdapter(mTypeAdapter);
 		mLvFootages.setAdapter(mFootageAdapter);
-
-		mHandler = new MyHandler(this);
 
 		// 显示当前的照片
 		if (mPhotoUri != null) {
@@ -416,6 +422,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		unregisterAllFootageMsg();
 		dismissDialog();
 		TipsDialog.getInstance().dismiss();
 	}
@@ -548,6 +555,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	}
 
 	private void onSceneClick(NetSence netScene, boolean save) {
+		if (netScene == NetSence.DEFAULT) {
+			setSceneOverlay(mNullScene);
+			return;
+		}
 		if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
 			SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri.parse(netScene
 					.getSenceNetIcon()));
@@ -579,15 +590,17 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	@Override
 	protected void onResume() {
 		super.onResume();
-		registerAllFootageMsg();
 		// 注册编辑内容可回退状态改变的消息
 		MessageCenter.getInstance(this).registerMessage(R.id.msg_editor_regret_status_change, mHandler);
+
+		if (mSceneOverlay != null) {
+			mSceneOverlay.setCursorVisable(false);
+		}
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		unregisterAllFootageMsg();
 		MessageCenter.getInstance(this).unregisterMessage(R.id.msg_editor_regret_status_change, mHandler);
 	}
 
@@ -655,18 +668,19 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		case REQUEST_CODE_EDIT_TEXT: { // 编辑了文本后，显示选择背景列表
 			if (resultCode == RESULT_OK) {
 				// 添加一个TextOverLay
-//				if (data != null) {
-//					String text = data.getStringExtra(EditTextActivity.EXTRA_TEXT);
-//					if (!TextUtils.isEmpty(text)) {
-//						TextOverlay overlay = new TextOverlay(this, text);
-//						addOverlay(overlay);
-//					}
-//				}
+				// if (data != null) {
+				// String text =
+				// data.getStringExtra(EditTextActivity.EXTRA_TEXT);
+				// if (!TextUtils.isEmpty(text)) {
+				// TextOverlay overlay = new TextOverlay(this, text);
+				// addOverlay(overlay);
+				// }
+				// }
 			}
 			break;
 		}
 		case REQUEST_CODE_PUBLISH: {
-			if(resultCode != RESULT_FIRST_USER) {
+			if (resultCode != RESULT_FIRST_USER) {
 				finish();
 			}
 			break;
@@ -790,17 +804,21 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mViewModifyFinish.setVisibility(View.GONE);
 		}
 
+		if (mSceneOverlay != null) {
+			mSceneOverlay.setCursorVisable(false);
+		}
+
 		mEditorPanel.destroyDrawingCache();
 		mEditorPanel.buildDrawingCache();
 		final Bitmap processedImage = mEditorPanel.getDrawingCache();
 		// mEditorPanel.destroyDrawingCache();
-		
+
 		TipsDialog.getInstance().show(this, R.drawable.tips_loading, R.string.photo_editor_saving, true, false);
 		ThreadPoolManager.getInstance().execute(new Runnable() {
 			@Override
 			public void run() {
-				final String processedPath = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), processedImage,
-						0, false);
+				final String processedPath = ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(),
+						processedImage, 0, false);
 				if (processedImage != null && !processedImage.isRecycled()) {
 					processedImage.recycle();
 				}
@@ -885,6 +903,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			overlay.setOperationListener(this);
 			overlay.setEditorPanel(mEditorPanel);
 			mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
+			if(mLastOverlay != null) {
+				removeOverlay(mLastOverlay);
+			}
 			if (mCurrentOverlay != null) {
 				mCurrentOverlay.setOverlaySelected(false);
 				mCurrentOverlay.getContainerView(this).invalidate();
@@ -892,6 +913,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mTopContextMenu.setVisibility(View.GONE);
 				mViewContextBtn.setText(R.string.photo_editor_context_btn_share);
 			}
+			mLastOverlay = overlay;
 			mVgContextMenuContainer.setVisibility(View.GONE);
 		}
 	}
@@ -928,6 +950,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mCurrentOverlay.checkKeyPointsSelectionStatus((int) e.getX(), (int) e.getY());
 				if (mCurrentOverlay.contains((int) e.getX(), (int) e.getY())
 						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isFlipPointSelected()) {
+					// 标记为已经选中过
+					mCurrentOverlay.setHasBeenSelected(true);
+					mLastOverlay = null;
 					// 是否点中了删除按钮
 					if (mCurrentOverlay.isFlipPointSelected()) {
 						// removeOverlay(mCurrentOverlay);
@@ -939,6 +964,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 					if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
 						mTopContextMenu.setVisibility(View.VISIBLE);
+						mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 						// mVgContextMenuContainer.removeAllViews();
 						// mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
 						// mVgContextMenuContainer.setVisibility(View.VISIBLE);
@@ -978,6 +1004,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 			// 选中了一个浮层
 			if (mCurrentOverlay != null) {
+				// 标记为已经选中过
+				mCurrentOverlay.setHasBeenSelected(true);
+				mLastOverlay = null;
 				if (mCurrentOverlay.isFlipPointSelected()) {
 					// removeOverlay(mCurrentOverlay);
 					// mCurrentOverlay = null;
@@ -1049,8 +1078,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 				// 如果选中的是控制点，则需要计算旋转和放缩
 				if (mCurrentOverlay.isControlPointSelected()) {
-					PointF ctrlPoint = mCurrentOverlay.getControlPoint();
-					PointF deletePoint = mCurrentOverlay.getDeletePoint();
+					PointF ctrlPoint = mCurrentOverlay.getControlButton();
+					PointF deletePoint = mCurrentOverlay.getFlipButton();
 					if (ctrlPoint != null && deletePoint != null) {
 						// 计算旋转
 						float centerX = (ctrlPoint.x + deletePoint.x) / 2;
@@ -1204,8 +1233,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				// viewHolder.tvName.setText(footage.getIconName());
 			} else if (obj instanceof NetSence) {
 				final NetSence netScene = (NetSence) obj;
-				if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
-					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netScene.getSenceNetIcon()));
+				if (netScene == NetSence.DEFAULT) {
+					viewHolder.aivIcon.setImageResource(R.drawable.null_scene);
+				} else {
+					if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
+						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netScene.getSenceNetIcon()));
+					}
 				}
 				// viewHolder.tvName.setText(netScene.getSenceName());
 			} else if (obj instanceof RecentFootAge) {

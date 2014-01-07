@@ -5,15 +5,17 @@ package com.canruoxingchen.uglypic;
 
 import java.io.File;
 
-import com.canruoxingchen.uglypic.cache.ImageInfo;
-
-import android.content.Context;
+import uk.co.senab.photoview.PhotoView;
+import uk.co.senab.photoview.PhotoViewAttacher.OnPhotoTapListener;
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
-import uk.co.senab.photoview.PhotoView;
+import android.view.Window;
+
+import com.canruoxingchen.uglypic.cache.ImageInfo;
 
 /**
  * 
@@ -25,16 +27,21 @@ import uk.co.senab.photoview.PhotoView;
 public class ViewUglyPicActivity extends BaseActivity {
 
 	private static final String EXTRA_IMAGE_PATH = "image_path";
+	private static final String EXTRA_IMAGE_ONLY_VIEW = "only_view";
 	private static final String KEY_IMAGE_PATH = EXTRA_IMAGE_PATH;
+	private static final String KEY_IMAGE_ONLY_VIEW = EXTRA_IMAGE_ONLY_VIEW;
 
 	private PhotoView mPvPic;
 	private View mViewFinish;
 	private String mImagePath;
+	
+	private boolean mOnlyView = false;
 
-	public static void start(Context context, String imagePath) {
+	public static void start(Activity context, int requestCode, String imagePath, boolean onlyView) {
 		Intent intent = new Intent(context, ViewUglyPicActivity.class);
 		intent.putExtra(EXTRA_IMAGE_PATH, imagePath);
-		context.startActivity(intent);
+		intent.putExtra(EXTRA_IMAGE_ONLY_VIEW, onlyView);
+		context.startActivityForResult(intent, requestCode);
 	}
 
 	@Override
@@ -43,11 +50,13 @@ public class ViewUglyPicActivity extends BaseActivity {
 
 		Intent intent = getIntent();
 		if (intent != null) {
-			mImagePath = intent.getStringExtra(KEY_IMAGE_PATH);
+			mImagePath = intent.getStringExtra(EXTRA_IMAGE_PATH);
+			mOnlyView = intent.getBooleanExtra(EXTRA_IMAGE_ONLY_VIEW, false);
 		}
 
 		if (savedInstanceState != null) {
 			mImagePath = savedInstanceState.getString(KEY_IMAGE_PATH);
+			mOnlyView = savedInstanceState.getBoolean(KEY_IMAGE_ONLY_VIEW, false);
 		}
 
 		initUI();
@@ -67,17 +76,28 @@ public class ViewUglyPicActivity extends BaseActivity {
 
 	@Override
 	protected void initUI() {
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.view_pic);
 		mPvPic = (PhotoView) findViewById(R.id.ugly_pic);
 		mViewFinish = findViewById(R.id.finish);
+		if(mOnlyView) {
+			mViewFinish.setVisibility(View.GONE);
+		}
 	}
 
 	@Override
 	protected void initListers() {
 		mViewFinish.setOnClickListener(new View.OnClickListener() {
-
 			@Override
 			public void onClick(View v) {
+				setResult(RESULT_FIRST_USER);
+				finish();
+			}
+		});
+		mPvPic.setOnPhotoTapListener(new OnPhotoTapListener() {
+			
+			@Override
+			public void onPhotoTap(View view, float x, float y) {
 				finish();
 			}
 		});

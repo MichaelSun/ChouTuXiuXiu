@@ -4,13 +4,17 @@
 package com.canruoxingchen.uglypic.overlay;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,6 +23,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.RelativeLayout;
 
+import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.util.Logger;
 
@@ -35,6 +40,8 @@ public abstract class ObjectOverlay implements IOverlay {
 	protected float mDensity = -1.0f;
 
 	private Matrix mMatrix = new Matrix();
+	
+	private float mRotateDegrees = 0.0f;
 
 	// 控制点是否被选中
 	private boolean mControlPointSelected = false;
@@ -42,6 +49,8 @@ public abstract class ObjectOverlay implements IOverlay {
 	private boolean mFlipPointSelected = false;
 
 	private View mEditorPanel;
+
+	private boolean mHasBeenSelected = false;
 
 	public interface ObjectOperationListener {
 
@@ -58,6 +67,9 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	// contentView外加控制按钮
 	private ViewGroup mContainerView = null;
+
+	private Bitmap mFlipBtn;
+	private Bitmap mRotateBtn;
 
 	public void setOperationListener(ObjectOperationListener listener) {
 		this.mObjectOperationListener = listener;
@@ -77,6 +89,14 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	public void setEditorPanel(View editorPanel) {
 		this.mEditorPanel = editorPanel;
+	}
+
+	public boolean hasBeenSelected() {
+		return mHasBeenSelected;
+	}
+
+	public void setHasBeenSelected(boolean hasSelected) {
+		this.mHasBeenSelected = hasSelected;
 	}
 
 	protected View getEditorPanel() {
@@ -128,13 +148,21 @@ public abstract class ObjectOverlay implements IOverlay {
 	 * @return
 	 */
 	public View getContainerView(Context context) {
+		if (mFlipBtn == null) {
+			mFlipBtn = BitmapFactory.decodeResource(context.getResources(), R.drawable.photo_editor_flip);
+		}
+		if (mRotateBtn == null) {
+			mRotateBtn = BitmapFactory.decodeResource(context.getResources(), R.drawable.photo_editor_rotate);
+		}
+
 		if (mContainerView == null) {
 			mContainerView = new ContainerView(context);
 			if (getView() != null) {
 
 				RelativeLayout.LayoutParams params = getDefaultParams();
 				if (params == null) {
-					params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+					params = new RelativeLayout.LayoutParams(android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT,
+							android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT);
 				}
 				mContainerView.addView(getView(), params);
 			}
@@ -171,7 +199,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	 */
 	@Override
 	public void resetOverlay() {
-
+		mRotateDegrees = 0.0f;
 	}
 
 	/*
@@ -228,12 +256,13 @@ public abstract class ObjectOverlay implements IOverlay {
 		PointF center = getCenter();
 		if (center != null) {
 			mMatrix.postRotate(degrees, center.x, center.y);
+			mRotateDegrees += degrees;
 		}
 	}
 
 	public PointF getCenter() {
-		PointF leftTop = getDeletePoint();
-		PointF rightBottom = getControlPoint();
+		PointF leftTop = getFlipButton();
+		PointF rightBottom = getControlButton();
 		if (leftTop != null && rightBottom != null) {
 			float centerX = (leftTop.x + rightBottom.x) / 2;
 			float centerY = (leftTop.y + rightBottom.y) / 2;
@@ -246,7 +275,7 @@ public abstract class ObjectOverlay implements IOverlay {
 		return false;
 	}
 
-	public PointF getControlPoint() {
+	public PointF getControlButton() {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.bottom };
@@ -257,7 +286,7 @@ public abstract class ObjectOverlay implements IOverlay {
 		return null;
 	}
 
-	public PointF getDeletePoint() {
+	public PointF getFlipButton() {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.left, rect.top };
@@ -279,7 +308,7 @@ public abstract class ObjectOverlay implements IOverlay {
 		return null;
 	}
 
-	public PointF getFlipButton() {
+	public PointF getRightTop() {
 		if (getInitialContentBounds() != null) {
 			Rect rect = getInitialContentBounds();
 			float[] pts = new float[] { rect.right, rect.top };
@@ -328,7 +357,7 @@ public abstract class ObjectOverlay implements IOverlay {
 			mFlipPointSelected = false;
 		}
 
-		point = getControlPoint();
+		point = getControlButton();
 		if (point != null && distance(point.x, point.y, x, y) < radius) {
 			mControlPointSelected = true;
 		} else {
@@ -343,6 +372,7 @@ public abstract class ObjectOverlay implements IOverlay {
 		public ContainerView(Context context) {
 			super(context);
 			mPaint = new Paint();
+			mPaint.setAntiAlias(true);
 		}
 
 		@Override
@@ -352,22 +382,22 @@ public abstract class ObjectOverlay implements IOverlay {
 		}
 
 		private void drawBtns(Canvas canvas) {
-			PointF leftTop = getDeletePoint();
-			PointF rightBottom = getControlPoint();
+			PointF leftTop = getFlipButton();
+			PointF rightBottom = getControlButton();
 			PointF leftBottom = getLeftBottom();
-			PointF rightTop = getFlipButton();
+			PointF rightTop = getRightTop();
 			int padding = (int) (CONTROL_POINTS_RADIUS * mDensity);
 
 			if (leftTop == null || rightBottom == null || leftBottom == null || rightTop == null) {
 				return;
 			}
 			if (isOverlaySelected()) {
-
 				mPaint.setColorFilter(null);
 				// 画线
 				mPaint.setStyle(Style.STROKE);
 				mPaint.setColor(Color.WHITE);
 				mPaint.setStrokeWidth(3);
+				mPaint.setStrokeJoin(Join.ROUND);
 				float[] pts = new float[] { leftTop.x, leftTop.y, rightTop.x, rightTop.y, rightTop.x, rightTop.y,
 						rightBottom.x, rightBottom.y, rightBottom.x, rightBottom.y, leftBottom.x, leftBottom.y,
 						leftBottom.x, leftBottom.y, leftTop.x, leftTop.y };
@@ -376,13 +406,28 @@ public abstract class ObjectOverlay implements IOverlay {
 				mPaint.setStyle(Style.FILL);
 				mPaint.setColor(Color.RED);
 
+				int saveCount = canvas.getSaveCount();
+				canvas.save();
+				canvas.rotate(mRotateDegrees, leftTop.x, leftTop.y);
 				// 画删除键
-				if (isFlipable()) {
-					canvas.drawCircle(rightTop.x, rightTop.y, padding, mPaint);
+				if (isFlipable() && mFlipBtn != null && !mFlipBtn.isRecycled()) {
+					// canvas.drawCircle(rightTop.x, rightTop.y, padding,
+					// mPaint);
+					canvas.drawBitmap(mFlipBtn, new Rect(0, 0, mFlipBtn.getWidth(), mFlipBtn.getHeight()), new RectF(
+							leftTop.x - padding, leftTop.y - padding, leftTop.x + padding, leftTop.y + padding),
+							mPaint);
 				}
+				canvas.restoreToCount(saveCount);
+				canvas.rotate(mRotateDegrees, rightBottom.x, rightBottom.y);
 				// 画移动键
-				canvas.drawCircle(rightBottom.x, rightBottom.y, padding, mPaint);
-
+				// canvas.drawCircle(rightBottom.x, rightBottom.y, padding,
+				// mPaint);
+				if (mRotateBtn != null && !mRotateBtn.isRecycled()) {
+					canvas.drawBitmap(mRotateBtn, new Rect(0, 0, mRotateBtn.getWidth(), mRotateBtn.getHeight()),
+							new RectF(rightBottom.x - padding, rightBottom.y - padding, rightBottom.x + padding,
+									rightBottom.y + padding), mPaint);
+				}
+				canvas.restoreToCount(saveCount);
 			}
 		}
 	}

@@ -11,7 +11,7 @@
     <color name="camera_button_pressed_background">#1a000000</color>
     <color name="camera_button_text">#8622ab</color>
     
-    <color name="default_background">#2F2C22</color>
+    <color name="default_background">#252525</color>
     <color name="default_text_pressed">#E26E26</color>
     <color name="default_text_normal">#FFFFFF</color>
     <color name="publish_topbar_background">#FB7537</color>

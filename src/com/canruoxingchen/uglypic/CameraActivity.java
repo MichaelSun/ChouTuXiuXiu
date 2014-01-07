@@ -53,6 +53,7 @@ import com.canruoxingchen.uglypic.camera.PmCameraData;
 import com.canruoxingchen.uglypic.camera.PmCameraRender;
 import com.canruoxingchen.uglypic.util.Logger;
 import com.canruoxingchen.uglypic.util.jni.NativeImageUtil;
+import com.canruoxingchen.uglypic.view.RoundAngleImageView;
 
 public class CameraActivity extends BaseActivity implements OnClickListener, OnTouchListener, LoaderCallbacks<Cursor> {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -85,7 +86,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	ImageButton mFlashOnOffIB;
 	ImageButton mCameraNextIB;
 	ImageButton mCapturePhotoIB;
-	AsyncImageView mChoosePhotoAiv;
+	RoundAngleImageView mChoosePhotoAiv;
 	View mFocusIndicatorView;
 	RelativeLayout mTopBarRL;
 	RelativeLayout mBottomBarRL;
@@ -251,7 +252,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		mFlashOnOffIB = (ImageButton) findViewById(R.id.ib_flash_on_off);
 		mCameraNextIB = (ImageButton) findViewById(R.id.ib_camera_next);
 		mCapturePhotoIB = (ImageButton) findViewById(R.id.ib_capture);
-		mChoosePhotoAiv = (AsyncImageView) findViewById(R.id.ib_choose_photo);
+		mChoosePhotoAiv = (RoundAngleImageView) findViewById(R.id.ib_choose_photo);
 		mFocusIndicatorView = (View) findViewById(R.id.focus_indicator);
 		mTopBarRL = (RelativeLayout) findViewById(R.id.rl_topbar);
 		mBottomBarRL = (RelativeLayout) findViewById(R.id.rl_bottombar);

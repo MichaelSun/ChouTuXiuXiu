@@ -963,4 +963,15 @@ public class ImageUtils {
 		}
 		return null;
 	}
+	
+
+	public static Bitmap getRoundAngleBitmap(Bitmap oriBitmap, int roundWidth,
+			int roundHeight) {
+		if (oriBitmap == null || oriBitmap.isRecycled()) {
+			return null;
+		}
+		InvisibleUtils.RoundAngleCreater creator = new InvisibleUtils.RoundAngleCreater(
+				oriBitmap, roundWidth, roundHeight);
+		return creator.getBitmap();
+	}
 }

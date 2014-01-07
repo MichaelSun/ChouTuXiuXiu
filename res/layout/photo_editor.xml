@@ -11,15 +11,18 @@
         android:layout_height="@dimen/top_bar_height"
         android:layout_alignParentTop="true" >
 
-        <Button
+        <TextView
             android:id="@+id/photo_editor_top_bar_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:textSize="16sp"
             android:textColor="@color/default_text_color"
             android:background="@null"
-            android:text="@string/photo_editor_top_bar_camera" >
-        </Button>
+            android:text="@string/photo_editor_top_bar_camera"
+			android:drawableLeft="@drawable/camera_back">
+        </TextView>
 
         <!--
         <Button
@@ -34,37 +37,47 @@
         <LinearLayout
             android:id="@+id/photo_editor_topbar_object_menu"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:orientation="horizontal"
-            android:visibility="gone" >
+            android:visibility="gone"
+            android:layout_centerVertical="true">
 
-            <TextView
+            <ImageView
                 android:id="@+id/photo_editor_top_bar_object_modify"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:text="@string/photo_editor_top_bar_modify"
-                android:textColor="@color/default_text_color" >
-            </TextView>
+                android:layout_height="24dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginRight="12dp"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/photo_editor_modify">
+            </ImageView>
 
-            <TextView
+            <ImageView
                 android:id="@+id/photo_editor_top_bar_object_delete"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:text="@string/photo_editor_top_bar_delete"
-                android:textColor="@color/default_text_color" >
-            </TextView>
+                android:layout_height="24dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginRight="12dp"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/photo_editor_delete">
+            </ImageView>
 
-            <TextView
+            <ImageView
                 android:id="@+id/photo_editor_top_bar_object_eraser"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:text="@string/photo_editor_top_bar_eraser"
-                android:textColor="@color/default_text_color" >
-            </TextView>
+                android:layout_height="24dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginRight="12dp"
+                android:background="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/photo_editor_erase">
+            </ImageView>
         </LinearLayout>
 
         <TextView
@@ -75,6 +88,9 @@
             android:layout_marginRight="10dp"
             android:text="@string/photo_editor_top_bar_finish"
             android:textColor="@color/default_text_color"
+            android:textSize="14sp"
+            android:gravity="center_vertical"
+            android:layout_centerVertical="true"
             android:visibility="gone" >
         </TextView>
     </RelativeLayout>
@@ -134,12 +150,14 @@
     
     <Button
         android:id="@+id/photo_editor_context_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="45dp"
+        android:layout_height="20dp"
         android:layout_above="@id/photo_editor_bottom_panel"
         android:layout_alignParentRight="true"
         android:layout_marginBottom="12dp"
         android:layout_marginRight="12dp"
+        android:background="@drawable/default_button_bg"
+        android:textSize="12sp"
         android:text="@string/photo_editor_context_btn_share"
         android:textColor="@color/default_text_color" >
     </Button>

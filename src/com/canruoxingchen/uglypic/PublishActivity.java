@@ -20,7 +20,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -49,11 +51,15 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 
 	public static final String KEY_ORIGIN = EXTRA_ORIGIN;
 	public static final String KEY_RESULT = EXTRA_RESULT;
+	
+	private static final int REQUEST_CODE_VIEW_PHOTO = 1;
 
 	private static final int SHARE_TYPE_LOCAL = 1;
 	private static final int SHARE_TYPE_WEIBO = 2;
 	private static final int SHARE_TYPE_WEIXIN = 3;
 	private static final int SHARE_TYPE_FRIENDS = 4;
+	//只是查看
+	private static final int SHARE_TYPE_VIEW = 5;
 
 	private static final int THUMBNAIL_MERGE = 1;
 	private static final int THUMBNAIL_NORMAL = 2;
@@ -305,6 +311,40 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 		mViewToFriends.setOnClickListener(this);
 		mViewBack.setOnClickListener(this);
 		mViewFinish.setOnClickListener(this);
+		mIvImage.setOnClickListener(this);
+		
+		mEtDesc.addTextChangedListener(new TextWatcher() {
+			
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				
+			}
+			
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				
+			}
+			
+			@Override
+			public void afterTextChanged(Editable s) {
+				final File mergeFile = mSharePathMerge == null ? null : new File(mSharePathMerge);
+				final File singleFile = mSharePathSingle == null ? null : new File(mSharePathSingle);
+				ThreadPoolManager.getInstance().execute(new Runnable() {
+					
+					@Override
+					public void run() {
+						if(mergeFile != null && mergeFile.exists()) {
+							mergeFile.delete();
+						}
+						if(singleFile != null && singleFile.exists()) {
+							singleFile.delete();
+						}
+					}
+				});
+				mSharePathMerge = null;
+				mSharePathSingle = null;
+			}
+		});
 	}
 
 	private void shareToWeibo() {
@@ -321,6 +361,7 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.publish_back:
+			setResult(RESULT_FIRST_USER);
 			finish();
 			break;
 		case R.id.publish_finish: {
@@ -338,6 +379,9 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			saveCurrentImage(SHARE_TYPE_FRIENDS);
 			mSnsHelper.shareToFriends(mEtDesc.getText().toString(), mMerged ? mOriginPath : mResultPath);
 			break;
+		case R.id.share_pic:
+			saveCurrentImage(SHARE_TYPE_VIEW);
+			break;
 		}
 	}
 
@@ -345,7 +389,7 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 		switch (shareType) {
 		case SHARE_TYPE_LOCAL:
 			ImageUtils.saveBitmapToGallery(this, Uri.fromFile(new File(imagePath)), 0);
-			ViewUglyPicActivity.start(this, imagePath);
+			ViewUglyPicActivity.start(this, REQUEST_CODE_VIEW_PHOTO, imagePath, false);
 			finish();
 			break;
 		case SHARE_TYPE_WEIBO:
@@ -356,6 +400,8 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			break;
 		case SHARE_TYPE_FRIENDS:
 			mSnsHelper.shareToFriends(SHARE_CONTENT, imagePath);
+		case SHARE_TYPE_VIEW:
+			ViewUglyPicActivity.start(this, REQUEST_CODE_VIEW_PHOTO, imagePath, true);
 			break;
 		}
 	}

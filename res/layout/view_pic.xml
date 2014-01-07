@@ -9,13 +9,15 @@
         android:layout_height="match_parent"
         android:scaleType="fitCenter"/>
 	<TextView android:id="@+id/finish"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
+	    android:layout_width="60dp"
+	    android:layout_height="27dp"
 	    android:layout_alignParentRight="true"
 	    android:layout_alignParentBottom="true"
-	    android:layout_marginRight="80dp"
-	    android:layout_marginBottom="100dp"
-	    android:textSize="16sp"
+	    android:layout_marginRight="60dp"
+	    android:layout_marginBottom="90dp"
+	    android:textSize="15sp"
+	    android:gravity="center"
+	    android:background="@drawable/default_button_bg"
 	    android:text="@string/publish_finish"
 	    android:textColor="@color/default_text_color"/>
 </RelativeLayout>

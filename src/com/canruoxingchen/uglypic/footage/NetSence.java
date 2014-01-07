@@ -51,6 +51,8 @@ public class NetSence implements Comparable<NetSence> {
 	private Integer mTimeFontColor;
 	private Integer mTimeFontAlignment;
 	
+	public static final NetSence DEFAULT = new NetSence();
+	
 	public NetSence() {
 		
 	}
