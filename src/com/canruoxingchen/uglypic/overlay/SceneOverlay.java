@@ -17,8 +17,11 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
@@ -227,9 +230,9 @@ public class SceneOverlay implements IOverlay {
 	public void resetOverlay() {
 
 	}
-	
+
 	public void setCursorVisable(boolean visible) {
-		if(mSceneLayout != null && mSceneLayout.mEtText != null) {
+		if (mSceneLayout != null && mSceneLayout.mEtText != null) {
 			mSceneLayout.mEtText.setCursorVisible(visible);
 		}
 	}
@@ -349,13 +352,26 @@ public class SceneOverlay implements IOverlay {
 					params.leftMargin = (int) (overlay.mTextViewLeft * scale);
 					params.topMargin = (int) (overlay.mTextViewTop * scale);
 					mEtText.setTextColor(overlay.mTextColor);
-//					mEtText.setHintTextColor(overlay.mTextColor);
+					// mEtText.setHintTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);
 					mEtText.setTextSize(overlay.mTextSize * scale / 2);
+					mEtText.setImeOptions(EditorInfo.IME_ACTION_DONE);
 					mEtText.setLayoutParams(params);
 					mEtText.setHint(overlay.mTextHint == null ? "" : overlay.mTextHint);
 					mEtText.setLines(1);
+					mEtText.setSingleLine();
 					mEtText.setGravity(overlay.mTextGravity | Gravity.CENTER_VERTICAL);
+					mEtText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+
+						@Override
+						public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+							InputMethodManager imm = (InputMethodManager) UglyPicApp.getAppExContext()
+									.getSystemService(Context.INPUT_METHOD_SERVICE);
+							imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+							return false;
+						}
+					});
+
 					if (!TextUtils.isEmpty(overlay.mTextFontName)
 							&& overlay.mTextFontName.toLowerCase().contains("bold")) {
 						mEtText.setTypeface(null, Typeface.BOLD);

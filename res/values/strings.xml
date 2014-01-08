@@ -36,6 +36,8 @@
 	<string name="photo_editor_save_failure">保存图片失败</string>
 	<string name="photo_editor_saving">正在处理图片</string>
 	
+	<string name="photo_editor_cancel_hint">您确定取消所有操作，重新拍照么?</string>
+	
 	<!-- 贴图相关操作 -->
 	<string name="image_menu_illumination">亮度</string>
 	<string name="image_menu_contrast">对比度</string>
@@ -67,4 +69,5 @@
     <string name="publish_exporting">正在导出图片</string>
     <string name="publish_exporting_failure">导出图片失败</string>
     <string name="publish_desc_hint">在此输入照片说明</string>
+    <string name="publish_title">发布</string>
 </resources>

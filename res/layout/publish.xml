@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#f7f3f0"
     android:orientation="vertical" >
 
     <RelativeLayout
@@ -23,6 +24,13 @@
             android:paddingLeft="5dip"
             android:paddingRight="5dip"
             android:src="@drawable/camera_back" />
+        
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/publish_title"
+            android:textSize="16sp"
+            android:textColor="@color/white"></TextView>
     </RelativeLayout>
 
     <LinearLayout
@@ -41,108 +49,129 @@
             android:id="@+id/share_desc"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@null"
+            android:background="@color/white"
+            android:gravity="top|left"
             android:hint="@string/publish_desc_hint"
-            android:maxLength="15"
-            android:gravity="top|left" >
+            android:maxLength="15" >
         </EditText>
     </LinearLayout>
-    
-    <View android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/publish_splitter"/>
 
-    <View android:layout_width="match_parent"
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/publish_splitter" />
+
+    <View
+        android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="20dp"
-        android:background="@color/publish_splitter"/>
+        android:background="@color/publish_splitter" />
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="38dp" >
+        android:layout_height="38dp"
+        android:background="@color/white" >
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:textSize="16sp"
-            android:text="@string/publish_include_origin_image" />
+            android:text="@string/publish_include_origin_image"
+            android:textSize="16sp" />
 
         <com.canruoxingchen.uglypic.view.SlipButton
             android:id="@+id/publish_slip_btn"
             android:layout_width="95dp"
             android:layout_height="25dp"
-            android:layout_marginRight="10dp"
             android:layout_alignParentRight="true"
-            android:layout_centerVertical="true" >
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp" >
         </com.canruoxingchen.uglypic.view.SlipButton>
     </RelativeLayout>
-    <View android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/publish_splitter"/>
 
-    <TextView android:layout_width="match_parent"
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/publish_splitter" />
+
+    <TextView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:textSize="16sp"
-        android:textColor="#C8C8C8"
-        android:text="@string/publish_sns_section"></TextView>
-    <View android:layout_width="match_parent"
+        android:text="@string/publish_sns_section"
+        android:textColor="#5e5e5e"
+        android:textSize="16sp" >
+    </TextView>
+
+    <View
+        android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/publish_splitter"/>
+        android:background="@color/publish_splitter" />
+
     <TextView
         android:id="@+id/publish_share_to_weibo"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:layout_marginLeft="10dp"
+        android:background="@color/white"
         android:gravity="center_vertical"
-        android:textSize="16sp"
-        android:text="@string/publish_share_to_weibo" >
+        android:paddingLeft="10dp"
+        android:text="@string/publish_share_to_weibo"
+        android:textSize="16sp" >
     </TextView>
-    <View android:layout_width="match_parent"
+
+    <View
+        android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginLeft="10dp"
-        android:background="@color/publish_splitter"/>
+        android:background="@color/publish_splitter" />
 
     <TextView
         android:id="@+id/publish_share_to_weixin"
         android:layout_width="match_parent"
         android:layout_height="40dp"
+        android:background="@color/white"
         android:gravity="center_vertical"
-        android:layout_marginLeft="10dp"
-        android:textSize="16sp"
-        android:text="@string/publish_share_to_weixin" >
+        android:paddingLeft="10dp"
+        android:text="@string/publish_share_to_weixin"
+        android:textSize="16sp" >
     </TextView>
-    <View android:layout_width="match_parent"
+
+    <View
+        android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginLeft="10dp"
-        android:background="@color/publish_splitter"/>
+        android:background="@color/publish_splitter" />
 
     <TextView
         android:id="@+id/publish_share_to_friends"
         android:layout_width="match_parent"
         android:layout_height="40dp"
+        android:background="@color/white"
         android:gravity="center_vertical"
-        android:layout_marginLeft="10dp"
-        android:textSize="16sp"
-        android:text="@string/publish_share_to_friends" >
+        android:paddingLeft="10dp"
+        android:text="@string/publish_share_to_friends"
+        android:textSize="16sp" >
     </TextView>
-    <View android:layout_width="match_parent"
+
+    <View
+        android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginLeft="10dp"
-        android:background="@color/publish_splitter"/>
-    
+        android:background="@color/publish_splitter" />
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <Button android:id="@+id/publish_finish"
-            android:layout_width="60dp"
-            android:layout_height="27dp"
+        android:layout_height="match_parent" >
+
+        <Button
+            android:id="@+id/publish_finish"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
             android:layout_centerInParent="true"
             android:background="@drawable/default_button_bg"
-            android:textSize="15sp"
+            android:text="@string/publish_finish"
             android:textColor="@color/default_text_color"
-            android:text="@string/publish_finish">
-            
+            android:textSize="15sp" >
         </Button>
     </RelativeLayout>
 

@@ -9,8 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import uk.co.senab.photoview.PhotoView;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
@@ -476,7 +478,11 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 			@Override
 			public void onVisible() {
-				mViewContextBtn.setVisibility(View.GONE);
+				if (mCurrentOverlay != null && mCurrentOverlay.isOverlaySelected()) {
+					mViewContextBtn.setVisibility(View.VISIBLE);
+				} else {
+					mViewContextBtn.setVisibility(View.GONE);
+				}
 				mViewBottomPanel.setVisibility(View.GONE);
 				// 编辑过程中，原图不可放缩
 				mPvPhoto.setZoomable(false);
@@ -661,6 +667,18 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 	}
 
+	private Dialog showCancelDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(R.string.photo_editor_cancel_hint)
+				.setPositiveButton(R.string.photo_editor_confirm, new DialogInterface.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				}).setNegativeButton(R.string.photo_editor_cancel, null);
+		return builder.show();
+	}
+
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
@@ -703,7 +721,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			break;
 		}
 		case R.id.photo_editor_top_bar_camera: { // 返回照相页面
-			finish();
+			mDialog = showCancelDialog();
 			break;
 		}
 		case R.id.photo_editor_top_bar_object_modify: {// 调整
@@ -744,6 +762,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mTopContextMenu.setVisibility(View.VISIBLE);
 				mViewModifyFinish.setVisibility(View.GONE);
 				mViewBottomPanel.setVisibility(View.VISIBLE);
+				mViewContextBtn.setText(R.string.photo_editor_context_btn_share);
 			}
 		}
 	}
@@ -856,6 +875,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					return true;
 				}
 			}
+
+			mDialog = showCancelDialog();
+			return true;
 		}
 		return super.onKeyDown(keyCode, event);
 	}
@@ -903,7 +925,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			overlay.setOperationListener(this);
 			overlay.setEditorPanel(mEditorPanel);
 			mRlOverlayContainer.addView(overlay.getContainerView(PhotoEditor.this));
-			if(mLastOverlay != null) {
+			if (mLastOverlay != null) {
 				removeOverlay(mLastOverlay);
 			}
 			if (mCurrentOverlay != null) {
@@ -964,6 +986,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 					if (mCurrentOverlay != null && mCurrentOverlay.getContextView() != null) {
 						mTopContextMenu.setVisibility(View.VISIBLE);
+						mCurrentOverlay.setOverlaySelected(true);
 						mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
 						// mVgContextMenuContainer.removeAllViews();
 						// mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());

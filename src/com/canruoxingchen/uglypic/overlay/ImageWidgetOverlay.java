@@ -26,9 +26,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView.ScaleType;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
@@ -260,22 +258,42 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 
 		private void initView() {
-			GridView gv = new GridView(getContext());
-			gv.setBackgroundColor(getResources().getColor(R.color.default_background));
-			int height = (int) getResources().getDimension(R.dimen.photo_editor_bottom_bar_height);
+//			GridView gv = new GridView(getContext());
+//			gv.setBackgroundColor(getResources().getColor(R.color.default_background));
+			
+			WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+			int width = wm.getDefaultDisplay().getWidth();
+			int height = (int) (wm.getDefaultDisplay().getHeight() 
+					- getResources().getDimension(R.dimen.top_bar_height)
+					- width);
+			height = height <= 0 ? (int) getResources().getDimension(R.dimen.photo_editor_bottom_bar_height)
+					: height;
+//			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
+//			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+//			gv.setAdapter(mAdapter);
+//			addView(gv, params);
+//			gv.setNumColumns(ERASER_WIDTH.length);
+//			gv.setDuplicateParentStateEnabled(true);
+//			gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//
+//				@Override
+//				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//					mAivImage.setCurrentStrokeWidth(ERASER_WIDTH[position]);
+//					mAdapter.mCurrentWidth = ERASER_WIDTH[position];
+//					mAdapter.notifyDataSetChanged();
+//				}
+//			});
+			
+			final EraseWidthPanel panel = new EraseWidthPanel(getContext());
 			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
 			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-			gv.setAdapter(mAdapter);
-			addView(gv, params);
-			gv.setNumColumns(ERASER_WIDTH.length);
-			gv.setDuplicateParentStateEnabled(true);
-			gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
+			addView(panel, params);
+			mAivImage.setCurrentStrokeWidth(panel.getDefaultWidth());
+			panel.setOnWidthSelectedListener(new EraseWidthPanel.OnWidthSelectedListener() {
+				
 				@Override
-				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-					mAivImage.setCurrentStrokeWidth(ERASER_WIDTH[position]);
-					mAdapter.mCurrentWidth = ERASER_WIDTH[position];
-					mAdapter.notifyDataSetChanged();
+				public void onWidthSelected(int width) {
+					mAivImage.setCurrentStrokeWidth(width);
 				}
 			});
 		}

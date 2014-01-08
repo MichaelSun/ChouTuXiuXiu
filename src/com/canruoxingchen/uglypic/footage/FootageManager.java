@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import android.content.Context;
@@ -242,6 +243,62 @@ public class FootageManager {
 			}
 		});
 	}
+	
+	private static class FootageAVOComparator implements Comparator<AVObject> {
+
+		@Override
+		public int compare(AVObject lhs, AVObject rhs) {
+			if(lhs == null || rhs == null) {
+				return 0;
+			}
+			
+			int lOrderNum = 0;
+			int rOrderNum = 0;
+			if(lhs.containsKey(FootAge.COLUMN_FOOTAGE_ORDER_NUM)) {
+				lOrderNum = Integer.parseInt(lhs.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM));
+			}
+			if(rhs.containsKey(FootAge.COLUMN_FOOTAGE_ORDER_NUM)) {
+				rOrderNum = Integer.parseInt(lhs.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM));
+			}
+			
+			if(lOrderNum > rOrderNum) {
+				return 1;
+			} else if(lOrderNum < rOrderNum) {
+				return -1;
+			}
+			
+			return 0;
+		}
+		
+	}
+	
+	private static class NetSceneAVOComparator implements Comparator<AVObject> {
+
+		@Override
+		public int compare(AVObject lhs, AVObject rhs) {
+			if(lhs == null || rhs == null) {
+				return 0;
+			}
+			
+			int lOrderNum = 0;
+			int rOrderNum = 0;
+			if(lhs.containsKey(NetSence.COLUMN_SENCE_ORDER_NUM)) {
+				lOrderNum = Integer.parseInt(lhs.getString(NetSence.COLUMN_SENCE_ORDER_NUM));
+			}
+			if(rhs.containsKey(NetSence.COLUMN_SENCE_ORDER_NUM)) {
+				rOrderNum = Integer.parseInt(lhs.getString(NetSence.COLUMN_SENCE_ORDER_NUM));
+			}
+			
+			if(lOrderNum > rOrderNum) {
+				return 1;
+			} else if(lOrderNum < rOrderNum) {
+				return -1;
+			}
+			
+			return 0;
+		}
+		
+	}
 
 	public void loadFootagesFromServer(final String objectId) {
 		AVQuery<AVObject> query = AVQuery.getQuery(FootAge.CLASS_NAME);
@@ -277,6 +334,7 @@ public class FootageManager {
 					}
 					footageDao.insertOrReplaceInTx(dbFootages);
 					Collections.sort(footages);
+					Collections.sort(noIconObjs, new FootageAVOComparator());
 					MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_SUCCESS, 0, 0, footages);
 
 					for (final AVObject avo : noIconObjs) {
@@ -415,6 +473,7 @@ public class FootageManager {
 					}
 					netSenceDao.insertOrReplaceInTx(dbScenes);
 					Collections.sort(scenes);
+					Collections.sort(noIconObjs, new NetSceneAVOComparator());
 					MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_SCENES_SUCCESS, 0, 0, scenes);
 
 					for (final AVObject avo : noIconObjs) {

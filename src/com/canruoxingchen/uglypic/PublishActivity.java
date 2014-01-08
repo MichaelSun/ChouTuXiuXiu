@@ -7,7 +7,6 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;

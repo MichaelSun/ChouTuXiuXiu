@@ -5,6 +5,7 @@
     <color name="white">#FFFFFFFF</color> <!-- 白色 -->
     
     <color name="red">#FFFF0000</color>
+    <color name="gray">#CCCCCC</color>
     
     
     <color name="camera_button_background">#ffffffff</color>

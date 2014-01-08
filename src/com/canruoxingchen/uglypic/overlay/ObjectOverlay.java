@@ -40,7 +40,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	protected float mDensity = -1.0f;
 
 	private Matrix mMatrix = new Matrix();
-	
+
 	private float mRotateDegrees = 0.0f;
 
 	// 控制点是否被选中
@@ -368,6 +368,7 @@ public abstract class ObjectOverlay implements IOverlay {
 	private class ContainerView extends RelativeLayout {
 
 		private Paint mPaint;
+		private Matrix mInvertMatrix = new Matrix();
 
 		public ContainerView(Context context) {
 			super(context);
@@ -396,8 +397,9 @@ public abstract class ObjectOverlay implements IOverlay {
 				// 画线
 				mPaint.setStyle(Style.STROKE);
 				mPaint.setColor(Color.WHITE);
-				mPaint.setStrokeWidth(3);
+				mPaint.setStrokeWidth(5);
 				mPaint.setStrokeJoin(Join.ROUND);
+
 				float[] pts = new float[] { leftTop.x, leftTop.y, rightTop.x, rightTop.y, rightTop.x, rightTop.y,
 						rightBottom.x, rightBottom.y, rightBottom.x, rightBottom.y, leftBottom.x, leftBottom.y,
 						leftBottom.x, leftBottom.y, leftTop.x, leftTop.y };
@@ -414,8 +416,7 @@ public abstract class ObjectOverlay implements IOverlay {
 					// canvas.drawCircle(rightTop.x, rightTop.y, padding,
 					// mPaint);
 					canvas.drawBitmap(mFlipBtn, new Rect(0, 0, mFlipBtn.getWidth(), mFlipBtn.getHeight()), new RectF(
-							leftTop.x - padding, leftTop.y - padding, leftTop.x + padding, leftTop.y + padding),
-							mPaint);
+							leftTop.x - padding, leftTop.y - padding, leftTop.x + padding, leftTop.y + padding), mPaint);
 				}
 				canvas.restoreToCount(saveCount);
 				canvas.rotate(mRotateDegrees, rightBottom.x, rightBottom.y);
