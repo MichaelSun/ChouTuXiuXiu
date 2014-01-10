@@ -3,6 +3,7 @@
  */
 package com.canruoxingchen.uglypic.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -973,5 +974,23 @@ public class ImageUtils {
 		InvisibleUtils.RoundAngleCreater creator = new InvisibleUtils.RoundAngleCreater(
 				oriBitmap, roundWidth, roundHeight);
 		return creator.getBitmap();
+	}
+	
+	public static byte[] getThumbnail(Uri uri, int maxWidth, int maxHeight) {
+		Bitmap bmp = scaleDecode(UglyPicApp.getAppExContext(), uri, maxWidth, maxHeight);
+		if (bmp != null) {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			bmp.compress(CompressFormat.PNG, 100, baos);
+			bmp.recycle();
+			byte[] data = baos.toByteArray();
+			try {
+				baos.close();
+			} catch (IOException e) {
+
+			}
+			return data;
+		}
+		return null;
+		
 	}
 }

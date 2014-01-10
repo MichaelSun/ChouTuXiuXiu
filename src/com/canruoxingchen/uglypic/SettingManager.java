@@ -1,5 +1,7 @@
 package com.canruoxingchen.uglypic;
 
+import com.sina.weibo.sdk.auth.Oauth2AccessToken;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -47,6 +49,42 @@ public class SettingManager {
     	mEditor.commit();
     }
     
+    /**
+     * 保存 Token 对象到 SharedPreferences。
+     * 
+     * @param context 应用程序上下文环境
+     * @param token   Token 对象
+     */
+    public void writeAccessToken(Context context, Oauth2AccessToken token) {
+        if (null == context || null == token) {
+            return;
+        }
+        
+        mEditor.putString(mContext.getString(R.string.pref_weibo_uid), token.getUid());
+        mEditor.putString(mContext.getString(R.string.pref_weibo_access_token), token.getToken());
+        mEditor.putLong(mContext.getString(R.string.pref_weibo_expires_in), token.getExpiresTime());
+        mEditor.commit();
+    }
+
+    /**
+     * 从 SharedPreferences 读取 Token 信息。
+     * 
+     * @param context 应用程序上下文环境
+     * 
+     * @return 返回 Token 对象
+     */
+    public Oauth2AccessToken readAccessToken(Context context) {
+        if (null == context) {
+            return null;
+        }
+        
+        Oauth2AccessToken token = new Oauth2AccessToken();
+        token.setUid(mSharedPreferences.getString(mContext.getString(R.string.pref_weibo_uid), ""));
+        token.setToken(mSharedPreferences.getString(mContext.getString(R.string.pref_weibo_access_token), ""));
+        token.setExpiresTime(mSharedPreferences.getLong(mContext.getString(R.string.pref_weibo_expires_in), 0));
+        return token;
+    }
+
     
     public String getAccessToken() {
     	return mSharedPreferences.getString(mContext.getString(R.string.pref_weibo_access_token), "");

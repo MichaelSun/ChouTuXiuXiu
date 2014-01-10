@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.text.TextUtils;
 
 import com.canruoxingchen.uglypic.MessageCenter;
 import com.canruoxingchen.uglypic.R;
@@ -41,13 +40,16 @@ import com.sina.weibo.sdk.exception.WeiboException;
  */
 public class WeiboHelper {
 	private static final String APP_ID = "431566928";
-	private static final String REDIRECT_URL = "http://www.canruoxingchen.com";
+	private static final String REDIRECT_URL = "http://newchinar.com";
 	private static final String SCOPE = "email,direct_messages_read,direct_messages_write,"
 			+ "friendships_groups_read,friendships_groups_write,statuses_to_me_read,"
 			+ "follow_app_official_microblog," + "invitation_write";
 
 	private WeiboAuth mWeiboAuth;
 
+	/**
+	 * ailed to find the associated render view host for url: http://newchinar.com/?access_token=2.004IxRwB0uQoMT6f0599bd77r4T_gE&remind_in=7526137&expires_in=7526137&uid=1777439211
+	 */
 	private Oauth2AccessToken mAccessToken = null;
 
 	private SettingManager mSettingManager = null;
@@ -64,11 +66,7 @@ public class WeiboHelper {
 		mWeiboAuth = new WeiboAuth(context, APP_ID, REDIRECT_URL, SCOPE);
 		mMessageCenter = MessageCenter.getInstance(context);
 		mSettingManager = SettingManager.getInstance();
-		String accessToken = mSettingManager.getAccessToken();
-		if (!TextUtils.isEmpty(accessToken)) {
-			mAccessToken = Oauth2AccessToken.parseAccessToken(accessToken);
-		}
-
+		mAccessToken = mSettingManager.readAccessToken(context);
 		mWeiboShareAPI = WeiboShareSDK.createWeiboAPI(context, APP_ID);
 		mWeiboResponse = new WeiboResponse();
 	}
@@ -89,12 +87,16 @@ public class WeiboHelper {
 		}
 
 		if (savedInstanceState != null) {
-			mWeiboShareAPI.handleWeiboResponse(activity.getIntent(), mWeiboResponse);
+			if (activity instanceof IWeiboHandler.Response) {
+				mWeiboShareAPI.handleWeiboResponse(activity.getIntent(), (IWeiboHandler.Response) activity);
+			}
 		}
 	}
 
 	void onNewIntent(Activity activity, Intent intent) {
-		mWeiboShareAPI.handleWeiboResponse(intent, mWeiboResponse);
+		if (activity instanceof IWeiboHandler.Response) {
+			mWeiboShareAPI.handleWeiboResponse(intent, (IWeiboHandler.Response) activity);
+		}
 	}
 
 	/**
@@ -138,7 +140,7 @@ public class WeiboHelper {
 		if (mWeiboShareAPI.checkEnvironment(true)) {
 			// 注册第三方应用 到微博客户端中，注册成功后该应用将显示在微博的应用列表中。
 			mWeiboShareAPI.registerApp();
-		} else {
+			// } else {
 			if (mWeiboShareAPI.isWeiboAppSupportAPI()) {
 				int supportApi = mWeiboShareAPI.getWeiboAppSupportAPI();
 				if (supportApi >= 10351 /* ApiUtils.BUILD_INT_VER_2_2 */) {

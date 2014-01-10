@@ -32,6 +32,7 @@ public class NetSence implements Comparable<NetSence> {
 	public static final String COLUMN_TIME_FONT_SIZE = "timeFontSize";
 	public static final String COLUMN_TIME_FONT_COLOR = "timeFontColor";
 	public static final String COLUMN_TIME_FONT_ALIGNMENT = "timeFontAlignment";
+	public static final String COLUMN_NET_SCENE_USER_NUM = "senceUseNum_Android";
 
 	private String mObjectId;
 	private String mSenceNetIcon;

@@ -90,9 +90,10 @@ public class EraseWidthPanel extends LinearLayout {
 			params.width = (int) (itemWidth * width);
 			params.height = params.width;
 			params.gravity = Gravity.CENTER_VERTICAL;
-			params.leftMargin = (int) (PADDING * density);
-			params.rightMargin = (int) (PADDING * density);
+//			params.leftMargin = (int) (PADDING * density);
+//			params.rightMargin = (int) (PADDING * density);
 			final ImageView iv = new ImageView(getContext());
+			iv.setPadding((int) (PADDING * density), 0, (int) (PADDING * density), 0);
 			iv.setImageResource(R.drawable.erase_width_bg);
 			iv.setBackgroundDrawable(null);
 			iv.setScaleType(ScaleType.FIT_CENTER);

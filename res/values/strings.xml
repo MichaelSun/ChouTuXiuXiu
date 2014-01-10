@@ -69,5 +69,5 @@
     <string name="publish_exporting">正在导出图片</string>
     <string name="publish_exporting_failure">导出图片失败</string>
     <string name="publish_desc_hint">在此输入照片说明</string>
-    <string name="publish_title">发布</string>
+    <string name="publish_title">发 布</string>
 </resources>

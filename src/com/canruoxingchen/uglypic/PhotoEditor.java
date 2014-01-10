@@ -53,6 +53,7 @@ import com.canruoxingchen.uglypic.overlay.ObjectOverlay;
 import com.canruoxingchen.uglypic.overlay.ObjectOverlay.ObjectOperationListener;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay;
 import com.canruoxingchen.uglypic.overlay.SceneOverlay.SceneSizeAquiredListener;
+import com.canruoxingchen.uglypic.statistics.StatisticsUtil;
 import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.Logger;
 import com.canruoxingchen.uglypic.util.UiUtils;
@@ -74,14 +75,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private static final int REQUEST_CODE_EDIT_TEXT = 1001;
 
 	private static final int MSG_REGRET_STATUS_CHANGED = R.id.msg_editor_regret_status_change;
-	private static final int MSG_ORIGIN_IMAGE_SAVED = R.id.msg_editor_origin_image_saved;
 
 	private static final int REQUEST_CODE_PUBLISH = 1;
 
 	// 原始照片的uri
 	private Uri mPhotoUri;
 	private String mImagePath;
-	private String mCroppedPath;
 
 	/*-
 	 * 各种View
@@ -507,17 +506,25 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				FootAgeType type = mFootageTypes.get(position);
 				mCurrentType = type;
 				mTypeAdapter.notifyDataSetChanged();
+				UglyPicApp.getUiHander().post(new Runnable() {
+					public void run() {
+						mLvFootages.scrollTo(0);
+					}
+				});
 				switch (type.getTypeTarget()) {
 				case FootAgeType.TYPE_RECENT: // 最近使用
-					// TODO: 加载最近使用的素材
+					mFootages.clear();
+					mFootageAdapter.notifyDataSetChanged();
 					mFootageManager.loadRecentFootages();
 					break;
 				case FootAgeType.TYPE_IMAGE: // 图片
-					// TODO：加载footage
+					mFootages.clear();
+					mFootageAdapter.notifyDataSetChanged();
 					mFootageManager.loadLocalFootages(type.getObjectId());
 					break;
 				case FootAgeType.TYPE_SCENE: // 场景
-					// TODO: 加载场景
+					mFootages.clear();
+					mFootageAdapter.notifyDataSetChanged();
 					mFootageManager.loadLocalScenes(type.getObjectId());
 					break;
 				}
@@ -552,6 +559,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private void onFootAgeClick(FootAge footage, boolean save) {
 		if (!TextUtils.isEmpty(footage.getIconUrl())) {
+			//统计素材使用
+			StatisticsUtil.increaseFootageCount(footage.getObjectId());
+			
 			ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage.getIconUrl()));
 			addOverlay(overlay);
 			if (save) {
@@ -566,6 +576,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			return;
 		}
 		if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
+			//统计场景次数
+			StatisticsUtil.increaseNetSceneCount(netScene.getObjectId());
+			
 			SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri.parse(netScene
 					.getSenceNetIcon()));
 			Rect inputRect = netScene.getInputRectBounds();
@@ -827,6 +840,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mSceneOverlay.setCursorVisable(false);
 		}
 
+		mEditorPanel.invalidate();
 		mEditorPanel.destroyDrawingCache();
 		mEditorPanel.buildDrawingCache();
 		final Bitmap processedImage = mEditorPanel.getDrawingCache();
@@ -1149,13 +1163,15 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		if (scaleX > scaleY) { // 容器比背景胖，则调整宽
 			params.topMargin = 0;
 			params.bottomMargin = 0;
-			int margin = (int) ((editorPanelWidth - width * scaleY) / 2);
+			int margin = (int) ((editorPanelWidth - editorPanelHeight) / 2);
 			params.leftMargin = margin;
 			params.rightMargin = margin;
 		} else {
-			params.height = (int) (height * scaleX);
+//			params.height = (int) (height * scaleX);
+			params.height = editorPanelWidth;
 		}
 
+		mEditorPanel.requestLayout();
 		mTypeAdapter.notifyDataSetChanged();
 		mFootageAdapter.notifyDataSetChanged();
 	}

@@ -30,9 +30,13 @@ import android.widget.ImageView;
 
 import com.canruoxingchen.uglypic.concurrent.ThreadPoolManager;
 import com.canruoxingchen.uglypic.sns.SnsHelper;
+import com.canruoxingchen.uglypic.statistics.StatisticsUtil;
 import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.UiUtils;
 import com.canruoxingchen.uglypic.view.SlipButton;
+import com.sina.weibo.sdk.api.share.BaseResponse;
+import com.sina.weibo.sdk.api.share.IWeiboHandler;
+import com.sina.weibo.sdk.constant.WBConstants;
 
 /**
  * 
@@ -41,7 +45,7 @@ import com.canruoxingchen.uglypic.view.SlipButton;
  * @author wsf
  * 
  */
-public class PublishActivity extends BaseActivity implements OnClickListener {
+public class PublishActivity extends BaseActivity implements OnClickListener, IWeiboHandler.Response {
 
 	private static final String EXTRA_ORIGIN = "origin";
 	private static final String EXTRA_RESULT = "result";
@@ -50,14 +54,14 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 
 	public static final String KEY_ORIGIN = EXTRA_ORIGIN;
 	public static final String KEY_RESULT = EXTRA_RESULT;
-	
+
 	private static final int REQUEST_CODE_VIEW_PHOTO = 1;
 
 	private static final int SHARE_TYPE_LOCAL = 1;
 	private static final int SHARE_TYPE_WEIBO = 2;
 	private static final int SHARE_TYPE_WEIXIN = 3;
 	private static final int SHARE_TYPE_FRIENDS = 4;
-	//只是查看
+	// 只是查看
 	private static final int SHARE_TYPE_VIEW = 5;
 
 	private static final int THUMBNAIL_MERGE = 1;
@@ -116,6 +120,7 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			}
 			case R.id.msg_weibo_share_success: {
 				UiUtils.toastMessage(UglyPicApp.getAppExContext(), R.string.publish_share_to_weibo_success);
+				
 				break;
 			}
 			case R.id.msg_weibo_share_failure: {
@@ -311,31 +316,31 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 		mViewBack.setOnClickListener(this);
 		mViewFinish.setOnClickListener(this);
 		mIvImage.setOnClickListener(this);
-		
+
 		mEtDesc.addTextChangedListener(new TextWatcher() {
-			
+
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				
+
 			}
-			
+
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-				
+
 			}
-			
+
 			@Override
 			public void afterTextChanged(Editable s) {
 				final File mergeFile = mSharePathMerge == null ? null : new File(mSharePathMerge);
 				final File singleFile = mSharePathSingle == null ? null : new File(mSharePathSingle);
 				ThreadPoolManager.getInstance().execute(new Runnable() {
-					
+
 					@Override
 					public void run() {
-						if(mergeFile != null && mergeFile.exists()) {
+						if (mergeFile != null && mergeFile.exists()) {
 							mergeFile.delete();
 						}
-						if(singleFile != null && singleFile.exists()) {
+						if (singleFile != null && singleFile.exists()) {
 							singleFile.delete();
 						}
 					}
@@ -364,7 +369,7 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			finish();
 			break;
 		case R.id.publish_finish: {
-//			finish();
+			// finish();
 			saveCurrentImage(SHARE_TYPE_LOCAL);
 			break;
 		}
@@ -376,7 +381,6 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			break;
 		case R.id.publish_share_to_friends:
 			saveCurrentImage(SHARE_TYPE_FRIENDS);
-			mSnsHelper.shareToFriends(mEtDesc.getText().toString(), mMerged ? mOriginPath : mResultPath);
 			break;
 		case R.id.share_pic:
 			saveCurrentImage(SHARE_TYPE_VIEW);
@@ -389,6 +393,11 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 		case SHARE_TYPE_LOCAL:
 			ImageUtils.saveBitmapToGallery(this, Uri.fromFile(new File(imagePath)), 0);
 			ViewUglyPicActivity.start(this, REQUEST_CODE_VIEW_PHOTO, imagePath, false);
+
+			// 统计图片
+			if (!TextUtils.isEmpty(mResultPath)) {
+				StatisticsUtil.saveFile(this, mResultPath);
+			}
 			finish();
 			break;
 		case SHARE_TYPE_WEIBO:
@@ -399,6 +408,7 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			break;
 		case SHARE_TYPE_FRIENDS:
 			mSnsHelper.shareToFriends(SHARE_CONTENT, imagePath);
+			break;
 		case SHARE_TYPE_VIEW:
 			ViewUglyPicActivity.start(this, REQUEST_CODE_VIEW_PHOTO, imagePath, true);
 			break;
@@ -537,6 +547,16 @@ public class PublishActivity extends BaseActivity implements OnClickListener {
 			}
 		});
 	}
-	
-	
+
+	@Override
+	public void onResponse(BaseResponse response) {
+		switch (response.errCode) {
+		case WBConstants.ErrorCode.ERR_OK:
+			MessageCenter.getInstance(UglyPicApp.getAppExContext()).notifyHandlers(R.id.msg_weibo_share_success);
+			break;
+		case WBConstants.ErrorCode.ERR_FAIL:
+			MessageCenter.getInstance(UglyPicApp.getAppExContext()).notifyHandlers(R.id.msg_weibo_share_failure);
+			break;
+		}
+	}
 }

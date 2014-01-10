@@ -1,9 +1,11 @@
 package com.canruoxingchen.uglypic.sns;
 
+import java.io.File;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.canruoxingchen.uglypic.util.ImageUtils;
@@ -22,7 +24,7 @@ import com.tencent.mm.sdk.openapi.WXMediaMessage;
  */
 public class WeixinHelper {
 	private static final String APPID = "wx375024ff3d6e6707";
-	private static final int THUMB_SIZE = 150;
+	private static final int THUMB_SIZE = 100;
 	
 	private IWXAPI mWXApi;
 	
@@ -45,8 +47,7 @@ public class WeixinHelper {
 		
 		WXMediaMessage msg = new WXMediaMessage();
 		msg.mediaObject = imgObj;
-		Bitmap thumbBmp = ImageUtils.scaleDecode(imagePath, THUMB_SIZE, THUMB_SIZE);
-		msg.thumbData = WeixinUtil.bmpToByteArray(thumbBmp, true);
+		msg.thumbData = ImageUtils.getThumbnail(Uri.fromFile(new File(imagePath)), THUMB_SIZE, THUMB_SIZE);
 		
 		SendMessageToWX.Req req = new SendMessageToWX.Req();
 		req.transaction = buildTransaction("img");

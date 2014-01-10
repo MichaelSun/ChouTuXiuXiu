@@ -15,6 +15,7 @@ public class FootAge implements Comparable<FootAge>{
 	public static final String COLUMN_FOOTAGE_OBJECT_ID = "objectId";
 	public static final String COLUMN_FOOTAGE_ICON_NAME = "footageIconName";
 	public static final String COLUMN_FOOTAGE_ORDER_NUM = "footageOrderNum";
+	public static final String COLUMN_FOOTAGE_USE_NUM_ANDROID = "footageUseNum_Android";
 
 	private String mObjectId;
 	private String mParentId;
