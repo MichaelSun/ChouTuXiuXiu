@@ -18,4 +18,7 @@
     <color name="publish_topbar_background">#FB7537</color>
     <color name="publish_splitter">#CCCCCC</color>
     
+    <color name="footage_bg_normal">#FF000000</color>
+    <color name="footage_bg_selected">#FF2f2f2f</color>
+    
 </resources>

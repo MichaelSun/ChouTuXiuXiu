@@ -8,11 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.canruoxingchen.uglypic.MessageCenter;
 import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.SettingManager;
 import com.canruoxingchen.uglypic.UglyPicApp;
+import com.canruoxingchen.uglypic.util.Logger;
 import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.WeiboMessage;
@@ -48,7 +50,10 @@ public class WeiboHelper {
 	private WeiboAuth mWeiboAuth;
 
 	/**
-	 * ailed to find the associated render view host for url: http://newchinar.com/?access_token=2.004IxRwB0uQoMT6f0599bd77r4T_gE&remind_in=7526137&expires_in=7526137&uid=1777439211
+	 * ailed to find the associated render view host for url:
+	 * http://newchinar.com
+	 * /?access_token=2.004IxRwB0uQoMT6f0599bd77r4T_gE&remind_in
+	 * =7526137&expires_in=7526137&uid=1777439211
 	 */
 	private Oauth2AccessToken mAccessToken = null;
 
@@ -71,8 +76,17 @@ public class WeiboHelper {
 		mWeiboResponse = new WeiboResponse();
 	}
 
+	private void LOGD(String logMe) {
+		Log.d("Weibo", logMe);
+	}
+
 	boolean hasAuthorized() {
-		return mAccessToken != null && mAccessToken.isSessionValid();
+		LOGD("AccessToken: " + mAccessToken);
+		if (mAccessToken != null) {
+			LOGD("Access is SessionValid: " + mAccessToken.isSessionValid());
+			LOGD("Current: " + System.currentTimeMillis() + ", ExpireTime:" + mAccessToken.getExpiresTime());
+		}
+		return mAccessToken != null && (System.currentTimeMillis() < mAccessToken.getExpiresTime());
 	}
 
 	void onCreate(Activity activity, Bundle savedInstanceState) {

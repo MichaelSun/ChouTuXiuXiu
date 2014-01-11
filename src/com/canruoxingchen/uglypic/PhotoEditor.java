@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -97,6 +98,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private View mTopContextMenu;
 	private View mViewModifyFinish;
 	private View mViewBottomPanel;
+	private RelativeLayout mFootageListContainer;
 
 	/**
 	 * "分享"和"重置"
@@ -232,6 +234,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						activity.mFootages.clear();
 						activity.mFootages.addAll(footages);
 						activity.mFootageAdapter.notifyDataSetChanged();
+						activity.mLvFootages.scrollTo(0);
 					}
 				}
 				break;
@@ -249,6 +252,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						activity.mFootages.clear();
 						activity.mFootages.addAll(footages);
 						activity.mFootageAdapter.notifyDataSetChanged();
+						activity.mLvFootages.scrollTo(0);
 					}
 				} else {
 					if (activity.mCurrentType != null) {
@@ -436,6 +440,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mRootView = (RelativeLayout) findViewById(R.id.photo_editor_root_view);
 		mViewBottomPanel = findViewById(R.id.photo_editor_bottom_panel);
 		mPvPhoto = (PhotoView) findViewById(R.id.photo_editor_photo);
+		mFootageListContainer = (RelativeLayout) findViewById(R.id.photo_editor_footage_list_container);
 
 		mTopContextMenu = findViewById(R.id.photo_editor_topbar_object_menu);
 		mViewModify = findViewById(R.id.photo_editor_top_bar_object_modify);
@@ -451,6 +456,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mEditorPanel = findViewById(R.id.photo_editor_edit_panel);
 		mEditorPanelRefView = findViewById(R.id.photo_editor_edit_panel_ref_view);
 		mRlOverlayContainer = (RelativeLayout) findViewById(R.id.photo_editor_overlay_container);
+		
+		RelativeLayout.LayoutParams editorPanelParams = (RelativeLayout.LayoutParams) mEditorPanel.getLayoutParams();
+		int width = getWindowManager().getDefaultDisplay().getWidth();
+		editorPanelParams.height = width;
 
 		mVgContextMenuContainer = (ViewGroup) findViewById(R.id.photo_editor_context_menu_container);
 
@@ -505,12 +514,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				FootAgeType type = mFootageTypes.get(position);
 				mCurrentType = type;
+				mFootageListContainer.removeView(mLvFootages);
+				mLvFootages.scrollTo(0);
+				mFootageListContainer.addView(mLvFootages);
 				mTypeAdapter.notifyDataSetChanged();
-				UglyPicApp.getUiHander().post(new Runnable() {
-					public void run() {
-						mLvFootages.scrollTo(0);
-					}
-				});
+				mFootageAdapter.mSelectedPosition = -1;
+				mFootageAdapter.notifyDataSetChanged();
+				
 				switch (type.getTypeTarget()) {
 				case FootAgeType.TYPE_RECENT: // 最近使用
 					mFootages.clear();
@@ -536,6 +546,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				final Object obj = mFootages.get(position);
+				mFootageAdapter.mSelectedPosition = position;
 				if (obj instanceof FootAge) {
 					FootAge footage = (FootAge) obj;
 					onFootAgeClick(footage, true);
@@ -559,9 +570,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private void onFootAgeClick(FootAge footage, boolean save) {
 		if (!TextUtils.isEmpty(footage.getIconUrl())) {
-			//统计素材使用
+			// 统计素材使用
 			StatisticsUtil.increaseFootageCount(footage.getObjectId());
-			
+
 			ImageWidgetOverlay overlay = new ImageWidgetOverlay(PhotoEditor.this, Uri.parse(footage.getIconUrl()));
 			addOverlay(overlay);
 			if (save) {
@@ -576,9 +587,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			return;
 		}
 		if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
-			//统计场景次数
+			// 统计场景次数
 			StatisticsUtil.increaseNetSceneCount(netScene.getObjectId());
-			
+
 			SceneOverlay.Builder builder = new SceneOverlay.Builder(PhotoEditor.this, Uri.parse(netScene
 					.getSenceNetIcon()));
 			Rect inputRect = netScene.getInputRectBounds();
@@ -1158,22 +1169,30 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mEditorPanel.getLayoutParams();
 		int editorPanelWidth = mEditorPanelRefView.getWidth();
 		int editorPanelHeight = mEditorPanelRefView.getHeight();
-		float scaleX = (1.0f * editorPanelWidth) / (1.0f * width);
-		float scaleY = (1.0f * editorPanelHeight) / (1.0f * height);
-		if (scaleX > scaleY) { // 容器比背景胖，则调整宽
-			params.topMargin = 0;
-			params.bottomMargin = 0;
-			int margin = (int) ((editorPanelWidth - editorPanelHeight) / 2);
-			params.leftMargin = margin;
-			params.rightMargin = margin;
-		} else {
-//			params.height = (int) (height * scaleX);
-			params.height = editorPanelWidth;
+		if (editorPanelHeight != editorPanelWidth) {
+			float scaleX = (1.0f * editorPanelWidth) / (1.0f * width);
+			float scaleY = (1.0f * editorPanelHeight) / (1.0f * height);
+			if (scaleX > scaleY) { // 容器比背景胖，则调整宽
+				params.topMargin = 0;
+				params.bottomMargin = 0;
+				int margin = (int) ((editorPanelWidth - editorPanelHeight) / 2);
+				params.leftMargin = margin;
+				params.rightMargin = margin;
+				params.width = editorPanelHeight;
+				params.height = editorPanelHeight;
+			} else {
+				// params.height = (int) (height * scaleX);
+				params.height = editorPanelWidth;
+				params.width = editorPanelWidth;
+			}
+			mTypeAdapter.notifyDataSetChanged();
+			mFootageAdapter.notifyDataSetChanged();
+			mPvPhoto.invalidate();
+			if (mPhotoUri != null) {
+				mPvPhoto.setImageInfo(null);
+				mPvPhoto.setImageInfo(ImageInfo.obtain(mPhotoUri.toString()));
+			}
 		}
-
-		mEditorPanel.requestLayout();
-		mTypeAdapter.notifyDataSetChanged();
-		mFootageAdapter.notifyDataSetChanged();
 	}
 
 	private class TypeAdapter extends BaseAdapter {
@@ -1237,6 +1256,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private class FootageAdapter extends BaseAdapter {
 
+		private int mSelectedPosition = -1;
+
 		@Override
 		public int getCount() {
 			return mFootages.size();
@@ -1258,8 +1279,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			if (convertView == null) {
 				convertView = View.inflate(PhotoEditor.this, R.layout.footage_item, null);
 				viewHolder.aivIcon = (AsyncImageView) convertView.findViewById(R.id.footage_item_icon);
-				// viewHolder.tvName = (TextView)
-				// convertView.findViewById(R.id.footage_item_name);
 				convertView.setTag(viewHolder);
 			}
 			viewHolder = (ViewHolder) convertView.getTag();
@@ -1295,6 +1314,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					}
 					// viewHolder.tvName.setText(netSence.getSenceName());
 				}
+			}
+
+			if (position == mSelectedPosition) {
+				viewHolder.aivIcon.setSelected(true);
+			} else {
+				viewHolder.aivIcon.setSelected(false);
 			}
 
 			return convertView;
