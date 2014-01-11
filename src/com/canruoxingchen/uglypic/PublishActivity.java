@@ -353,8 +353,6 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 
 	private void shareToWeibo() {
 		if (mSnsHelper.hasWeiboAuthorized()) {
-			// mSnsHelper.shareToWeibo(mEtDesc.getText().toString(), mMerged ?
-			// mOriginPath : mResultPath);
 			saveCurrentImage(SHARE_TYPE_WEIBO);
 		} else {
 			mSnsHelper.authorizeToWeibo(this);

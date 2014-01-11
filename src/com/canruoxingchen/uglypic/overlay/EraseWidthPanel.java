@@ -87,7 +87,7 @@ public class EraseWidthPanel extends LinearLayout {
 			final int width = ERASER_WIDTH[i];
 			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
 					LayoutParams.MATCH_PARENT);
-			params.width = (int) (itemWidth * width);
+			params.width = (int) (itemWidth * width) + (int) (PADDING * density) * 2;
 			params.height = params.width;
 			params.gravity = Gravity.CENTER_VERTICAL;
 //			params.leftMargin = (int) (PADDING * density);

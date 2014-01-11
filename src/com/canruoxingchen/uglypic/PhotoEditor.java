@@ -15,7 +15,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -776,7 +775,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		case R.id.photo_editor_top_bar_object_eraser: { // 擦除
 			if (mCurrentOverlay != null && mCurrentOverlay instanceof ImageWidgetOverlay) {
-				((ImageWidgetOverlay) mCurrentOverlay).startErase();
+				((ImageWidgetOverlay) mCurrentOverlay).startErase(mViewBottomPanel.getHeight());
 			}
 			break;
 		}

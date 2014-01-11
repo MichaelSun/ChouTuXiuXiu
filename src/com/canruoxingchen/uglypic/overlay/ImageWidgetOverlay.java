@@ -250,10 +250,12 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public class EraseImageEditorView extends RelativeLayout implements IEditor {
 
 		private EraseWidthAdapter mAdapter;
+		private int mPanelHeight;
 
-		public EraseImageEditorView(Context context) {
+		public EraseImageEditorView(Context context, int panelHeight) {
 			super(context);
 			mAdapter = new EraseWidthAdapter(ERASER_WIDTH);
+			mPanelHeight = panelHeight;
 			initView();
 		}
 
@@ -261,11 +263,7 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 //			GridView gv = new GridView(getContext());
 //			gv.setBackgroundColor(getResources().getColor(R.color.default_background));
 			
-			WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-			int width = wm.getDefaultDisplay().getWidth();
-			int height = (int) (wm.getDefaultDisplay().getHeight() 
-					- getResources().getDimension(R.dimen.top_bar_height)
-					- width);
+			int height = mPanelHeight;
 			height = height <= 0 ? (int) getResources().getDimension(R.dimen.photo_editor_bottom_bar_height)
 					: height;
 //			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
@@ -861,9 +859,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	}
 
-	public void startErase() {
+	public void startErase(int erasePanelHeight) {
 		if (getEditorContainerView().getVisibility() != View.VISIBLE) {
-			EraseImageEditorView eraseImageEditorView = new EraseImageEditorView(mContext);
+			EraseImageEditorView eraseImageEditorView = new EraseImageEditorView(mContext, erasePanelHeight);
 			getEditorContainerView().setEditorView(eraseImageEditorView);
 			getEditorContainerView().setVisibility(View.VISIBLE);
 			mAivImage.setEraserMode(true);
