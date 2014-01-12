@@ -36,6 +36,7 @@ import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
@@ -53,7 +54,6 @@ import com.canruoxingchen.uglypic.camera.PmCameraData;
 import com.canruoxingchen.uglypic.camera.PmCameraRender;
 import com.canruoxingchen.uglypic.util.Logger;
 import com.canruoxingchen.uglypic.util.jni.NativeImageUtil;
-import com.canruoxingchen.uglypic.view.RoundAngleImageView;
 
 public class CameraActivity extends BaseActivity implements OnClickListener, OnTouchListener, LoaderCallbacks<Cursor> {
 	private static final String TAG = CameraActivity.class.getSimpleName();
@@ -98,6 +98,8 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	boolean mIsFrontCamera = false;
 
 	FlashMode mCurrentFlashMode = FlashMode.OFF;
+
+	private ScaleGestureDetector mScaleGestureDetector = null;
 
 	// 相机可见区域宽高比
 	float mPictureRatio = 1.0f;
@@ -181,6 +183,23 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_VOLUME_UP:
+			if (mPmCamera != null && !mPmCamera.isZooming()) {
+				if (!mPmCamera.smoothZoom(mPmCamera.getMaxZoom())) {
+					mPmCamera.zoomIn();
+				}
+			}
+			return true;
+		case KeyEvent.KEYCODE_VOLUME_DOWN:
+			if (mPmCamera != null && !mPmCamera.isZooming()) {
+				if (!mPmCamera.smoothZoom(0)) {
+					mPmCamera.zoomOut();
+				}
+			}
+			return true;
+
+		}
 		return super.onKeyDown(keyCode, event);
 	}
 
@@ -216,6 +235,7 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		if (!canFocus(event.getX(), event.getY())) {
 			return true;
 		}
+		mScaleGestureDetector.onTouchEvent(event);
 
 		switch (event.getAction() & MotionEvent.ACTION_MASK) {
 		case MotionEvent.ACTION_DOWN:
@@ -243,9 +263,18 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 	private void startPhotoPicker() {
 		// TODO: 从相册选图
-//		PickPhotoActivity.startForPhotoFromGallery(this, REQUEST_CODE_GALLERY);
+		// PickPhotoActivity.startForPhotoFromGallery(this,
+		// REQUEST_CODE_GALLERY);
 		ImageCropActivity.start(this, REQUEST_CODE_GALLERY);
 		// TODO
+	}
+
+	private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+		@Override
+		public boolean onScale(ScaleGestureDetector detector) {
+			onScaled(detector.getScaleFactor());
+			return true;
+		}
 	}
 
 	private void initView() {
@@ -261,9 +290,9 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		mFlashOnOffIB.setOnClickListener(this);
 		mCameraNextIB.setOnClickListener(this);
 		mChoosePhotoAiv.setOnClickListener(this);
-//		mChoosePhotoView.setOnClickListener(this);
+		// mChoosePhotoView.setOnClickListener(this);
 		mCapturePhotoIB.setOnClickListener(this);
-
+		mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 		needFocusWhenTouch();
 
 		int width = getResources().getDisplayMetrics().widthPixels;
@@ -410,12 +439,12 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		@Override
 		public void onOrientationChanged(int orientation) {
 			orientation = (((orientation + 45) / 90) * 90) % 360;
-//			mPmCameraData.mDeviceOrientation = orientation;
-//
-//			mCapturePhotoIB.setRotation(-orientation);
-//			mCameraNextIB.setRotation(-orientation);
-//			mFlashOnOffIB.setRotation(-orientation);
-//			mChoosePhotoAiv.setRotation(-orientation);
+			// mPmCameraData.mDeviceOrientation = orientation;
+			//
+			// mCapturePhotoIB.setRotation(-orientation);
+			// mCameraNextIB.setRotation(-orientation);
+			// mFlashOnOffIB.setRotation(-orientation);
+			// mChoosePhotoAiv.setRotation(-orientation);
 		}
 	}
 
@@ -649,6 +678,22 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 
 	private void LOGD(String logMe) {
 		Logger.d("CameraActivity", logMe);
+	}
+
+	public void onScaled(float scale) {
+		if (scale > 1.0f) { // zoom in
+			if (mPmCamera != null && !mPmCamera.isZooming()) {
+				if (!mPmCamera.smoothZoom(mPmCamera.getMaxZoom())) {
+					mPmCamera.zoomIn();
+				}
+			}
+		} else { // zoom out
+			if (mPmCamera != null && !mPmCamera.isZooming()) {
+				if (!mPmCamera.smoothZoom(0)) {
+					mPmCamera.zoomOut();
+				}
+			}
+		}
 	}
 
 }

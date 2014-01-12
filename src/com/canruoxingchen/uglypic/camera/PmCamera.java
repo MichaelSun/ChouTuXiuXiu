@@ -1,6 +1,7 @@
 package com.canruoxingchen.uglypic.camera;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
@@ -29,7 +30,16 @@ public class PmCamera {
     private String mCurrentFlashMode = Parameters.FLASH_MODE_AUTO;
 
     private boolean mNeedRefreshPreviewSize = false;
-
+    
+    //当前zoom的位置
+	private int mCurrentZoomIndex = 0;
+	private volatile boolean mIsZooming = false;
+	private List<Integer> mZoomRatios = new ArrayList<Integer>();
+	private boolean mIsZoomSupported = false;
+	private boolean mIsSmoothZoomSupported = false;
+	private int mZoomMax = 0;
+	
+    
     public PmCamera(Context context) {
         mContext = context;
     }
@@ -101,6 +111,18 @@ public class PmCamera {
             }
             if (!isCameraFront() && params.getSupportedFlashModes().contains(mCurrentFlashMode)) {
                 params.setFlashMode(mCurrentFlashMode);
+            }
+            
+            //调焦参数
+            mIsSmoothZoomSupported = params.isSmoothZoomSupported();
+            mIsZoomSupported = params.isZoomSupported();
+            if(mIsZoomSupported) {
+            	mCamera.setZoomChangeListener(mZoomChangeListener);
+            	mZoomRatios = params.getZoomRatios();
+            	mZoomMax = params.getMaxZoom();
+            } else {
+            	mZoomRatios = new ArrayList<Integer>();
+            	mZoomMax = 0;
             }
             // Camera.Area focusArea = new Camera.Area(new Rect(-100, -100, 100,
             // 100), 1000);
@@ -312,6 +334,55 @@ public class PmCamera {
     public void stopPreview() {
         mCamera.stopPreview();
     }
+    
+    public boolean isZooming() {
+    	return mIsZooming;
+    }
+    
+    public boolean smoothZoom(int index) {
+    	if(mCamera != null && mIsZoomSupported && mIsSmoothZoomSupported) {
+    		mCamera.stopSmoothZoom();
+    		mCamera.startSmoothZoom(index);
+    		return true;
+    	}
+    	return false;
+    }
+   
+    public int getMaxZoom() {
+    	return mZoomMax;
+    }
+    
+ // 放大
+ 	public void zoomIn() {
+ 		if  (mCamera != null
+ 				&& mIsZoomSupported
+ 				&& mZoomRatios != null
+ 				&& mZoomRatios.size() > 0) {
+ 			Camera.Parameters params = mCamera.getParameters();
+ 			if (mCurrentZoomIndex + 1 < params.getMaxZoom()) {
+ 				++mCurrentZoomIndex;
+ 				int ratio = mZoomRatios
+ 						.get(mCurrentZoomIndex);
+ 				params.setZoom(mCurrentZoomIndex);
+ 				mCamera.setParameters(params);
+ 			}
+ 		}
+ 	}
+
+ 	// 缩小
+ 	public void zoomOut() {
+ 		if (mCamera != null
+ 				&& mIsZoomSupported
+ 				&& mZoomRatios != null
+ 				&& mZoomRatios.size() > 0) {
+ 			if (mCurrentZoomIndex - 1 >= 0) {
+ 				--mCurrentZoomIndex;
+ 				Camera.Parameters params = mCamera.getParameters();
+ 				params.setZoom(mCurrentZoomIndex);
+ 				mCamera.setParameters(params);
+ 			}
+ 		}
+ 	}
 
     private void switchFocusMode(String focusMode) {
         if (mCamera == null || focusMode == null) {
@@ -401,7 +472,6 @@ public class PmCamera {
         public void onShutter() {
             mObserver.onShutter();
         }
-
     }
 
     public interface Observer {
@@ -413,5 +483,16 @@ public class PmCamera {
 
         public void onException();
     }
+    
+
+
+	private final Camera.OnZoomChangeListener mZoomChangeListener = new Camera.OnZoomChangeListener() {
+
+		@Override
+		public void onZoomChange(int zoomValue, boolean stopped, Camera camera) {
+			// mCurrentZoomIndex = zoomValue;
+			mIsZooming = !stopped;
+		}
+	};
 
 }
