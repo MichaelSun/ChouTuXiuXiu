@@ -26,6 +26,7 @@ import com.avos.avoscloud.FindCallback;
 import com.avos.avoscloud.GetDataCallback;
 import com.canruoxingchen.uglypic.MessageCenter;
 import com.canruoxingchen.uglypic.R;
+import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.concurrent.ThreadPoolManager;
 import com.canruoxingchen.uglypic.dao.DaoManager;
 import com.canruoxingchen.uglypic.dao.FootAgeTypeDao;
@@ -124,7 +125,8 @@ public class FootageManager {
 				List<RecentFootAge> recentFootages = new ArrayList<RecentFootAge>();
 				if (footages != null) {
 					for (RecentFootage rf : footages) {
-						recentFootages.add(new RecentFootAge(rf.getObjectId(), rf.getAccessTime(), rf.getFootageType(), rf.getJson()));
+						recentFootages.add(new RecentFootAge(rf.getObjectId(), rf.getAccessTime(), rf.getFootageType(),
+								rf.getJson()));
 					}
 				}
 
@@ -243,61 +245,61 @@ public class FootageManager {
 			}
 		});
 	}
-	
+
 	private static class FootageAVOComparator implements Comparator<AVObject> {
 
 		@Override
 		public int compare(AVObject lhs, AVObject rhs) {
-			if(lhs == null || rhs == null) {
+			if (lhs == null || rhs == null) {
 				return 0;
 			}
-			
+
 			int lOrderNum = 0;
 			int rOrderNum = 0;
-			if(lhs.containsKey(FootAge.COLUMN_FOOTAGE_ORDER_NUM)) {
+			if (lhs.containsKey(FootAge.COLUMN_FOOTAGE_ORDER_NUM)) {
 				lOrderNum = Integer.parseInt(lhs.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM));
 			}
-			if(rhs.containsKey(FootAge.COLUMN_FOOTAGE_ORDER_NUM)) {
+			if (rhs.containsKey(FootAge.COLUMN_FOOTAGE_ORDER_NUM)) {
 				rOrderNum = Integer.parseInt(lhs.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM));
 			}
-			
-			if(lOrderNum > rOrderNum) {
+
+			if (lOrderNum > rOrderNum) {
 				return 1;
-			} else if(lOrderNum < rOrderNum) {
+			} else if (lOrderNum < rOrderNum) {
 				return -1;
 			}
-			
+
 			return 0;
 		}
-		
+
 	}
-	
+
 	private static class NetSceneAVOComparator implements Comparator<AVObject> {
 
 		@Override
 		public int compare(AVObject lhs, AVObject rhs) {
-			if(lhs == null || rhs == null) {
+			if (lhs == null || rhs == null) {
 				return 0;
 			}
-			
+
 			int lOrderNum = 0;
 			int rOrderNum = 0;
-			if(lhs.containsKey(NetSence.COLUMN_SENCE_ORDER_NUM)) {
+			if (lhs.containsKey(NetSence.COLUMN_SENCE_ORDER_NUM)) {
 				lOrderNum = Integer.parseInt(lhs.getString(NetSence.COLUMN_SENCE_ORDER_NUM));
 			}
-			if(rhs.containsKey(NetSence.COLUMN_SENCE_ORDER_NUM)) {
+			if (rhs.containsKey(NetSence.COLUMN_SENCE_ORDER_NUM)) {
 				rOrderNum = Integer.parseInt(lhs.getString(NetSence.COLUMN_SENCE_ORDER_NUM));
 			}
-			
-			if(lOrderNum > rOrderNum) {
+
+			if (lOrderNum > rOrderNum) {
 				return 1;
-			} else if(lOrderNum < rOrderNum) {
+			} else if (lOrderNum < rOrderNum) {
 				return -1;
 			}
-			
+
 			return 0;
 		}
-		
+
 	}
 
 	public void loadFootagesFromServer(final String objectId) {
@@ -323,6 +325,7 @@ public class FootageManager {
 								.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM)));
 						LOGD(">>>>>> loadFootageType >>>>>> " + footage.toString());
 						// 结果存入数据库
+						footage.setAVObject(avo);
 						footages.add(footage);
 						com.canruoxingchen.uglypic.dao.Footage f = footageDao.load(avo.getObjectId());
 						String iconPath = f == null ? "" : f.getFootageIcon();
@@ -337,39 +340,48 @@ public class FootageManager {
 					Collections.sort(noIconObjs, new FootageAVOComparator());
 					MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_SUCCESS, 0, 0, footages);
 
-					for (final AVObject avo : noIconObjs) {
-						// 如果尚未下载
-						loadIconFile(avo, FootAge.COLUMN_FOOTAGE_ICON, avo.getString(FootAge.COLUMN_FOOTAGE_ICON_NAME)
-								+ ".png", new ILoadIconFileListener() {
-
-							@Override
-							public void onLoadFailed() {
-								MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_ICON_FAILURE, 0, 0,
-										null);
-							}
-
-							@Override
-							public void onFileLoaded(Uri uri) {
-								com.canruoxingchen.uglypic.dao.Footage footage = new Footage(avo.getObjectId(), uri
-										.toString(), avo.getString(FootAge.COLUMN_FOOTAGE_ICON_NAME), Integer
-										.parseInt(avo.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM)), avo
-										.getString(FootAge.COLUMN_FOOTAGE_PARENT_ID));
-								footageDao.insertOrReplace(footage);
-								footage.setFootageIcon(uri.toString());
-								FootAge fAge = new FootAge(footage.getObjectId(), footage.getFootageParentId(), footage
-										.getFootageIcon(), footage.getFootageIconName(), footage.getFootageOrderNum());
-								// 通知更新UI
-								MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_ICON_SUCCESS, 0, 0,
-										fAge);
-							}
-						});
-					}
+//					for (final AVObject avo : noIconObjs) {
+//						loadFootageIcon(avo);
+//					}
 				} else {
 					LOGD(">>>>>> loadFootages >>>>>> errorcode=" + e.getCode() + ", message=" + e.getMessage());
 					MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_FAILURE, 0, 0, null);
 				}
 			}
 		});
+	}
+
+	public void loadFootageIcon(final AVObject avo) {
+		// 如果尚未下载
+		loadIconFile(avo, FootAge.COLUMN_FOOTAGE_ICON, avo.getString(FootAge.COLUMN_FOOTAGE_ICON_NAME) + ".png",
+				new ILoadIconFileListener() {
+
+					@Override
+					public void onLoadFailed() {
+						MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_ICON_FAILURE, 0, 0, null);
+					}
+
+					@Override
+					public void onFileLoaded(Uri uri) {
+						FootageDao footageDao = DaoManager.getInstance(UglyPicApp.getAppExContext()).getDao(
+								FootageDao.class);
+//						com.canruoxingchen.uglypic.dao.Footage footage = new Footage(avo.getObjectId(), uri.toString(),
+//								avo.getString(FootAge.COLUMN_FOOTAGE_ICON_NAME), Integer.parseInt(avo
+//										.getString(FootAge.COLUMN_FOOTAGE_ORDER_NUM)), avo
+//										.getString(FootAge.COLUMN_FOOTAGE_PARENT_ID));
+						com.canruoxingchen.uglypic.dao.Footage footage = footageDao.load(avo.getObjectId());
+						if(footage == null) {
+							return;
+						}
+						footage.setFootageIcon(uri == null ? "" : uri.toString());
+						footageDao.insertOrReplace(footage);
+						footage.setFootageIcon(uri.toString());
+						FootAge fAge = new FootAge(footage.getObjectId(), footage.getFootageParentId(), footage
+								.getFootageIcon(), footage.getFootageIconName(), footage.getFootageOrderNum());
+						// 通知更新UI
+						MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_ICON_SUCCESS, 0, 0, fAge);
+					}
+				});
 	}
 
 	/**
@@ -458,6 +470,7 @@ public class FootageManager {
 										.getString(NetSence.COLUMN_TIME_FONT_ALIGNMENT))));
 						// 结果存入数据库
 						scenes.add(netScene);
+						netScene.setAVObject(avo);
 						com.canruoxingchen.uglypic.dao.NetSence ns = netSenceDao.load(avo.getObjectId());
 						String iconPath = ns == null ? "" : ns.getSenceNetIcon();
 						dbScenes.add(new com.canruoxingchen.uglypic.dao.NetSence(netScene.getObjectId(), iconPath,
@@ -476,10 +489,10 @@ public class FootageManager {
 					Collections.sort(noIconObjs, new NetSceneAVOComparator());
 					MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_SCENES_SUCCESS, 0, 0, scenes);
 
-					for (final AVObject avo : noIconObjs) {
-						// 如果尚未下载
-						loadSceneIcon(avo);
-					}
+//					for (final AVObject avo : noIconObjs) {
+//						// 如果尚未下载
+//						loadSceneIcon(avo);
+//					}
 				} else {
 					LOGD(">>>>>> loadNetScenes >>>>>> " + e.getMessage());
 					MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_SCENES_FAILURE, 0, 0, null);
@@ -488,7 +501,7 @@ public class FootageManager {
 		});
 	}
 
-	private void loadSceneIcon(final AVObject avo) {
+	public void loadSceneIcon(final AVObject avo) {
 		loadIconFile(avo, NetSence.COLUMN_SENCE_NET_ICON, avo.getString(NetSence.COLUMN_SENCE_NAME) + ".png",
 				new ILoadIconFileListener() {
 
@@ -499,39 +512,33 @@ public class FootageManager {
 
 					@Override
 					public void onFileLoaded(Uri uri) {
-						com.canruoxingchen.uglypic.dao.NetSence ns = new com.canruoxingchen.uglypic.dao.NetSence(avo
-								.getObjectId(), uri.toString(), avo.getString(NetSence.COLUMN_SENCE_PARENT_ID), Integer
-								.parseInt(avo.getString(NetSence.COLUMN_SENCE_ORDER_NUM)), avo
-								.getString(NetSence.COLUMN_SENCE_NAME), avo.getString(NetSence.COLUMN_SENCE_DESCRIBE),
-								avo.getString(NetSence.COLUMN_INPUT_CONTENT),
-								avo.getString(NetSence.COLUMN_INPUT_RECT), avo
-										.getString(NetSence.COLUMN_INPUT_FONT_NAME), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_INPUT_FONT_SIZE))), parseColor(avo
-										.getString(NetSence.COLUMN_INPUT_FONT_COLOR)), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_INPUT_FONT_ALIGNMENT))), avo
-										.getString(NetSence.COLUMN_TIME_RECT), avo
-										.getString(NetSence.COLUMN_TIME_FONT_NAME), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_TIME_FONT_SIZE))), parseColor(avo
-										.getString(NetSence.COLUMN_TIME_FONT_COLOR)), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_TIME_FONT_ALIGNMENT))));
+//						com.canruoxingchen.uglypic.dao.NetSence ns = new com.canruoxingchen.uglypic.dao.NetSence(avo
+//								.getObjectId(), uri.toString(), avo.getString(NetSence.COLUMN_SENCE_PARENT_ID), Integer
+//								.parseInt(avo.getString(NetSence.COLUMN_SENCE_ORDER_NUM)), avo
+//								.getString(NetSence.COLUMN_SENCE_NAME), avo.getString(NetSence.COLUMN_SENCE_DESCRIBE),
+//								avo.getString(NetSence.COLUMN_INPUT_CONTENT),
+//								avo.getString(NetSence.COLUMN_INPUT_RECT), avo
+//										.getString(NetSence.COLUMN_INPUT_FONT_NAME), Integer.parseInt(numFormat(avo
+//										.getString(NetSence.COLUMN_INPUT_FONT_SIZE))), parseColor(avo
+//										.getString(NetSence.COLUMN_INPUT_FONT_COLOR)), Integer.parseInt(numFormat(avo
+//										.getString(NetSence.COLUMN_INPUT_FONT_ALIGNMENT))), avo
+//										.getString(NetSence.COLUMN_TIME_RECT), avo
+//										.getString(NetSence.COLUMN_TIME_FONT_NAME), Integer.parseInt(numFormat(avo
+//										.getString(NetSence.COLUMN_TIME_FONT_SIZE))), parseColor(avo
+//										.getString(NetSence.COLUMN_TIME_FONT_COLOR)), Integer.parseInt(numFormat(avo
+//										.getString(NetSence.COLUMN_TIME_FONT_ALIGNMENT))));
 						final NetSenceDao netSenceDao = DaoManager.getInstance(mContext).getDao(NetSenceDao.class);
+						com.canruoxingchen.uglypic.dao.NetSence ns = netSenceDao.load(avo.getObjectId());
+						if(ns == null) {
+							return;
+						}
+						ns.setSenceNetIcon(uri == null ? "" : uri.toString());
 						netSenceDao.insertOrReplace(ns);
-						NetSence netScene = new NetSence(avo.getObjectId(), uri.toString(), avo
-								.getString(NetSence.COLUMN_SENCE_PARENT_ID), Integer.parseInt(avo
-								.getString(NetSence.COLUMN_SENCE_ORDER_NUM)),
-								avo.getString(NetSence.COLUMN_SENCE_NAME), avo
-										.getString(NetSence.COLUMN_SENCE_DESCRIBE), avo
-										.getString(NetSence.COLUMN_INPUT_CONTENT), avo
-										.getString(NetSence.COLUMN_INPUT_RECT), avo
-										.getString(NetSence.COLUMN_INPUT_FONT_NAME), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_INPUT_FONT_SIZE))), parseColor(avo
-										.getString(NetSence.COLUMN_INPUT_FONT_COLOR)), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_INPUT_FONT_ALIGNMENT))), avo
-										.getString(NetSence.COLUMN_TIME_RECT), avo
-										.getString(NetSence.COLUMN_TIME_FONT_NAME), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_TIME_FONT_SIZE))), parseColor(avo
-										.getString(NetSence.COLUMN_TIME_FONT_COLOR)), Integer.parseInt(numFormat(avo
-										.getString(NetSence.COLUMN_TIME_FONT_ALIGNMENT))));
+						NetSence netScene = new NetSence(avo.getObjectId(), ns.getSenceNetIcon(), ns.getSenceParentId(), 
+								ns.getSenceOrderNum(), ns.getSenceName(), ns.getSenceDescribe(), ns.getInputContent(),
+								ns.getInputRect(), ns.getInputFontName(), ns.getInputFontSize(),
+								ns.getInputFontColor(), ns.getInputFontAlignment(), ns.getTimeRect(),
+								ns.getTimeRect(), ns.getTimeFontSize(), ns.getTimeFontColor(), ns.getTimeFontAlignment());
 						// 通知更新UI
 						MessageCenter.getInstance(mContext).notifyHandlers(MSG_LOAD_FOOTAGE_ICON_SUCCESS, 0, 0,
 								netScene);
@@ -552,6 +559,9 @@ public class FootageManager {
 	public void loadIconFile(AVObject avObject, final String key, final String name,
 			final ILoadIconFileListener listener) {
 		AVFile avFile = avObject.getAVFile(key);
+		if(avFile == null) {
+			return;
+		}
 		avFile.getDataInBackground(new GetDataCallback() {
 
 			@Override

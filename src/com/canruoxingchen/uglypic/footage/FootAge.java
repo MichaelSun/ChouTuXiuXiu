@@ -3,6 +3,8 @@
  */
 package com.canruoxingchen.uglypic.footage;
 
+import com.avos.avoscloud.AVObject;
+
 
 /**
  * @author wsf
@@ -22,6 +24,15 @@ public class FootAge implements Comparable<FootAge>{
 	private String mIconUrl;
 	private String mIconName;
 	private int mOrderNum;
+	private AVObject mAVObject;
+	
+	public void setAVObject(AVObject avo) {
+		this.mAVObject = avo;
+	}
+	
+	public AVObject getAVObject() {
+		return mAVObject;
+	}
 
 	public String getObjectId() {
 		return mObjectId;

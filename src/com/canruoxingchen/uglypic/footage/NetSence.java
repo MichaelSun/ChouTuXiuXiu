@@ -3,6 +3,8 @@
  */
 package com.canruoxingchen.uglypic.footage;
 
+import com.avos.avoscloud.AVObject;
+
 import android.graphics.Rect;
 
 /**
@@ -52,6 +54,8 @@ public class NetSence implements Comparable<NetSence> {
 	private Integer mTimeFontColor;
 	private Integer mTimeFontAlignment;
 	
+	private AVObject mAVObject;
+	
 	public static final NetSence DEFAULT = new NetSence();
 	
 	public NetSence() {
@@ -79,6 +83,14 @@ public class NetSence implements Comparable<NetSence> {
 		this.mTimeFontSize = timeFontSize;
 		this.mTimeFontColor = timeFontColor;
 		this.mTimeFontAlignment = timeFontAlignment;
+	}
+	
+	public void setAVObject(AVObject avo) {
+		this.mAVObject = avo;
+	}
+	
+	public AVObject getAVObject() {
+		return mAVObject;
 	}
 
 	public String getObjectId() {

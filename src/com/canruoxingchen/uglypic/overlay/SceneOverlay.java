@@ -405,7 +405,7 @@ public class SceneOverlay implements IOverlay {
 					mTvTime.setLayoutParams(params);
 					mTvTime.setLines(1);
 					mTvTime.setGravity(overlay.mTimeGravity | Gravity.CENTER_VERTICAL);
-					SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+					SimpleDateFormat dateFormat = new SimpleDateFormat("MM月dd日");
 					mTvTime.setText(dateFormat.format(new Date(System.currentTimeMillis())));
 					if (!TextUtils.isEmpty(overlay.mTimeFontName)
 							&& overlay.mTimeFontName.toLowerCase().contains("bold")) {

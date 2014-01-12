@@ -38,6 +38,7 @@ import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
 import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
+import com.avos.avoscloud.AVObject;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.concurrent.ThreadPoolManager;
@@ -1292,6 +1293,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				final FootAge footage = (FootAge) obj;
 				if (!TextUtils.isEmpty(footage.getIconUrl())) {
 					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
+				} else {
+					if (footage.getAVObject() != null) {
+						mFootageManager.loadFootageIcon(footage.getAVObject());
+					}
 				}
 				// viewHolder.tvName.setText(footage.getIconName());
 			} else if (obj instanceof NetSence) {
@@ -1301,6 +1306,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				} else {
 					if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
 						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netScene.getSenceNetIcon()));
+					} else {
+						if (netScene.getAVObject() != null) {
+							mFootageManager.loadSceneIcon(netScene.getAVObject());
+						}
 					}
 				}
 				// viewHolder.tvName.setText(netScene.getSenceName());
@@ -1310,14 +1319,25 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					FootAge footage = JSON.parseObject(recent.getJson(), FootAge.class);
 					if (!TextUtils.isEmpty(footage.getIconUrl())) {
 						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
+					} else {
+						if (footage.getAVObject() != null) {
+							mFootageManager.loadFootageIcon(footage.getAVObject());
+						}
 					}
 					// viewHolder.tvName.setText(footage.getIconName());
 				} else if (recent.getType() == FootAgeType.TYPE_SCENE) {
 					NetSence netSence = JSON.parseObject(recent.getJson(), NetSence.class);
 					if (!TextUtils.isEmpty(netSence.getSenceNetIcon())) {
 						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netSence.getSenceNetIcon()));
+					} else {
+						if (!TextUtils.isEmpty(netSence.getSenceNetIcon())) {
+							viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netSence.getSenceNetIcon()));
+						} else {
+							if (netSence.getAVObject() != null) {
+								mFootageManager.loadSceneIcon(netSence.getAVObject());
+							}
+						}
 					}
-					// viewHolder.tvName.setText(netSence.getSenceName());
 				}
 			}
 
