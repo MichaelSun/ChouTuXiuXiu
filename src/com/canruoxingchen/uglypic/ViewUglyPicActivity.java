@@ -91,6 +91,9 @@ public class ViewUglyPicActivity extends BaseActivity {
 			@Override
 			public void onClick(View v) {
 				setResult(RESULT_FIRST_USER);
+				Intent intent = new Intent(ViewUglyPicActivity.this, CameraActivity.class);
+				intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				startActivity(intent);
 				finish();
 			}
 		});

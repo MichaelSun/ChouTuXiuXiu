@@ -255,6 +255,13 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 		mSnsHelper.authorizeCallBack(requestCode, resultCode, data);
+		if(requestCode == REQUEST_CODE_VIEW_PHOTO) {
+			if(resultCode == RESULT_FIRST_USER) {
+				finish();
+				Intent intent = new Intent(this, CameraActivity.class);
+				startActivity(intent);
+			}
+		}
 	}
 
 	@Override

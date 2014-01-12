@@ -1,12 +1,11 @@
 package com.canruoxingchen.uglypic;
 
-import com.avos.avoscloud.LogUtil.log;
-import com.canruoxingchen.uglypic.sns.WeiboHelper;
-import com.sina.weibo.sdk.auth.Oauth2AccessToken;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+
+import com.canruoxingchen.uglypic.sns.WeiboHelper;
+import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 
 public class SettingManager {
     private static SettingManager mInstance;

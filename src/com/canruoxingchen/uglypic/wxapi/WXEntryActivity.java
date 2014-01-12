@@ -23,6 +23,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler{
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mWeixinHelper = new WeixinHelper(this);
+		mWeixinHelper.onCreate(this, savedInstanceState);
 		mWeixinHelper.handleIntent(getIntent(), this);
 	}
 

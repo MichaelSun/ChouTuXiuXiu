@@ -16,6 +16,7 @@ import com.tencent.mm.sdk.openapi.SendMessageToWX;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.mm.sdk.openapi.WXImageObject;
 import com.tencent.mm.sdk.openapi.WXMediaMessage;
+import com.tencent.mm.sdk.openapi.WXTextObject;
 
 /**
  * 微信分享相关封装
@@ -46,10 +47,13 @@ public class WeixinHelper {
 		Log.d("Weixin", content + ", imagePath=" + imagePath);
 		WXImageObject imgObj = new WXImageObject();
 		imgObj.setImagePath(imagePath);
-		
+
+//		WXTextObject textObj = new WXTextObject();
+//		textObj.text = "测试";
 		WXMediaMessage msg = new WXMediaMessage();
 		msg.mediaObject = imgObj;
 		msg.thumbData = ImageUtils.getThumbnail(Uri.fromFile(new File(imagePath)), THUMB_SIZE, THUMB_SIZE);
+//		msg.description = "测试";
 		
 		SendMessageToWX.Req req = new SendMessageToWX.Req();
 		req.transaction = buildTransaction("img");
