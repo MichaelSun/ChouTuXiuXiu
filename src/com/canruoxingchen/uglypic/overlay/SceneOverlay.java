@@ -345,15 +345,13 @@ public class SceneOverlay implements IOverlay {
 					float etHeight = (overlay.mTextViewBottom - overlay.mTextViewTop);
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
-					float scale = Math.min(scaleX, scaleY);
-					float density = mDensity > 0 ? mDensity : 1.0f;
 					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scaleX),
 							(int)(etHeight * scaleY));
 					params.leftMargin = (int) (overlay.mTextViewLeft * scaleX);
 					params.topMargin = (int) (overlay.mTextViewTop * scaleY);
 					mEtText.setTextColor(overlay.mTextColor);
-					// mEtText.setHintTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);
+					float density = mDensity > 0 ? mDensity : 1.0f;
 					mEtText.setTextSize(overlay.mTextSize * scaleX / density);
 					mEtText.setImeOptions(EditorInfo.IME_ACTION_DONE);
 					mEtText.setLayoutParams(params);
@@ -389,16 +387,14 @@ public class SceneOverlay implements IOverlay {
 					mTvTime = new TextView(mContext);
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
-					float scale = Math.min(scaleX, scaleY);
-					mEtText = new EditText(mContext);
 					float etWidth = (overlay.mTimeRight - overlay.mTimeLeft);
 					float etHeight = (overlay.mTimeBottom - overlay.mTimeTop);
 
 					float density = mDensity > 0 ? mDensity : 1.0f;
 					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scaleX),
 							(int)(etHeight * scaleY));
-					params.leftMargin = (int) (overlay.mTimeLeft * scale);
-					params.topMargin = (int) (overlay.mTimeTop * scale);
+					params.leftMargin = (int) (overlay.mTimeLeft * scaleX);
+					params.topMargin = (int) (overlay.mTimeTop * scaleY);
 					mTvTime.setTextColor(overlay.mTimeColor);
 					mTvTime.setBackgroundDrawable(null);
 					mTvTime.setTextSize(overlay.mTimeSize * scaleX / density);

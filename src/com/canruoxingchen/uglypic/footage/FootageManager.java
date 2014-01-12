@@ -329,7 +329,10 @@ public class FootageManager {
 						footages.add(footage);
 						com.canruoxingchen.uglypic.dao.Footage f = footageDao.load(avo.getObjectId());
 						String iconPath = f == null ? "" : f.getFootageIcon();
-						dbFootages.add(new Footage(avo.getObjectId(), iconPath, footage.getIconName(), footage
+						
+						AVFile avFile = avo.getAVFile( FootAge.COLUMN_FOOTAGE_ICON);
+						avFile.getUrl();
+						dbFootages.add(new Footage(avo.getObjectId(), avFile.getUrl(), footage.getIconName(), footage
 								.getOrderNum(), footage.getParentId()));
 						if (TextUtils.isEmpty(iconPath)) {
 							noIconObjs.add(avo);
@@ -471,9 +474,10 @@ public class FootageManager {
 						// 结果存入数据库
 						scenes.add(netScene);
 						netScene.setAVObject(avo);
+						AVFile avFile = avo.getAVFile(NetSence.COLUMN_SENCE_NET_ICON);
 						com.canruoxingchen.uglypic.dao.NetSence ns = netSenceDao.load(avo.getObjectId());
 						String iconPath = ns == null ? "" : ns.getSenceNetIcon();
-						dbScenes.add(new com.canruoxingchen.uglypic.dao.NetSence(netScene.getObjectId(), iconPath,
+						dbScenes.add(new com.canruoxingchen.uglypic.dao.NetSence(netScene.getObjectId(), avFile.getUrl(),
 								netScene.getSenceParentId(), netScene.getSenceOrderNum(), netScene.getSenceName(),
 								netScene.getSenceDescribe(), netScene.getInputContent(), netScene.getInputRect(),
 								netScene.getInputFontName(), netScene.getInputFontSize(), netScene.getInputFontColor(),
@@ -562,6 +566,7 @@ public class FootageManager {
 		if(avFile == null) {
 			return;
 		}
+		
 		avFile.getDataInBackground(new GetDataCallback() {
 
 			@Override

@@ -82,19 +82,21 @@ public class EraseWidthPanel extends LinearLayout {
 		}
 //		setWeightSum(total);
 //		float PADDING = getWidth() / (6 * ERASER_WIDTH.length);
-		float PADDING = 6;
-		float itemWidth = ((getWidth() - (ERASER_WIDTH.length * 2 * PADDING * density)) / total);
+//		float PADDING = 6;
+//		float itemWidth = ((getWidth() - (ERASER_WIDTH.length * 2 * PADDING * density)) / total);
+		float itemWidth = getWidth() * 1.0f / (2 * total);
+		float PADDING = (getWidth() / 28.0f);
 		for (int i = 0; i < ERASER_WIDTH.length; ++i) {
 			final int width = ERASER_WIDTH[i];
 			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0,
 					LayoutParams.MATCH_PARENT);
-			params.width = (int) (itemWidth * width) + (int) (PADDING * density) * 2;
+			params.width = (int) (itemWidth * width) + (int) (PADDING * 2);
 			params.height = params.width;
 			params.gravity = Gravity.CENTER_VERTICAL;
 //			params.leftMargin = (int) (PADDING * density);
 //			params.rightMargin = (int) (PADDING * density);
 			final ImageView iv = new ImageView(getContext());
-			iv.setPadding((int) (PADDING * density), 0, (int) (PADDING * density), 0);
+			iv.setPadding((int) (PADDING), 0, (int) (PADDING), 0);
 			iv.setImageResource(R.drawable.erase_width_bg);
 			iv.setBackgroundDrawable(null);
 			iv.setScaleType(ScaleType.FIT_CENTER);
