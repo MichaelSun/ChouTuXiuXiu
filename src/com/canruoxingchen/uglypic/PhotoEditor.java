@@ -76,8 +76,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	private static final int MSG_REGRET_STATUS_CHANGED = R.id.msg_editor_regret_status_change;
 
-	private static final int REQUEST_CODE_PUBLISH = 1;
-
 	// 原始照片的uri
 	private Uri mPhotoUri;
 	private String mImagePath;
@@ -513,9 +511,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				FootAgeType type = mFootageTypes.get(position);
 				mCurrentType = type;
-				mFootageListContainer.removeView(mLvFootages);
-				mLvFootages.scrollTo(0);
-				mFootageListContainer.addView(mLvFootages);
+				mLvFootages.scrollTo(1);
 				mTypeAdapter.notifyDataSetChanged();
 				mFootageAdapter.mSelectedPosition = -1;
 				mFootageAdapter.notifyDataSetChanged();
@@ -546,6 +542,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				final Object obj = mFootages.get(position);
 				mFootageAdapter.mSelectedPosition = position;
+				mFootageAdapter.notifyDataSetChanged();
 				if (obj instanceof FootAge) {
 					FootAge footage = (FootAge) obj;
 					onFootAgeClick(footage, true);
@@ -720,12 +717,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			}
 			break;
 		}
-		case REQUEST_CODE_PUBLISH: {
-			if (resultCode != RESULT_FIRST_USER) {
-				finish();
-			}
-			break;
-		}
 		}
 	}
 
@@ -880,7 +871,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						@Override
 						public void run() {
 							TipsDialog.getInstance().dismiss();
-							PublishActivity.start(PhotoEditor.this, REQUEST_CODE_PUBLISH, mImagePath, processedPath);
+							PublishActivity.start(PhotoEditor.this, mImagePath, processedPath);
 						}
 					});
 				}
@@ -1191,6 +1182,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mPvPhoto.setImageInfo(null);
 				mPvPhoto.setImageInfo(ImageInfo.obtain(mPhotoUri.toString()));
 			}
+			
+			int footageListHeight = editorPanelHeight - params.width - mLvTypes.getHeight() - 12;
+			int tmp = mFootageListContainer.getWidth() / 3;
+			footageListHeight = footageListHeight < tmp ? footageListHeight : tmp;
+			params = (RelativeLayout.LayoutParams)mLvFootages.getLayoutParams();
+			params.height = footageListHeight;
 		}
 	}
 
@@ -1279,6 +1276,14 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				convertView = View.inflate(PhotoEditor.this, R.layout.footage_item, null);
 				viewHolder.aivIcon = (AsyncImageView) convertView.findViewById(R.id.footage_item_icon);
 				convertView.setTag(viewHolder);
+
+				//调整view的大小
+				int height = mViewBottomPanel.getHeight() - mLvTypes.getHeight() - 12;
+				int width = mFootageListContainer.getWidth() / 3;
+				width = width < height ? width : height;
+				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.aivIcon.getLayoutParams();
+				params.height = width;
+				params.width = width;
 			}
 			viewHolder = (ViewHolder) convertView.getTag();
 			final Object obj = mFootages.get(position);
@@ -1286,7 +1291,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				final FootAge footage = (FootAge) obj;
 				if (!TextUtils.isEmpty(footage.getIconUrl())) {
 					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
-				}
+				} 
 				// viewHolder.tvName.setText(footage.getIconName());
 			} else if (obj instanceof NetSence) {
 				final NetSence netScene = (NetSence) obj;
@@ -1320,7 +1325,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			} else {
 				viewHolder.aivIcon.setSelected(false);
 			}
-
+			
 			return convertView;
 		}
 

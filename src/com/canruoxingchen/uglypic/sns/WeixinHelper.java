@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.tencent.mm.sdk.openapi.IWXAPI;
@@ -42,6 +43,7 @@ public class WeixinHelper {
 	}
 
 	private void share(String content, String imagePath, int scene) {
+		Log.d("Weixin", content + ", imagePath=" + imagePath);
 		WXImageObject imgObj = new WXImageObject();
 		imgObj.setImagePath(imagePath);
 		

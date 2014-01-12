@@ -29,4 +29,7 @@
     <item name="msg_photo_export_failure" type="id"></item>
     <item name="msg_photo_merge_thumbnail_success" type="id"></item>
     
+    <item name="msg_publish_canceled" type="id"></item>
+    <item name="msg_publish_finished" type="id"></item>
+    
 </resources>

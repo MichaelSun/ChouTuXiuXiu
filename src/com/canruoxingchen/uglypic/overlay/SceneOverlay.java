@@ -346,15 +346,15 @@ public class SceneOverlay implements IOverlay {
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					float scale = Math.min(scaleX, scaleY);
-
-					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scale),
-							LayoutParams.WRAP_CONTENT);
-					params.leftMargin = (int) (overlay.mTextViewLeft * scale);
-					params.topMargin = (int) (overlay.mTextViewTop * scale);
+					float density = mDensity > 0 ? mDensity : 1.0f;
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scaleX),
+							(int)(etHeight * scaleY));
+					params.leftMargin = (int) (overlay.mTextViewLeft * scaleX);
+					params.topMargin = (int) (overlay.mTextViewTop * scaleY);
 					mEtText.setTextColor(overlay.mTextColor);
 					// mEtText.setHintTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);
-					mEtText.setTextSize(overlay.mTextSize * scale / 2);
+					mEtText.setTextSize(overlay.mTextSize * scaleX / density);
 					mEtText.setImeOptions(EditorInfo.IME_ACTION_DONE);
 					mEtText.setLayoutParams(params);
 					mEtText.setHint(overlay.mTextHint == null ? "" : overlay.mTextHint);
@@ -390,14 +390,18 @@ public class SceneOverlay implements IOverlay {
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					float scale = Math.min(scaleX, scaleY);
+					mEtText = new EditText(mContext);
+					float etWidth = (overlay.mTimeRight - overlay.mTimeLeft);
+					float etHeight = (overlay.mTimeBottom - overlay.mTimeTop);
 
-					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT,
-							LayoutParams.WRAP_CONTENT);
+					float density = mDensity > 0 ? mDensity : 1.0f;
+					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scaleX),
+							(int)(etHeight * scaleY));
 					params.leftMargin = (int) (overlay.mTimeLeft * scale);
 					params.topMargin = (int) (overlay.mTimeTop * scale);
 					mTvTime.setTextColor(overlay.mTimeColor);
 					mTvTime.setBackgroundDrawable(null);
-					mTvTime.setTextSize(overlay.mTimeSize * scale / 2);
+					mTvTime.setTextSize(overlay.mTimeSize * scaleX / density);
 					mTvTime.setLayoutParams(params);
 					mTvTime.setLines(1);
 					mTvTime.setGravity(overlay.mTimeGravity | Gravity.CENTER_VERTICAL);

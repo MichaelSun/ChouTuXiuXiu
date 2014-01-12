@@ -1,5 +1,7 @@
 package com.canruoxingchen.uglypic;
 
+import com.avos.avoscloud.LogUtil.log;
+import com.canruoxingchen.uglypic.sns.WeiboHelper;
 import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 
 import android.content.Context;
@@ -60,6 +62,8 @@ public class SettingManager {
             return;
         }
         
+        WeiboHelper.LOGD("-----save------ + exprires time: " + token.getExpiresTime());
+        
         mEditor.putString(mContext.getString(R.string.pref_weibo_uid), token.getUid());
         mEditor.putString(mContext.getString(R.string.pref_weibo_access_token), token.getToken());
         mEditor.putLong(mContext.getString(R.string.pref_weibo_expires_in), token.getExpiresTime());
@@ -85,8 +89,14 @@ public class SettingManager {
         return token;
     }
 
-    
     public String getAccessToken() {
     	return mSharedPreferences.getString(mContext.getString(R.string.pref_weibo_access_token), "");
     }    
+    
+    public void clearWeiboInfo() {
+    	  mEditor.remove(mContext.getString(R.string.pref_weibo_uid));
+          mEditor.remove(mContext.getString(R.string.pref_weibo_access_token));
+          mEditor.remove(mContext.getString(R.string.pref_weibo_expires_in));
+          mEditor.commit();
+    }
 }

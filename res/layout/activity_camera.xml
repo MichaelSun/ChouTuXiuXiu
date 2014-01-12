@@ -67,21 +67,31 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:src="@drawable/camera_capture"
             android:background="@null"
-            android:contentDescription="camera_ib_capture" />
+            android:contentDescription="camera_ib_capture"
+            android:src="@drawable/camera_capture" />
 
-        <com.canruoxingchen.uglypic.view.RoundAngleImageView
-            android:id="@+id/ib_choose_photo"
+        <RelativeLayout
+            android:id="@+id/choose_photo"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_centerVertical="true"
             android:layout_marginRight="50dip"
-            android:layout_toLeftOf="@id/ib_capture"
-            raiv:roundWidth="15dp"
-            raiv:roundHeight="15dp"
-            android:scaleType="centerCrop"
-            android:contentDescription="camera_ib_choose_photo" />
+            android:layout_toLeftOf="@id/ib_capture" >
+
+            <com.canruoxingchen.uglypic.cache.AsyncImageView
+                android:id="@+id/ib_choose_photo"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:contentDescription="camera_ib_choose_photo"
+                android:scaleType="centerCrop" />
+
+            <View
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/round_angle_cover" >
+            </View>
+        </RelativeLayout>
     </RelativeLayout>
 
 </RelativeLayout>

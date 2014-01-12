@@ -22,6 +22,7 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -112,8 +113,10 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 			super.handleMessage(msg);
 			switch (msg.what) {
 			case R.id.msg_weibo_auth_success: {
+				Log.d("Weibo", ">>>>>>>>Auth Success");
 				PublishActivity activity = mActivity.get();
 				if (activity != null) {
+					Log.d("Weibo", ">>>>>>>>After Auth Success, Share");
 					activity.saveCurrentImage(SHARE_TYPE_WEIBO);
 				}
 				break;
@@ -166,11 +169,11 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 		}
 	}
 
-	public static void start(Activity context, int requestCode, String originPath, String resultPath) {
+	public static void start(Activity context, String originPath, String resultPath) {
 		Intent intent = new Intent(context, PublishActivity.class);
 		intent.putExtra(EXTRA_ORIGIN, originPath);
 		intent.putExtra(EXTRA_RESULT, resultPath);
-		context.startActivityForResult(intent, requestCode);
+		context.startActivity(intent);
 	}
 
 	@Override
@@ -196,15 +199,33 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 		// mAivImage.setImageInfo(ImageInfo.obtain(Uri.fromFile(new
 		// File(mResultPath)).toString()));
 
-		loadThumbnail(THUMBNAIL_NORMAL);
-
 		mSnsHelper = new SnsHelper(this);
 		mSnsHelper.onCreate(this, savedInstanceState);
+		
+
+		MessageCenter msgCenter = MessageCenter.getInstance(this);
+		msgCenter.registerMessage(R.id.msg_weibo_share_failure, mHandler);
+		msgCenter.registerMessage(R.id.msg_weibo_auth_failure, mHandler);
+		msgCenter.registerMessage(R.id.msg_weibo_share_success, mHandler);
+		msgCenter.registerMessage(R.id.msg_weibo_auth_success, mHandler);
+		msgCenter.registerMessage(R.id.msg_photo_export_failure, mHandler);
+		msgCenter.registerMessage(R.id.msg_photo_export_success, mHandler);
+		msgCenter.registerMessage(R.id.msg_photo_merge_thumbnail_success, mHandler);
+
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		MessageCenter msgCenter = MessageCenter.getInstance(this);
+		msgCenter.unregisterMessage(R.id.msg_weibo_share_failure, mHandler);
+		msgCenter.unregisterMessage(R.id.msg_weibo_auth_failure, mHandler);
+		msgCenter.unregisterMessage(R.id.msg_weibo_share_success, mHandler);
+		msgCenter.unregisterMessage(R.id.msg_weibo_auth_success, mHandler);
+		msgCenter.unregisterMessage(R.id.msg_photo_export_failure, mHandler);
+		msgCenter.unregisterMessage(R.id.msg_photo_export_success, mHandler);
+		msgCenter.unregisterMessage(R.id.msg_photo_merge_thumbnail_success, mHandler);
+		
 		mIvImage.setImageDrawable(null);
 		if (mSingleThumbnail != null && !mSingleThumbnail.isRecycled()) {
 			mSingleThumbnail.recycle();
@@ -220,7 +241,8 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		setResult(RESULT_FIRST_USER);
+//		setResult(RESULT_FIRST_USER);
+		PhotoEditor.start(this, mOriginPath);
 	}
 
 	@Override
@@ -245,27 +267,12 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 	@Override
 	protected void onResume() {
 		super.onResume();
-		MessageCenter msgCenter = MessageCenter.getInstance(this);
-		msgCenter.registerMessage(R.id.msg_weibo_share_failure, mHandler);
-		msgCenter.registerMessage(R.id.msg_weibo_auth_failure, mHandler);
-		msgCenter.registerMessage(R.id.msg_weibo_share_success, mHandler);
-		msgCenter.registerMessage(R.id.msg_weibo_auth_success, mHandler);
-		msgCenter.registerMessage(R.id.msg_photo_export_failure, mHandler);
-		msgCenter.registerMessage(R.id.msg_photo_export_success, mHandler);
-		msgCenter.registerMessage(R.id.msg_photo_merge_thumbnail_success, mHandler);
+		loadThumbnail(THUMBNAIL_NORMAL);
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		MessageCenter msgCenter = MessageCenter.getInstance(this);
-		msgCenter.unregisterMessage(R.id.msg_weibo_share_failure, mHandler);
-		msgCenter.unregisterMessage(R.id.msg_weibo_auth_failure, mHandler);
-		msgCenter.unregisterMessage(R.id.msg_weibo_share_success, mHandler);
-		msgCenter.unregisterMessage(R.id.msg_weibo_auth_success, mHandler);
-		msgCenter.unregisterMessage(R.id.msg_photo_export_failure, mHandler);
-		msgCenter.unregisterMessage(R.id.msg_photo_export_success, mHandler);
-		msgCenter.unregisterMessage(R.id.msg_photo_merge_thumbnail_success, mHandler);
 	}
 
 	@Override
@@ -363,7 +370,8 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 	public void onClick(View v) {
 		switch (v.getId()) {
 		case R.id.publish_back:
-			setResult(RESULT_FIRST_USER);
+//			setResult(RESULT_FIRST_USER);
+			PhotoEditor.start(this, mOriginPath);
 			finish();
 			break;
 		case R.id.publish_finish: {
@@ -484,10 +492,12 @@ public class PublishActivity extends BaseActivity implements OnClickListener, IW
 		if (merged) {
 			if (mSharePathMerge != null) {
 				messageCenter.notifyHandlers(R.id.msg_photo_export_success, shareType, 0, mSharePathMerge);
+				return;
 			}
 		} else {
 			if (mSharePathSingle != null) {
 				messageCenter.notifyHandlers(R.id.msg_photo_export_success, shareType, 0, mSharePathSingle);
+				return;
 			}
 		}
 		ThreadPoolManager.getInstance().execute(new Runnable() {

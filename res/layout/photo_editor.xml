@@ -130,6 +130,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_below="@id/photo_editor_edit_panel"
+        android:weightSum="1"
         android:orientation="vertical" >
 
         <com.canruoxingchen.uglypic.view.HorizontalListView
@@ -147,12 +148,13 @@
         <RelativeLayout
             android:id="@+id/photo_editor_footage_list_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="0dip"
+            android:layout_weight="1" >
 
             <com.canruoxingchen.uglypic.view.HorizontalListView
                 android:id="@+id/photo_editor_footage_list"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_height="match_parent"
                 android:layout_centerInParent="true" >
             </com.canruoxingchen.uglypic.view.HorizontalListView>
         </RelativeLayout>

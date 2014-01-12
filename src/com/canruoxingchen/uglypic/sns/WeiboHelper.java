@@ -14,7 +14,6 @@ import com.canruoxingchen.uglypic.MessageCenter;
 import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.SettingManager;
 import com.canruoxingchen.uglypic.UglyPicApp;
-import com.canruoxingchen.uglypic.util.Logger;
 import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.WeiboMessage;
@@ -76,17 +75,9 @@ public class WeiboHelper {
 		mWeiboResponse = new WeiboResponse();
 	}
 
-	private void LOGD(String logMe) {
-		Log.d("Weibo", logMe);
-	}
 
 	boolean hasAuthorized() {
-		LOGD("AccessToken: " + mAccessToken);
-		if (mAccessToken != null) {
-			LOGD("Access is SessionValid: " + mAccessToken.isSessionValid());
-			LOGD("Current: " + System.currentTimeMillis() + ", ExpireTime:" + mAccessToken.getExpiresTime());
-		}
-		return mAccessToken != null && (System.currentTimeMillis() < mAccessToken.getExpiresTime());
+		return mAccessToken != null && mAccessToken.isSessionValid();
 	}
 
 	void onCreate(Activity activity, Bundle savedInstanceState) {
@@ -205,7 +196,7 @@ public class WeiboHelper {
 			mAccessToken = Oauth2AccessToken.parseAccessToken(values);
 			if (mAccessToken.isSessionValid()) {
 				// 存入sharedpreferences
-				mSettingManager.saveWeiboTokenInfo(mAccessToken.toString());
+				mSettingManager.writeAccessToken(UglyPicApp.getAppExContext(), mAccessToken);
 				mMessageCenter.notifyHandlers(R.id.msg_weibo_auth_success);
 			} else {
 				// 当您注册的应用程序签名不正确时，就会收到 Code，请确保签名正确
@@ -222,5 +213,9 @@ public class WeiboHelper {
 		public void onWeiboException(WeiboException arg0) {
 			mMessageCenter.notifyHandlers(R.id.msg_weibo_auth_failure);
 		}
+	}
+	
+	public static void LOGD(String logMe) {
+		Log.d("Weibo", logMe);
 	}
 }

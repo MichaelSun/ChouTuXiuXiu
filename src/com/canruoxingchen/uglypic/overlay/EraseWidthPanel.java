@@ -81,7 +81,8 @@ public class EraseWidthPanel extends LinearLayout {
 			total += width;
 		}
 //		setWeightSum(total);
-		float PADDING = getWidth() / (6 * ERASER_WIDTH.length);
+//		float PADDING = getWidth() / (6 * ERASER_WIDTH.length);
+		float PADDING = 6;
 		float itemWidth = ((getWidth() - (ERASER_WIDTH.length * 2 * PADDING * density)) / total);
 		for (int i = 0; i < ERASER_WIDTH.length; ++i) {
 			final int width = ERASER_WIDTH[i];

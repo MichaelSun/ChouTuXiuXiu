@@ -86,7 +86,8 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 	ImageButton mFlashOnOffIB;
 	ImageButton mCameraNextIB;
 	ImageButton mCapturePhotoIB;
-	RoundAngleImageView mChoosePhotoAiv;
+	AsyncImageView mChoosePhotoAiv;
+	View mChoosePhotoView;
 	View mFocusIndicatorView;
 	RelativeLayout mTopBarRL;
 	RelativeLayout mBottomBarRL;
@@ -252,13 +253,15 @@ public class CameraActivity extends BaseActivity implements OnClickListener, OnT
 		mFlashOnOffIB = (ImageButton) findViewById(R.id.ib_flash_on_off);
 		mCameraNextIB = (ImageButton) findViewById(R.id.ib_camera_next);
 		mCapturePhotoIB = (ImageButton) findViewById(R.id.ib_capture);
-		mChoosePhotoAiv = (RoundAngleImageView) findViewById(R.id.ib_choose_photo);
+		mChoosePhotoAiv = (AsyncImageView) findViewById(R.id.ib_choose_photo);
+		mChoosePhotoView = findViewById(R.id.choose_photo);
 		mFocusIndicatorView = (View) findViewById(R.id.focus_indicator);
 		mTopBarRL = (RelativeLayout) findViewById(R.id.rl_topbar);
 		mBottomBarRL = (RelativeLayout) findViewById(R.id.rl_bottombar);
 		mFlashOnOffIB.setOnClickListener(this);
 		mCameraNextIB.setOnClickListener(this);
 		mChoosePhotoAiv.setOnClickListener(this);
+//		mChoosePhotoView.setOnClickListener(this);
 		mCapturePhotoIB.setOnClickListener(this);
 
 		needFocusWhenTouch();
