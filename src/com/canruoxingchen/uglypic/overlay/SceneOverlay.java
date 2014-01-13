@@ -457,7 +457,6 @@ public class SceneOverlay implements IOverlay {
 			if (opts != null && sceneLayout != null) {
 				sceneLayout.setSceneSize(opts.outWidth, opts.outHeight);
 			}
-			LOGD(">>>>>>>>> getSceneSize >>>>>>>>> width=" + opts.outWidth + ", height=" + opts.outHeight);
 		}
 	}
 
