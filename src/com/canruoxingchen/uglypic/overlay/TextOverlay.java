@@ -9,16 +9,12 @@ import java.io.InputStream;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 /**

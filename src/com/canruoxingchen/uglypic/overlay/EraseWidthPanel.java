@@ -6,18 +6,17 @@ package com.canruoxingchen.uglypic.overlay;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.canruoxingchen.uglypic.R;
-import com.canruoxingchen.uglypic.UglyPicApp;
-
 import android.content.Context;
-import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ImageView.ScaleType;
+import android.widget.LinearLayout;
+
+import com.canruoxingchen.uglypic.R;
+import com.canruoxingchen.uglypic.UglyPicApp;
 
 /**
  * 
@@ -68,7 +67,6 @@ public class EraseWidthPanel extends LinearLayout {
 		WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
 		DisplayMetrics dm = new DisplayMetrics();
 		wm.getDefaultDisplay().getMetrics(dm);
-		float density = dm.density > 0.0f ? dm.density : 1.0f;
 
 		if (mInitialized) {
 			return;
@@ -80,10 +78,6 @@ public class EraseWidthPanel extends LinearLayout {
 		for (final int width : ERASER_WIDTH) {
 			total += width;
 		}
-//		setWeightSum(total);
-//		float PADDING = getWidth() / (6 * ERASER_WIDTH.length);
-//		float PADDING = 6;
-//		float itemWidth = ((getWidth() - (ERASER_WIDTH.length * 2 * PADDING * density)) / total);
 		float itemWidth = getWidth() * 1.0f / (2 * total);
 		float PADDING = (getWidth() / 28.0f);
 		for (int i = 0; i < ERASER_WIDTH.length; ++i) {
@@ -93,8 +87,6 @@ public class EraseWidthPanel extends LinearLayout {
 			params.width = (int) (itemWidth * width) + (int) (PADDING * 2);
 			params.height = params.width;
 			params.gravity = Gravity.CENTER_VERTICAL;
-//			params.leftMargin = (int) (PADDING * density);
-//			params.rightMargin = (int) (PADDING * density);
 			final ImageView iv = new ImageView(getContext());
 			iv.setPadding((int) (PADDING), 0, (int) (PADDING), 0);
 			iv.setImageResource(R.drawable.erase_width_bg);

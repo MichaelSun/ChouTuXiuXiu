@@ -8,7 +8,7 @@
         android:id="@+id/image_params"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="#FDEA6A"
+        android:background="#ffea62"
         android:orientation="horizontal" >
 
         <Button
@@ -47,7 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/splitter"
-        android:background="#1DB32A">
+        android:background="#22af13">
 
         <SeekBar
             android:id="@+id/image_seekbar_illumination"

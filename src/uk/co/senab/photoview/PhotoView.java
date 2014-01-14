@@ -183,4 +183,22 @@ public class PhotoView extends AsyncImageView implements IPhotoView {
 		super.onDetachedFromWindow();
 	}
 
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
+		
+		if(mOnSizeChangedListener != null) {
+			mOnSizeChangedListener.onSizeChanged(w, h, oldw, oldh);
+		}
+	}
+	
+	private OnSizeChangedListener mOnSizeChangedListener;
+	
+	public void setOnSizeChangedListener(OnSizeChangedListener listener) {
+		this.mOnSizeChangedListener = listener;
+	}
+
+	public interface OnSizeChangedListener {
+		void onSizeChanged(int w, int h, int oldw, int oldh);
+	}
 }

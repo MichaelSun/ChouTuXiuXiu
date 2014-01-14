@@ -18,7 +18,6 @@ import com.sina.weibo.sdk.api.ImageObject;
 import com.sina.weibo.sdk.api.TextObject;
 import com.sina.weibo.sdk.api.WeiboMessage;
 import com.sina.weibo.sdk.api.WeiboMultiMessage;
-import com.sina.weibo.sdk.api.share.BaseResponse;
 import com.sina.weibo.sdk.api.share.IWeiboDownloadListener;
 import com.sina.weibo.sdk.api.share.IWeiboHandler;
 import com.sina.weibo.sdk.api.share.IWeiboShareAPI;
@@ -29,7 +28,6 @@ import com.sina.weibo.sdk.auth.Oauth2AccessToken;
 import com.sina.weibo.sdk.auth.WeiboAuth;
 import com.sina.weibo.sdk.auth.WeiboAuthListener;
 import com.sina.weibo.sdk.auth.sso.SsoHandler;
-import com.sina.weibo.sdk.constant.WBConstants;
 import com.sina.weibo.sdk.exception.WeiboException;
 
 /**
@@ -64,15 +62,12 @@ public class WeiboHelper {
 
 	private IWeiboShareAPI mWeiboShareAPI = null;
 
-	private WeiboResponse mWeiboResponse = null;
-
 	public WeiboHelper(Context context) {
 		mWeiboAuth = new WeiboAuth(context, APP_ID, REDIRECT_URL, SCOPE);
 		mMessageCenter = MessageCenter.getInstance(context);
 		mSettingManager = SettingManager.getInstance();
 		mAccessToken = mSettingManager.readAccessToken(context);
 		mWeiboShareAPI = WeiboShareSDK.createWeiboAPI(context, APP_ID);
-		mWeiboResponse = new WeiboResponse();
 	}
 
 
@@ -123,21 +118,6 @@ public class WeiboHelper {
 			mSsoHandler = new SsoHandler(activity, mWeiboAuth);
 		}
 		mSsoHandler.authorize(new AuthListener());
-	}
-
-	private static class WeiboResponse implements IWeiboHandler.Response {
-
-		@Override
-		public void onResponse(BaseResponse response) {
-			switch (response.errCode) {
-			case WBConstants.ErrorCode.ERR_OK:
-				MessageCenter.getInstance(UglyPicApp.getAppExContext()).notifyHandlers(R.id.msg_weibo_share_success);
-				break;
-			case WBConstants.ErrorCode.ERR_FAIL:
-				MessageCenter.getInstance(UglyPicApp.getAppExContext()).notifyHandlers(R.id.msg_weibo_share_failure);
-				break;
-			}
-		}
 	}
 
 	void share(String content, String filePath) {

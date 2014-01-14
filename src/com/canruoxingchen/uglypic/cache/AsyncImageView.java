@@ -10,11 +10,16 @@ import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import uk.co.senab.bitmapcache.CacheableImageView;
 import uk.co.senab.photoview.SDK11;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.view.ViewGroup.LayoutParams;
 import android.view.WindowManager;
 
+import com.canruoxingchen.uglypic.R;
 import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.util.Logger;
 
@@ -31,13 +36,14 @@ import com.canruoxingchen.uglypic.util.Logger;
  * 重写 {@link #getShouldSavedToDisk()} 来告诉外界 当前下载的图片是否想要保存到 Disk 的缓存中;<br>
  * 重写 {@link #getShouldSavedToMem()} 来告诉外界 当前下载的图片是否想要保存到 内存的缓存中 ； <br>
  * 
- * @author wsf
+ * @author Shaofeng Wang
  * 
+ *         2013-4-7
  */
 public class AsyncImageView extends CacheableImageView {
 
 	private static final String TAG = "AsyncImageView";
-	private static final int MIN_WIDTH_HEIGHT = 400;
+	private static final int MIN_WIDTH_HEIGHT = 67;
 
 	protected ImageInfo mImgInfo;
 
@@ -58,7 +64,9 @@ public class AsyncImageView extends CacheableImageView {
 	 * 是否需要展示默认的动画
 	 */
 	boolean mNeedProgressDrawable = true;
-	
+
+	private boolean mNeedResample = true;
+
 	public interface ImageLoadedListener {
 		public void onComplete();
 		public void onFailure();
@@ -88,10 +96,169 @@ public class AsyncImageView extends CacheableImageView {
 
 	public AsyncImageView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		init(context, attrs);
 	}
 
 	public AsyncImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs);
+		init(context, attrs);
+	}
+
+	private void init(Context context, AttributeSet attrs) {
+		TypedArray arr = context.obtainStyledAttributes(attrs,
+				R.styleable.AsyncImageView);
+		mMaxWidthPercent = arr.getFloat(
+				R.styleable.AsyncImageView_maxWitdhPercent, 1.0f);
+		mMaxHeightPercent = arr.getFloat(
+				R.styleable.AsyncImageView_maxHeightPercent, 1.0f);
+		arr.recycle();
+
+	}
+
+	@Override
+	public void setImageDrawable(Drawable drawable) {
+		super.setImageDrawable(drawable);
+		if (drawable == null) {
+			mImgInfo = null;
+		}
+	}
+
+	@Override
+	public void setImageResource(int resId) {
+		super.setImageResource(resId);
+		if(resId == 0) {
+			mImgInfo = null;
+		}
+	}
+
+	@Override
+	public void setImageURI(Uri uri) {
+		super.setImageURI(uri);
+		if(uri == null) {
+			mImgInfo = null;
+		}
+	}
+
+	@Override
+	public void setImageBitmap(Bitmap bm) {
+		super.setImageBitmap(bm);
+		if(bm == null) {
+			mImgInfo = null;
+		}
+	}
+
+	// 设置图片信息,默认压缩图片
+	public void setImageInfo(ImageInfo info) {
+		setImageInfo(info, false, true);
+	}
+
+	// 设置图片信息
+	public void setImageInfo(ImageInfo info, boolean needReSample) {
+		setImageInfo(info, false, needReSample);
+	}
+
+	// 如果有必要，则加载图片
+	private void loadImageIfNecessary(boolean inLayout) {
+
+		int width = getWidth();
+		int height = getHeight();
+		boolean isFullyWrapContent = getLayoutParams() != null
+				&& getLayoutParams().height == LayoutParams.WRAP_CONTENT
+				&& getLayoutParams().width == LayoutParams.WRAP_CONTENT;
+		// if the view's bounds aren't known yet, and this is not a
+		// wrap-content/wrap-content
+		// view, hold off on loading the image.
+		if (width == 0 && height == 0 && !isFullyWrapContent) {
+			return;
+		}
+
+		if (mImgInfo != null) {
+			CacheableBitmapDrawable wrapper = ImageCacheManager.getInstance(
+					getContext()).getMemBitmapByCategoryAndUrl(
+					mImgInfo.getCategory(), mImgInfo.getUrl(), getSuffix());
+
+			if (wrapper != null) {
+				setImageDrawable(wrapper);
+				return;
+			}
+
+			// if (!info.equals(mImgInfo)) {
+			ImageInfo info = mImgInfo;
+			setImageDrawable(null);
+			mImgInfo = info;
+			loadImage();
+
+		} else {
+			// changeImageInfo(null);
+			setImageDrawable(null);
+		}
+		// }
+	}
+
+	private void loadImage() {
+		ImageLoadTask task = new ImageLoadTask(UglyPicApp.getAppExContext(),
+				mImgInfo, this, mNeedResample);
+		try {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+				// android系统在 API11 以后，对于AsyncTask就不再用线程池执行了，而是单独一个线程去做，
+				// 如果想实现多任务并发执行，就调task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR
+				// , params...)
+				SDK11.executeOnThreadPool(task);
+			} else {
+				// 在API 1.6-3.0(10)之间，AsyncTask都是多线程并发执行的
+				task.execute();
+
+				// 串行执行:
+				// task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
+				// params..);
+			}
+		} catch (RejectedExecutionException e) {
+			// This shouldn't happen, but might.
+		}
+		setTag(new WeakReference<ImageLoadTask>(task));
+		// }
+	}
+
+	// 设置图片信息，并设置是否需要加载动画，默认不需要
+	public final void setImageInfo(ImageInfo info, boolean needProgressAnim,
+			boolean needReSample) {
+		// 先取消之前的下载操作
+		@SuppressWarnings("unchecked")
+		WeakReference<ImageLoadTask> lastTask = (WeakReference<ImageLoadTask>) getTag();
+		if (lastTask != null) {
+			ImageLoadTask lastImageLoadTask = lastTask.get();
+			if (lastImageLoadTask != null) {
+				lastImageLoadTask.cancel(true);
+				changeImageInfo(null);
+			}
+		}
+
+		mNeedProgressDrawable = needProgressAnim;
+		mNeedResample = needReSample;
+		// if (mImgInfo == null || !mImgInfo.equals(info)) {
+		changeImageInfo(info);
+		if (mImgInfo == null) {
+			setImageDrawable(null);
+		} else {
+			loadImageIfNecessary(false);
+		}
+	}
+
+	private void printInView(String surfix, CacheableBitmapDrawable result) {
+		if (result != null && getData() instanceof DebugTag
+				&& result.getBitmap() != null) {
+			Logger.i(surfix + "  width:" + result.getBitmap().getWidth());
+			Logger.i(surfix + " height :" + result.getBitmap().getHeight());
+		}
+	}
+
+	@SuppressWarnings("unused")
+	private static void LOGD(String logMe) {
+		Logger.d(TAG, logMe);
+	}
+
+	private void changeImageInfo(ImageInfo info) {
+		this.mImgInfo = info;
 	}
 	
 	//获得图片的宽度
@@ -112,85 +279,6 @@ public class AsyncImageView extends CacheableImageView {
 	//设置图片高度
 	public void setImageHeight(int imageHeight) {
 		this.mImageHeight = imageHeight;
-	}
-
-	// 设置图片信息,默认压缩图片
-	public void setImageInfo(ImageInfo info) {
-		setImageInfo(info, false, true);
-	}
-
-	// 设置图片信息
-	public void setImageInfo(ImageInfo info, boolean needReSample) {
-		setImageInfo(info, false, needReSample);
-	}
-
-	// 设置图片信息，并设置是否需要加载动画，默认不需要
-	public final void setImageInfo(ImageInfo info, boolean needProgressAnim,
-			boolean needReSample) {
-		// 先取消之前的下载操作
-		@SuppressWarnings("unchecked")
-		WeakReference<ImageLoadTask> lastTask = (WeakReference<ImageLoadTask>) getTag();
-		if (lastTask != null) {
-			ImageLoadTask lastImageLoadTask = lastTask.get();
-			if (lastImageLoadTask != null) {
-				lastImageLoadTask.cancel(true);
-				changeImageInfo(null);
-			}
-		}
-
-		mNeedProgressDrawable = needProgressAnim;
-		// if (mImgInfo == null || !mImgInfo.equals(info)) {
-		if (info != null) {
-			CacheableBitmapDrawable wrapper = ImageCacheManager.getInstance(
-					getContext()).getMemBitmapByCategoryAndUrl(
-					info.getCategory(), info.getUrl(),
-					getSuffix());
-
-			if (wrapper != null) {
-				setImageDrawable(wrapper);
-				return;
-			}
-
-//			if (!info.equals(mImgInfo)) {
-				changeImageInfo(info);
-				setImageDrawable(null);
-				ImageLoadTask task = new ImageLoadTask(
-						UglyPicApp.getAppExContext(), info, this, needReSample);
-				try {
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-						// android系统在 API11 以后，对于AsyncTask就不再用线程池执行了，而是单独一个线程去做，
-						// 如果想实现多任务并发执行，就调task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR
-						// , params...)
-						SDK11.executeOnThreadPool(task);
-					} else {
-						// 在API 1.6-3.0(10)之间，AsyncTask都是多线程并发执行的
-						task.execute();
-
-						// 串行执行:
-						// task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,
-						// params..);
-					}
-				} catch (RejectedExecutionException e) {
-					// This shouldn't happen, but might.
-				}
-				setTag(new WeakReference<ImageLoadTask>(task));
-//			}
-
-		} else {
-			changeImageInfo(null);
-			setImageDrawable(null);
-
-		}
-		// }
-	}
-
-	@SuppressWarnings("unused")
-	private static void LOGD(String logMe) {
-		Logger.d(TAG, logMe);
-	}
-
-	private void changeImageInfo(ImageInfo info) {
-		this.mImgInfo = info;
 	}
 
 	/**
@@ -227,7 +315,7 @@ public class AsyncImageView extends CacheableImageView {
 	 */
 	public int getDestHeightPixel() {
 		if (getHeight() > 0) {
-			return Math.min(MIN_WIDTH_HEIGHT, getHeight());
+			return Math.max(MIN_WIDTH_HEIGHT, getHeight());
 		}
 		WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
 		int displayHeight = wm.getDefaultDisplay().getHeight();
@@ -251,6 +339,18 @@ public class AsyncImageView extends CacheableImageView {
 		mHeightMeasureMode = MeasureSpec.getMode(heightMeasureSpec);
 		mWidthMeasureSize = MeasureSpec.getSize(widthMeasureSpec);
 		mHeightMeasureSize = MeasureSpec.getSize(heightMeasureSpec);
+
+		// LOGD("<<<<<<<<<< ImageLoadTask >>>>>>>>>> measured width="
+		// + mWidthMeasureSize + ",height=" + mHeightMeasureSize);
+	}
+
+	@Override
+	protected void onLayout(boolean changed, int left, int top, int right,
+			int bottom) {
+		super.onLayout(changed, left, top, right, bottom);
+		if (mImgInfo != null) {
+			loadImageIfNecessary(true);
+		}
 	}
 
 	/**

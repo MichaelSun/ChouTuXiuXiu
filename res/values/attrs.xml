@@ -4,4 +4,11 @@
         <attr name="roundWidth" format="dimension"></attr>
         <attr name="roundHeight" format="dimension"></attr>
     </declare-styleable>
+     <declare-styleable name="AsyncImageView">
+
+        <!-- 最大能在手机屏幕上所占有的宽度(以手机宽的实际像素为基准) -->
+        <attr name="maxWitdhPercent" format="float" />
+        <!-- 最大能在手机屏幕上所占有的高度(以手机高的实际像素为基准) -->
+        <attr name="maxHeightPercent" format="float"></attr>
+    </declare-styleable>
 </resources>

@@ -103,12 +103,8 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	@Override
 	public Rect getInitialContentBounds() {
-		// super.getInitialContentBounds();
-		// return mAivImage.getDrawable() == null ? null :
-		// mAivImage.getDrawable().getBounds();
 
 		retrieveDensity();
-		// float density = mDensity > 0 ? mDensity : 1.0f;
 		float density = 1.0f;
 		int left = (int) (mAivImage.getLeft() / density);
 		int top = (int) (mAivImage.getTop() / density);
@@ -121,7 +117,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void translate(int dx, int dy) {
 		super.translate(dx, dy);
 		if (mAivImage.getDrawable() != null) {
-			// mAivImage.setImageMatrix(getMatrix());
 			mTranslateX += dx;
 			mTranslateY += dy;
 			mAivImage.setTranslationX(mTranslateX);
@@ -133,7 +128,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void scale(float sx, float sy) {
 		super.scale(sx, sy);
 		if (mAivImage.getDrawable() != null) {
-			// mAivImage.setImageMatrix(getMatrix());
 			mScaleX *= sx;
 			mScaleY *= sy;
 			mAivImage.setScaleX(mScaleX);
@@ -145,7 +139,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	public void rotate(float degrees) {
 		super.rotate(degrees);
 		if (mAivImage.getDrawable() != null) {
-			// mAivImage.setImageMatrix(getMatrix());
 			mRotate += degrees;
 			mAivImage.setRotation(mRotate);
 			LOGD("<<<<<<<<<rotate widget object >>>>>>>>> degree=" + mRotate);
@@ -260,27 +253,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		}
 
 		private void initView() {
-//			GridView gv = new GridView(getContext());
-//			gv.setBackgroundColor(getResources().getColor(R.color.default_background));
-			
 			int height = mPanelHeight;
 			height = height <= 0 ? (int) getResources().getDimension(R.dimen.photo_editor_bottom_bar_height)
 					: height;
-//			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
-//			params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-//			gv.setAdapter(mAdapter);
-//			addView(gv, params);
-//			gv.setNumColumns(ERASER_WIDTH.length);
-//			gv.setDuplicateParentStateEnabled(true);
-//			gv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//
-//				@Override
-//				public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//					mAivImage.setCurrentStrokeWidth(ERASER_WIDTH[position]);
-//					mAdapter.mCurrentWidth = ERASER_WIDTH[position];
-//					mAdapter.notifyDataSetChanged();
-//				}
-//			});
 			
 			final EraseWidthPanel panel = new EraseWidthPanel(getContext());
 			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, height);
@@ -376,8 +351,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 
 	private class CopyOnWriteImageView extends AsyncImageView {
 
-		// private static final int CONTROL_POINTS_RADIS = 20;
-		private float mDensity = 1.0f;
 		private Paint mPaint;
 
 		/* 用于绘制橡皮轨迹 */
@@ -411,8 +384,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			DisplayMetrics dm = new DisplayMetrics();
 			wm.getDefaultDisplay().getMetrics(dm);
 			mDensity = dm.density;
-			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
-			// setPadding(padding, padding, padding, padding);
 
 			setIllumination(IlluminationImageOperation.DEFAULT);
 			setSatuation(SatuationImageOperation.DEFAULT);
@@ -421,7 +392,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			mEraserPaint = new Paint();
 			mEraserPaint.setAntiAlias(true);
 			mEraserPaint.setColor(Color.RED);
-			// mPaint.setAlpha(0);
 			mEraserPaint.setDither(true);
 			mEraserPaint.setStyle(Paint.Style.STROKE);
 			mEraserPaint.setStrokeJoin(Paint.Join.ROUND);
@@ -531,18 +501,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			}
 		}
 
-		public void addOperation(IImageOperation operation) {
-			if (operation == null) {
-				return;
-			}
-
-			copyImage();
-
-			mOperations.add(operation);
-			mImage = operation.operate(mImage);
-			invalidate();
-		}
-
 		@Override
 		protected void onDetachedFromWindow() {
 			super.onDetachedFromWindow();
@@ -571,13 +529,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 				}
 			}
 			mImage = bm;
-		}
-
-		private Bitmap getImage() {
-			if (mImage == null) {
-				copyImage();
-			}
-			return mImage;
 		}
 
 		/*-橡皮相关*/
@@ -657,13 +608,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			if (mPathIndex < mRecords.size() - 1 && mPathIndex >= 0) {
 				mRecords = mRecords.subList(0, mPathIndex + 1);
 			}
-			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 			int saveCount = canvas.getSaveCount();
 			canvas.save();
 			android.graphics.Matrix matrix = new Matrix();
 			getImageMatrix().invert(matrix);
 			canvas.concat(matrix);
-			// canvas.translate(-padding, -padding);
 			for (EraseRecord record : mRecords) {
 				mEraserPaint.setStrokeWidth(record.strokeWidth);
 				canvas.drawPath(record.path, mEraserPaint);
@@ -684,13 +633,11 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			if (mPathIndex < mRecords.size() && mPathIndex >= 0) {
 				records = mRecords.subList(0, mPathIndex + 1);
 			}
-			// int padding = (int) (CONTROL_POINTS_RADIS * mDensity);
 			int saveCount = mEraseableCanvas.getSaveCount();
 			mEraseableCanvas.save();
 			android.graphics.Matrix matrix = new Matrix();
 			getImageMatrix().invert(matrix);
 			mEraseableCanvas.concat(matrix);
-			// mEraseableCanvas.translate(-padding, -padding);
 			for (EraseRecord record : records) {
 				mEraserPaint.setStrokeWidth(record.strokeWidth);
 				mEraseableCanvas.drawPath(record.path, mEraserPaint);
@@ -795,8 +742,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 	private static class EraseModeParams {
 		float scaleX = 1.0f;
 		float scaleY = 1.0f;
-		float tx = 0.0f;
-		float ty = 0.0f;
 		float pivotX = 0.0f;
 		float pivotY = 0.0f;
 	}
@@ -843,8 +788,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 		int width = v.getWidth();
 		int height = v.getHeight();
 		if (width > 0 && height > 0 && r > l && b > t) {
-			params.tx = l;
-			params.ty = t;
 			params.scaleX = width / (1.0f * (r - l));
 			params.scaleY = height / (1.0f * (b - t));
 			// 计算重心

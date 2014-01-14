@@ -29,12 +29,24 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler{
 
 	@Override
 	public void onReq(BaseReq arg0) {
-		
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				finish();
+			}
+		});
 	}
 
 	@Override
-	public void onResp(BaseResp arg0) {
-		
+	public void onResp(BaseResp resp) {
+		runOnUiThread(new Runnable() {
+			
+			@Override
+			public void run() {
+				finish();
+			}
+		});
 	}
 
 }

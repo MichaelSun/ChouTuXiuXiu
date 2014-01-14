@@ -127,11 +127,6 @@ public abstract class ObjectOverlay implements IOverlay {
 	 */
 	public abstract View getContextView();
 
-	// @Override
-	// public View getView() {
-	// return mContentView;
-	// }
-
 	protected void retrieveDensity() {
 
 		if (mDensity < 0) {
@@ -182,31 +177,16 @@ public abstract class ObjectOverlay implements IOverlay {
 		return params;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.canruoxingchen.uglypic.overlay.BaseOverlay#doOverlay()
-	 */
 	@Override
 	public void doOverlay() {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.canruoxingchen.uglypic.overlay.BaseOverlay#resetOverlay()
-	 */
 	@Override
 	public void resetOverlay() {
 		mRotateDegrees = 0.0f;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.canruoxingchen.uglypic.overlay.BaseOverlay#contains(int, int)
-	 */
 	@Override
 	public boolean contains(int x, int y) {
 		Rect rect = getInitialContentBounds();

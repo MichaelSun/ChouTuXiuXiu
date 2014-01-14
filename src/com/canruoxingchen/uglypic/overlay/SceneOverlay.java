@@ -7,9 +7,10 @@ import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -29,9 +30,10 @@ import android.widget.TextView;
 
 import com.canruoxingchen.uglypic.UglyPicApp;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
+import com.canruoxingchen.uglypic.cache.ImageCacheManager;
+import com.canruoxingchen.uglypic.cache.ImageCategories;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.concurrent.ThreadPoolManager;
-import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.Logger;
 
 /**
@@ -49,8 +51,10 @@ public class SceneOverlay implements IOverlay {
 
 	private static final float IPHONE_SCREEN_SIZE = 320.0f;
 
-	private static final int NULL_SCENE_WIDTH = 100;
-	private static final int NULL_SCENE_HEIGHT = 100;
+	private static final int NULL_SCENE_WIDTH = 1024;
+	private static final int NULL_SCENE_HEIGHT = 1024;
+	
+	private static final Uri DEFAULT_URI = Uri.parse("file:///android_asset/trans_scene.png");
 
 	// 场景图片
 	private Uri mSceneUri = null;
@@ -95,6 +99,11 @@ public class SceneOverlay implements IOverlay {
 	private SceneOverlay(Context context, Uri uri) {
 		this.mContext = context;
 		this.mSceneUri = uri;
+
+		if (mSceneLayout == null) {
+			mSceneLayout = new SceneLayout(mContext);
+			mSceneLayout.setSceneOverlay(this);
+		}
 	}
 
 	public void setViewSizeAdjustedListener(SceneSizeAquiredListener listener) {
@@ -106,6 +115,7 @@ public class SceneOverlay implements IOverlay {
 		SceneOverlay scene = null;
 
 		public Builder(Context context, Uri uri) {
+			uri = uri == null ? DEFAULT_URI : uri;
 			scene = new SceneOverlay(context, uri);
 		}
 
@@ -346,7 +356,7 @@ public class SceneOverlay implements IOverlay {
 					float scaleX = viewWidth / IPHONE_SCREEN_SIZE;
 					float scaleY = viewHeight / IPHONE_SCREEN_SIZE;
 					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scaleX),
-							(int)(etHeight * scaleY));
+							(int) (etHeight * scaleY));
 					params.leftMargin = (int) (overlay.mTextViewLeft * scaleX);
 					params.topMargin = (int) (overlay.mTextViewTop * scaleY);
 					mEtText.setTextColor(overlay.mTextColor);
@@ -392,7 +402,7 @@ public class SceneOverlay implements IOverlay {
 
 					float density = mDensity > 0 ? mDensity : 1.0f;
 					RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams((int) (etWidth * scaleX),
-							(int)(etHeight * scaleY));
+							(int) (etHeight * scaleY));
 					params.leftMargin = (int) (overlay.mTimeLeft * scaleX);
 					params.topMargin = (int) (overlay.mTimeTop * scaleY);
 					mTvTime.setTextColor(overlay.mTimeColor);
@@ -453,9 +463,17 @@ public class SceneOverlay implements IOverlay {
 					return;
 				}
 			}
-			final BitmapFactory.Options opts = ImageUtils.getImageInfo(UglyPicApp.getAppExContext(), mUri);
-			if (opts != null && sceneLayout != null) {
-				sceneLayout.setSceneSize(opts.outWidth, opts.outHeight);
+			// final BitmapFactory.Options opts =
+			// ImageUtils.getImageInfo(UglyPicApp.getAppExContext(), mUri);
+			CacheableBitmapDrawable drawable = ImageCacheManager.getInstance(UglyPicApp.getAppExContext())
+					.getBitmapByCategoryAndUrl(ImageCategories.CATEGORY_DEFAULT, mUri.toString());
+			if (drawable != null && drawable.getBitmap() != null) {
+				Bitmap bmp = drawable.getBitmap();
+				if (!bmp.isRecycled()) {
+					sceneLayout.setSceneSize(drawable.getBitmap().getWidth(), drawable.getBitmap().getHeight());
+				}
+			} else {
+				sceneLayout.setSceneSize(NULL_SCENE_WIDTH, NULL_SCENE_HEIGHT);
 			}
 		}
 	}
