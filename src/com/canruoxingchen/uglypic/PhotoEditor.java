@@ -15,10 +15,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Matrix;
 import android.graphics.PointF;
 import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -70,6 +68,7 @@ import com.canruoxingchen.uglypic.view.HorizontalListView;
  */
 public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouchListener, ObjectOperationListener,
 		SceneSizeAquiredListener {
+
 	private static final String EXTRA_PHOTO_PATH = "photo_uri";
 
 	private static final String KEY_PHOTO_PATH = EXTRA_PHOTO_PATH;
@@ -121,9 +120,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 	// 编辑页面View的容器
 	private EditorContainerView mEditorContainerView;
-
 	private RelativeLayout mRootView;
-
 	private Dialog mDialog = null;
 
 	private MoveGestureDetector mMoveGestureDetector;
@@ -136,22 +133,36 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	 * 场景浮层，整张图只能有一个场景浮层
 	 */
 	private SceneOverlay mSceneOverlay = null;
+	/**
+	 * 默认的空场景
+	 */
 	private SceneOverlay mNullScene = null;
 	/**
 	 * 当前被选中的浮层
 	 */
 	private ObjectOverlay mCurrentOverlay;
+	/**
+	 * 上一次被选中的浮层
+	 */
 	private ObjectOverlay mLastOverlay;
 
+	/**
+	 * 素材类型列表
+	 */
 	private List<FootAgeType> mFootageTypes = new ArrayList<FootAgeType>();
+
+	/**
+	 * 素材（图片和场景）
+	 */
 	private List<Object> mFootages = new ArrayList<Object>();
+
 	private TypeAdapter mTypeAdapter = new TypeAdapter();
 	private FootageAdapter mFootageAdapter = new FootageAdapter();
 
 	private FootageManager mFootageManager;
 
 	private FootAgeType mCurrentType;
-	
+
 	private boolean mHasLoadPhoto = false;
 
 	/**
@@ -312,41 +323,43 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				}
 				break;
 			}
-//			case FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS: {
-//				if (activity.mFootages != null) {
-//					if (msg.obj instanceof FootAge) {
-//						FootAge footage = (FootAge) msg.obj;
-//						for (Object obj : activity.mFootages) {
-//							if (obj instanceof NetSence || obj instanceof RecentFootAge) {
-//								break;
-//							}
-//							FootAge f = (FootAge) obj;
-//							if (footage != null && footage.getObjectId().equals(f.getObjectId())) {
-//								f.setIconUrl(footage.getIconUrl());
-//								activity.mFootageAdapter.notifyDataSetChanged();
-//								break;
-//							}
-//						}
-//					} else {
-//						NetSence netScene = (NetSence) msg.obj;
-//						for (Object obj : activity.mFootages) {
-//							if (obj instanceof FootAge || obj instanceof RecentFootAge) {
-//								break;
-//							}
-//							NetSence ns = (NetSence) obj;
-//							if (netScene != null && netScene.getObjectId().equals(ns.getObjectId())) {
-//								ns.setSenceNetIcon(netScene.getSenceNetIcon());
-//								activity.mFootageAdapter.notifyDataSetChanged();
-//								break;
-//							}
-//						}
-//					}
-//				}
-//				break;
-//			}
-//			case FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE: {
-//				break;
-//			}
+			// case FootageManager.MSG_LOAD_FOOTAGE_ICON_SUCCESS: {
+			// if (activity.mFootages != null) {
+			// if (msg.obj instanceof FootAge) {
+			// FootAge footage = (FootAge) msg.obj;
+			// for (Object obj : activity.mFootages) {
+			// if (obj instanceof NetSence || obj instanceof RecentFootAge) {
+			// break;
+			// }
+			// FootAge f = (FootAge) obj;
+			// if (footage != null &&
+			// footage.getObjectId().equals(f.getObjectId())) {
+			// f.setIconUrl(footage.getIconUrl());
+			// activity.mFootageAdapter.notifyDataSetChanged();
+			// break;
+			// }
+			// }
+			// } else {
+			// NetSence netScene = (NetSence) msg.obj;
+			// for (Object obj : activity.mFootages) {
+			// if (obj instanceof FootAge || obj instanceof RecentFootAge) {
+			// break;
+			// }
+			// NetSence ns = (NetSence) obj;
+			// if (netScene != null &&
+			// netScene.getObjectId().equals(ns.getObjectId())) {
+			// ns.setSenceNetIcon(netScene.getSenceNetIcon());
+			// activity.mFootageAdapter.notifyDataSetChanged();
+			// break;
+			// }
+			// }
+			// }
+			// }
+			// break;
+			// }
+			// case FootageManager.MSG_LOAD_FOOTAGE_ICON_FAILURE: {
+			// break;
+			// }
 			case MSG_REGRET_STATUS_CHANGED: {
 				if (activity.mEditorContainerView != null) {
 					activity.mEditorContainerView.onRegretStatusChanged();
@@ -398,8 +411,11 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mMoveGestureDetector = new MoveGestureDetector(this, new MoveListener());
 
 		mFootageManager = FootageManager.getInstance(this);
-		// 先从本地加载数据
-		mFootageManager.loadFootageTypeFromLocal();
+
+		// 加载图片
+		if (mPhotoUri != null) {
+			mPvPhoto.setImageInfo(ImageInfo.obtain(mPhotoUri.toString()));
+		}
 
 	}
 
@@ -548,44 +564,32 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			}
 
 		});
-		
-		mPvPhoto.setOnSizeChangedListener(new PhotoView.OnSizeChangedListener() {
-			
-			@Override
-			public void onSizeChanged(int w, int h, int oldw, int oldh) {
-				
-				if(w > 0 && h > 0 && w == h && !mHasLoadPhoto) {
-					mHasLoadPhoto = true;
-					// 显示当前的照片
-					LOGD("Before loading image: PhotoView Size: " + mPvPhoto.getWidth() + ", " + mPvPhoto.getHeight());
-					if (mPhotoUri != null) {
-						mPvPhoto.setImageInfo(ImageInfo.obtain(mPhotoUri.toString()));
-					}
-				}				
-			}
-		});
-		
+
 		mPvPhoto.setImageLoadedListener(new AsyncImageView.ImageLoadedListener() {
-			
+
 			@Override
 			public void onFailure() {
-				// TODO Auto-generated method stub
-				
+
 			}
-			
+
 			@Override
 			public void onComplete() {
-				Drawable drawable = mPvPhoto.getDrawable();
-				if(drawable != null) {
-					int dw = drawable.getIntrinsicWidth();
-					int dh = drawable.getIntrinsicHeight();
-					int viewWidth = mPvPhoto.getWidth();
-					int viewHeight = mPvPhoto.getHeight();
-					if(dw > 0 && dh > 0 && viewWidth > 0 && viewHeight > 0) {
-						Matrix matrix = mPvPhoto.getImageMatrix();
-						matrix.postScale(viewWidth * 1.0f / dw,  viewHeight * 1.0f / dh);
-						mPvPhoto.setImageMatrix(matrix);
-					}
+				if (!mHasLoadPhoto) {
+					mHasLoadPhoto = true;
+					runOnUiThread(new Runnable() {
+
+						@Override
+						public void run() {
+							if (mPvPhoto != null && mSceneOverlay == mNullScene) {
+								mPvPhoto.setZoomable(false);
+							} else {
+								mPvPhoto.setZoomable(true);
+							}
+							LOGD(">>>>>>> StartToLoad >>>>>>>>>>>>>>>");
+							// 加载素材类型数据
+							mFootageManager.loadFootageTypeFromLocal();
+						}
+					});
 				}
 			}
 		});
@@ -617,7 +621,11 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					.getSenceNetIcon()));
 			Rect inputRect = netScene.getInputRectBounds();
 			if (inputRect != null) {
-				builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
+				if ("52b2c476e4b0a1f3e5c5b373".equals(netScene.getObjectId())) {
+					builder.setTextBounds(inputRect.left, inputRect.top - 6, inputRect.right, inputRect.bottom + 6);
+				} else {
+					builder.setTextBounds(inputRect.left, inputRect.top, inputRect.right, inputRect.bottom);
+				}
 				builder.setTextHint(netScene.getInputContent());
 				builder.setTextSize(netScene.getInputFontSize());
 				builder.setTextAlignment(netScene.getInputFontAlignment());
@@ -654,12 +662,11 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				setSceneOverlay(null);
 			}
 		}, 200);
-		
 
 		if (mSceneOverlay != null) {
 			mSceneOverlay.setCursorVisable(false);
 		}
-		
+
 	}
 
 	@Override
@@ -955,7 +962,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		scene.getView().setLayoutParams(params);
 		mRlOverlayContainer.addView(scene.getView(), 0);
 		scene.setViewSizeAdjustedListener(this);
-		if (mSceneOverlay == mNullScene) {
+		
+
+		if (mHasLoadPhoto && mPvPhoto != null && mSceneOverlay == mNullScene) {
 			mPvPhoto.setZoomable(false);
 		} else {
 			mPvPhoto.setZoomable(true);
@@ -1190,7 +1199,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			return true;
 		}
 	}
-	
+
 	private void adjustSceneSize(int width, int height) {
 		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mEditorPanel.getLayoutParams();
 		int editorPanelWidth = mEditorPanelRefView.getWidth();
@@ -1214,15 +1223,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		mTypeAdapter.notifyDataSetChanged();
 		mFootageAdapter.notifyDataSetChanged();
-		mPvPhoto.invalidate();
-		mEditorPanel.requestLayout();
 	}
 
 	@Override
 	public void onSceneSizeAquired(int width, int height) {
 		// 根据当前场景的尺寸调整大小
 		adjustSceneSize(width, height);
-		
 	}
 
 	private class TypeAdapter extends BaseAdapter {
@@ -1311,40 +1317,28 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				viewHolder.aivIcon = (AsyncImageView) convertView.findViewById(R.id.footage_item_icon);
 				convertView.setTag(viewHolder);
 
-				//调整view的大小
-				int height = mViewBottomPanel.getHeight() - mLvTypes.getHeight() - 12;
-				int width = mFootageListContainer.getWidth() / 3;
-				width = width < height ? width : height;
 				RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.aivIcon.getLayoutParams();
-				params.height = width;
-				params.width = width;
-			}
-			
-			viewHolder = (ViewHolder) convertView.getTag();
-			
-			// 调整view的大小
-			int height = mLvFootages.getHeight() - 12;
-			int width = mLvFootages.getWidth() / 3;
-			width = width < height ? width : height;
-			int min = Math.min(width, height);
-			RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) viewHolder.aivIcon.getLayoutParams();
-			if(params.width != min || params.height != min) {
+				int width = mLvFootages.getWidth() / 3 - 20;
+				int height = mLvFootages.getHeight() - 10;
+				LOGD("-----------getView----------- width=" + width + ", height=" + height);
+				int min = Math.min(width, height);
 				params.width = min;
 				params.height = min;
 			}
-			
+			viewHolder = (ViewHolder) convertView.getTag();
+
 			final Object obj = mFootages.get(position);
 			if (obj instanceof FootAge) {
 				final FootAge footage = (FootAge) obj;
 				if (!TextUtils.isEmpty(footage.getIconUrl())) {
 					viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
-				} 
+				}
 			} else if (obj instanceof NetSence) {
 				final NetSence netScene = (NetSence) obj;
 				if (netScene == NetSence.DEFAULT) {
 					viewHolder.aivIcon.setImageResource(R.drawable.null_scene);
-				}  else {
-					if(!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
+				} else {
+					if (!TextUtils.isEmpty(netScene.getSenceNetIcon())) {
 						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netScene.getSenceNetIcon()));
 					}
 				}
@@ -1354,7 +1348,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					FootAge footage = JSON.parseObject(recent.getJson(), FootAge.class);
 					if (!TextUtils.isEmpty(footage.getIconUrl())) {
 						viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(footage.getIconUrl()));
-					} 
+					}
 				} else if (recent.getType() == FootAgeType.TYPE_SCENE) {
 					NetSence netSence = JSON.parseObject(recent.getJson(), NetSence.class);
 					if (!TextUtils.isEmpty(netSence.getSenceNetIcon())) {
@@ -1362,7 +1356,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					} else {
 						if (!TextUtils.isEmpty(netSence.getSenceNetIcon())) {
 							viewHolder.aivIcon.setImageInfo(ImageInfo.obtain(netSence.getSenceNetIcon()));
-						} 
+						}
 					}
 				}
 			}

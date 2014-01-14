@@ -22,7 +22,7 @@ import com.tencent.mm.sdk.openapi.WXMediaMessage;
  */
 public class WeixinHelper {
 	private static final String APPID = "wx375024ff3d6e6707";
-	private static final int THUMB_SIZE = 120;
+	private static final int THUMB_SIZE = 100;
 
 	private IWXAPI mWXApi;
 

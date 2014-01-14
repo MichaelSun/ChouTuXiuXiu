@@ -359,6 +359,8 @@ public class SceneOverlay implements IOverlay {
 							(int) (etHeight * scaleY));
 					params.leftMargin = (int) (overlay.mTextViewLeft * scaleX);
 					params.topMargin = (int) (overlay.mTextViewTop * scaleY);
+					Logger.d("leftMargin:" + params.leftMargin + ", topMargin:" + params.topMargin
+							+ ", width=" + (etWidth * scaleX) + ", height=" + (etHeight * scaleY));
 					mEtText.setTextColor(overlay.mTextColor);
 					mEtText.setBackgroundDrawable(null);
 					float density = mDensity > 0 ? mDensity : 1.0f;
@@ -368,7 +370,7 @@ public class SceneOverlay implements IOverlay {
 					mEtText.setHint(overlay.mTextHint == null ? "" : overlay.mTextHint);
 					mEtText.setLines(1);
 					mEtText.setSingleLine();
-					mEtText.setGravity(overlay.mTextGravity | Gravity.CENTER_VERTICAL);
+					mEtText.setGravity(overlay.mTextGravity);
 					mEtText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 
 						@Override

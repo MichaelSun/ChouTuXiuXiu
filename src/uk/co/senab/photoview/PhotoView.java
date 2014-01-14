@@ -25,6 +25,7 @@ import android.net.Uri;
 import android.util.AttributeSet;
 
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
+import com.canruoxingchen.uglypic.util.Logger;
 
 /**
  * 
@@ -181,24 +182,5 @@ public class PhotoView extends AsyncImageView implements IPhotoView {
 	protected void onDetachedFromWindow() {
 		mAttacher.cleanup();
 		super.onDetachedFromWindow();
-	}
-
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		super.onSizeChanged(w, h, oldw, oldh);
-		
-		if(mOnSizeChangedListener != null) {
-			mOnSizeChangedListener.onSizeChanged(w, h, oldw, oldh);
-		}
-	}
-	
-	private OnSizeChangedListener mOnSizeChangedListener;
-	
-	public void setOnSizeChangedListener(OnSizeChangedListener listener) {
-		this.mOnSizeChangedListener = listener;
-	}
-
-	public interface OnSizeChangedListener {
-		void onSizeChanged(int w, int h, int oldw, int oldh);
 	}
 }

@@ -60,6 +60,7 @@ public class AsyncImageView extends CacheableImageView {
 	private int mImageWidth = 0;
 	private int mImageHeight = 0;
 	
+	
 	/**
 	 * 是否需要展示默认的动画
 	 */
@@ -179,6 +180,7 @@ public class AsyncImageView extends CacheableImageView {
 
 			if (wrapper != null) {
 				setImageDrawable(wrapper);
+				notifyComplete();
 				return;
 			}
 
@@ -350,6 +352,7 @@ public class AsyncImageView extends CacheableImageView {
 		super.onLayout(changed, left, top, right, bottom);
 		if (mImgInfo != null) {
 			loadImageIfNecessary(true);
+			Logger.d(" >>>>>> StartToLoad >>>>> in onLayout");
 		}
 	}
 
