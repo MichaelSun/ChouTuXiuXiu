@@ -39,7 +39,9 @@
 -keep class com.canruoxingchen.uglypic.dao.** { *; }
 
 -keep public class * extends android.content.BroadcastReceiver
--keep class com.canruoxingchen.uglypic.footage.RecentFootAge
+
+#jni
+-keep public class com.canruoxingchen.uglypic.util.jni.** { *; }
 
 # cache
 -keep class uk.co.senab.bitmapcache.** { *; }
@@ -95,6 +97,10 @@
 public static final int *;
 }
 
+-keep class com.canruoxingchen.uglypic.footage.FootAge { *; }
+-keep class com.canruoxingchen.uglypic.footage.NetSence { *; }
+-keep class com.canruoxingchen.uglypic.footage.RecentFootAge { *; }
+
 #umeng
 # 添加第三方jar包
 -libraryjars libs/umeng_sdk.jar
@@ -102,5 +108,6 @@ public static final int *;
 # 以下包不进行过滤 
 -keep class com.umeng.** { *; }
 -dontwarn com.umeng.**
+
 
 

@@ -1,15 +1,15 @@
-#include "rrimagelib.h"
+#include "imagelib.h"
 
-rrimage *init_rrimage() {
-	rrimage *data = (rrimage *) malloc(sizeof(rrimage));
+uglyimage *init_image() {
+	uglyimage *data = (uglyimage *) malloc(sizeof(uglyimage));
 	data->pixels = NULL;
-	data->type = TYPE_RRIMAGE_UNSPECIFIED;
+	data->type = TYPE_IMAGE_UNSPECIFIED;
 	data->quality = 100;
 
 	return data;
 }
 
-void free_rrimage(rrimage *data) {
+void free_image(uglyimage *data) {
 	if (!data) {
 		return;
 	}
@@ -23,12 +23,12 @@ void free_rrimage(rrimage *data) {
 	data = NULL;
 }
 
-rrimage* clone_rrimage(rrimage *data) {
+uglyimage* clone_image(uglyimage *data) {
 	if (!data) {
 		return NULL;
 	}
 
-	rrimage *result = (rrimage *) malloc(sizeof(rrimage));
+	uglyimage *result = (uglyimage *) malloc(sizeof(uglyimage));
 
 	int width = data->width;
 	int height = data->height;
@@ -51,7 +51,7 @@ rrimage* clone_rrimage(rrimage *data) {
 	return result;
 }
 
-void strip_alpha(rrimage *data) {
+void strip_alpha(uglyimage *data) {
 	if (data == NULL || data->channels != 4) {
 		return;
 	}
@@ -86,33 +86,33 @@ void strip_alpha(rrimage *data) {
 
 int check_file_type(FILE *fp) {
 	if (!fp) {
-		return TYPE_RRIMAGE_UNSPECIFIED;
+		return TYPE_IMAGE_UNSPECIFIED;
 	}
 
 	fseek(fp, 0L, SEEK_SET);
 	char buf[PNG_MAGIC_SIZE];
 	if (fread(buf, sizeof(char), PNG_MAGIC_SIZE, fp) != PNG_MAGIC_SIZE) {
-		return TYPE_RRIMAGE_UNSPECIFIED;
+		return TYPE_IMAGE_UNSPECIFIED;
 	}
 	if ((buf[0] == (char) 0xFF) && (buf[1] = (char) 0xD8)) {
 		fseek(fp, 0L, SEEK_SET);
-		return TYPE_RRIMAGE_JPEG;
+		return TYPE_IMAGE_JPEG;
 	}
 	if (!png_sig_cmp((png_byte *) buf, (png_size_t) 0, PNG_MAGIC_SIZE)) {
 		fseek(fp, 0L, SEEK_SET);
-		return TYPE_RRIMAGE_PNG;
+		return TYPE_IMAGE_PNG;
 	}
 	if ((buf[0] == 'B') && (buf[1] == 'M')) {
 		fseek(fp, 0L, SEEK_SET);
-		return TYPE_RRIMAGE_BMP;
+		return TYPE_IMAGE_BMP;
 	}
 	if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) {
 		fseek(fp, 0L, SEEK_SET);
-		return TYPE_RRIMAGE_GIF;
+		return TYPE_IMAGE_GIF;
 	}
 
 	fseek(fp, 0L, SEEK_SET);
-	return TYPE_RRIMAGE_UNSPECIFIED;
+	return TYPE_IMAGE_UNSPECIFIED;
 }
 
 void my_error_exit(j_common_ptr cinfo) {
@@ -140,7 +140,7 @@ void png_read_data_from_asset(png_structp pngPtr, png_bytep data,
 	}
 }
 
-rrimage* read_jpeg(const char *file_name) {
+uglyimage* read_jpeg(const char *file_name) {
 	if (!file_name) {
 		return NULL;
 	}
@@ -150,7 +150,7 @@ rrimage* read_jpeg(const char *file_name) {
 		return NULL;
 	}
 
-	rrimage *data = init_rrimage();
+	uglyimage *data = init_image();
 
 	struct jpeg_decompress_struct in;
 	struct my_error_mgr in_err;
@@ -174,7 +174,7 @@ rrimage* read_jpeg(const char *file_name) {
 	data->height = in.image_height;
 	data->channels = 3;
 	data->stride = in.image_width * 3 * sizeof(unsigned char);
-	data->type = TYPE_RRIMAGE_JPEG;
+	data->type = TYPE_IMAGE_JPEG;
 
 	// 灰度图将会转换为RGB
 	data->pixels = (unsigned char *) malloc(data->stride * data->height);
@@ -211,7 +211,7 @@ rrimage* read_jpeg(const char *file_name) {
 		LOGD("unsupported jpeg format...channels = %d", channels);
 		jpeg_destroy_decompress(&in);
 		fclose(in_file);
-		free_rrimage(data);
+		free_image(data);
 		return NULL;
 	}
 
@@ -222,7 +222,7 @@ rrimage* read_jpeg(const char *file_name) {
 	return data;
 }
 
-int write_jpeg(const char *file_name, rrimage *data) {
+int write_jpeg(const char *file_name, uglyimage *data) {
 	if (file_name == NULL || data == NULL || data->pixels == NULL) {
 		return 0;
 	}
@@ -280,7 +280,7 @@ int write_jpeg(const char *file_name, rrimage *data) {
 	return 1;
 }
 
-rrimage* read_png(const char *file_name) {
+uglyimage* read_png(const char *file_name) {
 	if (file_name == NULL) {
 		return NULL;
 	}
@@ -290,7 +290,7 @@ rrimage* read_png(const char *file_name) {
 		return NULL;
 	}
 
-	rrimage *data = init_rrimage();
+	uglyimage *data = init_image();
 
 	png_structp in_png_ptr;
 	png_infop in_info_ptr;
@@ -361,7 +361,7 @@ rrimage* read_png(const char *file_name) {
 
 	row_stride = data->width * data->channels;
 	data->stride = row_stride;
-	data->type = TYPE_RRIMAGE_PNG;
+	data->type = TYPE_IMAGE_PNG;
 	data->pixels = (unsigned char *) malloc(
 			sizeof(unsigned char) * row_stride * data->height);
 	if (!data->pixels) {
@@ -388,7 +388,7 @@ rrimage* read_png(const char *file_name) {
 /**
  * 根据路径名从assets目录下读入png图片（用来做OpenGL滤镜模版图片）
  */
-rrimage* read_png_from_asset(AAssetManager *mgr, const char *fileName) {
+uglyimage* read_png_from_asset(AAssetManager *mgr, const char *fileName) {
 	if (!mgr || !fileName) {
 		return NULL;
 	}
@@ -398,7 +398,7 @@ rrimage* read_png_from_asset(AAssetManager *mgr, const char *fileName) {
 		return NULL;
 	}
 
-	rrimage *data = init_rrimage();
+	uglyimage *data = init_image();
 
 	png_structp in_png_ptr;
 	png_infop in_info_ptr;
@@ -467,7 +467,7 @@ rrimage* read_png_from_asset(AAssetManager *mgr, const char *fileName) {
 
 	row_stride = data->width * data->channels;
 	data->stride = row_stride;
-	data->type = TYPE_RRIMAGE_PNG;
+	data->type = TYPE_IMAGE_PNG;
 	data->pixels = (unsigned char *) malloc(
 			sizeof(unsigned char) * row_stride * data->height);
 	if (!data->pixels) {
@@ -511,7 +511,7 @@ char* read_string_from_asset(AAssetManager *mgr, const char *fileName) {
 	return content;
 }
 
-int write_png(const char *file_name, rrimage *data) {
+int write_png(const char *file_name, uglyimage *data) {
 	if (file_name == NULL || data == NULL || data->pixels == NULL) {
 		return 0;
 	}
@@ -599,7 +599,7 @@ int write_png(const char *file_name, rrimage *data) {
 	return 1;
 }
 
-rrimage* read_bmp(const char *file_name) {
+uglyimage* read_bmp(const char *file_name) {
 	if (file_name == NULL) {
 		return NULL;
 	}
@@ -787,12 +787,12 @@ rrimage* read_bmp(const char *file_name) {
 
 	fclose(in_file);
 
-	rrimage *data = init_rrimage();
+	uglyimage *data = init_image();
 	data->width = width;
 	data->height = height;
 	data->channels = channels;
 	data->stride = width * channels;
-	data->type = TYPE_RRIMAGE_BMP;
+	data->type = TYPE_IMAGE_BMP;
 	data->pixels = pixels;
 
 	if (channels == 4) {
@@ -802,7 +802,7 @@ rrimage* read_bmp(const char *file_name) {
 	return data;
 }
 
-rrimage* read_gif(const char *file_path) {
+uglyimage* read_gif(const char *file_path) {
 	if (!file_path) {
 		return NULL;
 	}
@@ -835,7 +835,7 @@ rrimage* read_gif(const char *file_path) {
 		return NULL;
 	}
 
-	rrimage *result = init_rrimage();
+	uglyimage *result = init_image();
 	result->width = gif.width;
 	result->height = gif.height;
 	result->channels = 4;
@@ -852,7 +852,7 @@ rrimage* read_gif(const char *file_path) {
 /**
  * 这个方法有bug，待处理。。。。
  */
-int write_bmp(const char *file_name, rrimage *data) {
+int write_bmp(const char *file_name, uglyimage *data) {
 	if (file_name == NULL || data == NULL || data->pixels == NULL) {
 		return 0;
 	}
@@ -1056,11 +1056,11 @@ int write_bmp(const char *file_name, rrimage *data) {
 	return 1;
 }
 
-rrimage *read_image(const char *file_name) {
+uglyimage *read_image(const char *file_name) {
 	return read_image_with_compress(file_name, NULL, 0);
 }
 
-rrimage* read_image_with_compress(const char *file_name,
+uglyimage* read_image_with_compress(const char *file_name,
 		COMPRESS_METHOD compress_method, int min_width) {
 	return read_image_with_compress_by_area(file_name, NULL, min_width, 0, 0, 0,
 			0, ROTATE_0);
@@ -1145,18 +1145,18 @@ void calculate_crop_area(int width, int height, int *x, int *y, int *w, int *h,
 	}
 }
 
-rrimage* read_image_with_compress_by_area(const char *file_name,
+uglyimage* read_image_with_compress_by_area(const char *file_name,
 		COMPRESS_METHOD compress_method, int min_width, int x, int y, int w,
 		int h, int rotate) {
 	int i, j;
-	rrimage *data = NULL;
+	uglyimage *data = NULL;
 
 	FILE * in_file;
 	if ((in_file = fopen(file_name, "rb")) == NULL) {
 		return NULL;
 	}
 	int file_type = check_file_type(in_file);
-	if (file_type == TYPE_RRIMAGE_JPEG) {
+	if (file_type == TYPE_IMAGE_JPEG) {
 		struct jpeg_decompress_struct in;
 		struct my_error_mgr in_err;
 
@@ -1371,17 +1371,17 @@ rrimage* read_image_with_compress_by_area(const char *file_name,
 		jpeg_destroy_decompress(&in);
 		fclose(in_file);
 
-		data = init_rrimage();
+		data = init_image();
 		data->width = out_width;
 		data->height = out_height;
 		data->channels = channels;
 		data->stride = out_stride;
-		data->type = TYPE_RRIMAGE_JPEG;
+		data->type = TYPE_IMAGE_JPEG;
 		data->pixels = pixels;
 
 		// 旋转处理
 		flip_or_rotate(data, rotate);
-	} else if (file_type == TYPE_RRIMAGE_PNG) {
+	} else if (file_type == TYPE_IMAGE_PNG) {
 		png_structp in_png_ptr;
 		png_infop in_info_ptr;
 
@@ -1576,12 +1576,12 @@ rrimage* read_image_with_compress_by_area(const char *file_name,
 			png_destroy_read_struct(&in_png_ptr, &in_info_ptr, NULL);
 			fclose(in_file);
 
-			data = init_rrimage();
+			data = init_image();
 			data->width = out_width;
 			data->height = out_height;
 			data->channels = channels;
 			data->stride = out_stride;
-			data->type = TYPE_RRIMAGE_PNG;
+			data->type = TYPE_IMAGE_PNG;
 			data->pixels = pixels;
 
 			// 旋转处理
@@ -1593,9 +1593,9 @@ rrimage* read_image_with_compress_by_area(const char *file_name,
 			data = read_png(file_name);
 			compress_image_by_area(data, compress_method, min_width, x, y, w, h,
 					rotate);
-			data->type = TYPE_RRIMAGE_PNG;
+			data->type = TYPE_IMAGE_PNG;
 		}
-	} else if (file_type == TYPE_RRIMAGE_BMP) {
+	} else if (file_type == TYPE_IMAGE_BMP) {
 		unsigned int size;
 		unsigned int bitmap_offset;
 		unsigned int header_size;
@@ -1912,22 +1912,22 @@ rrimage* read_image_with_compress_by_area(const char *file_name,
 
 		fclose(in_file);
 
-		data = init_rrimage();
+		data = init_image();
 		data->width = out_width;
 		data->height = out_height;
 		data->channels = channels;
 		data->stride = out_stride;
-		data->type = TYPE_RRIMAGE_BMP;
+		data->type = TYPE_IMAGE_BMP;
 		data->pixels = pixels;
 
 		// 旋转处理
 		flip_or_rotate(data, rotate);
-	} else if (file_type == TYPE_RRIMAGE_GIF) {
+	} else if (file_type == TYPE_IMAGE_GIF) {
 		fclose(in_file);
 		data = read_gif(file_name);
 		compress_image_by_area(data, compress_method, min_width, x, y, w, h,
 				rotate);
-		data->type = TYPE_RRIMAGE_GIF;
+		data->type = TYPE_IMAGE_GIF;
 	} else {
 		LOGD("file format not supported yet...");
 		fclose(in_file);
@@ -1936,7 +1936,7 @@ rrimage* read_image_with_compress_by_area(const char *file_name,
 	return data;
 }
 
-void compress_image_by_area(rrimage *data, COMPRESS_METHOD compress_method,
+void compress_image_by_area(uglyimage *data, COMPRESS_METHOD compress_method,
 		int min_width, int x, int y, int w, int h, int rotate) {
 	int i, j;
 
@@ -2114,15 +2114,15 @@ void compress_image_by_area(rrimage *data, COMPRESS_METHOD compress_method,
 	flip_or_rotate(data, rotate);
 }
 
-int write_image(const char *file_name, rrimage *data) {
+int write_image(const char *file_name, uglyimage *data) {
 	/*
 	 int result;
 
 	 switch (data->type) {
-	 case TYPE_RRIMAGE_JPEG:
+	 case TYPE_uglyimage_JPEG:
 	 result = write_jpeg(file_name, data);
 	 break;
-	 case TYPE_RRIMAGE_PNG:
+	 case TYPE_uglyimage_PNG:
 	 result = write_png(file_name, data);
 	 break;
 	 default:
@@ -2157,7 +2157,7 @@ void compress_strategy(int width, int height, int *out_width, int *out_height,
 	}
 }
 
-void flip_or_rotate(rrimage *data, int orientation) {
+void flip_or_rotate(uglyimage *data, int orientation) {
 
 	if (!data || !data->pixels || orientation == ROTATE_0) {
 		return;
@@ -2169,7 +2169,7 @@ void flip_or_rotate(rrimage *data, int orientation) {
 	int stride = data->stride;
 
 	int i, j, k;
-	rrimage *result = clone_rrimage(data);
+	uglyimage *result = clone_image(data);
 
 	unsigned char *sptr;
 	unsigned char *dptr;
@@ -2285,5 +2285,5 @@ void flip_or_rotate(rrimage *data, int orientation) {
 		break;
 	}
 
-	free_rrimage(result);
+	free_image(result);
 }

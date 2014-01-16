@@ -1,4 +1,4 @@
-#include "rrutil_exif.h"
+#include "util_exif.h"
 
 #include <stdlib.h>
 #include <stdio.h>

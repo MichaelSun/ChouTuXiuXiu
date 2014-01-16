@@ -28,7 +28,7 @@ extern "C" {
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#include "rrutil_exif.h"
+#include "util_exif.h"
 #include "libnsgif.h"
 
 #define RR_DEBUG 0
@@ -37,11 +37,11 @@ extern "C" {
 #define PNG_MAGIC_SIZE 4
 
 // 图片类型常量
-#define TYPE_RRIMAGE_UNSPECIFIED 0
-#define TYPE_RRIMAGE_JPEG 1
-#define TYPE_RRIMAGE_PNG 2
-#define TYPE_RRIMAGE_BMP 3
-#define TYPE_RRIMAGE_GIF 4
+#define TYPE_IMAGE_UNSPECIFIED 0
+#define TYPE_IMAGE_JPEG 1
+#define TYPE_IMAGE_PNG 2
+#define TYPE_IMAGE_BMP 3
+#define TYPE_IMAGE_GIF 4
 
 // 压缩常量
 #define COMPRESS_MAX_WIDTH 1600
@@ -85,23 +85,23 @@ typedef struct {
 	unsigned char *pixels;
 	unsigned char type;// 图片源为jpeg格式或png格式，TYPE_RRIMAGE_JPEG表示jpeg，TYPE_RRIMAGE_PNG表示png，TYPE_RRIMAGE_UNSPECIFIED表示未知
 	unsigned char quality;// 图片质量
-}rrimage;
+}uglyimage;
 
 typedef struct my_error_mgr {
 	struct jpeg_error_mgr pub;
 	jmp_buf setjmp_buffer;
 }* my_error_ptr;
 
-rrimage *init_rrimage();
+uglyimage *init_image();
 
-void free_rrimage(rrimage *);
+void free_image(uglyimage *);
 
-rrimage * clone_rrimage(rrimage *);
+uglyimage * clone_rrimage(uglyimage *);
 
 /**
  * RGBA数据转换为RGB数据，忽略A通道
  */
-void strip_alpha(rrimage *);
+void strip_alpha(uglyimage *);
 
 int check_file_type(FILE *);
 
@@ -109,36 +109,36 @@ void my_error_exit(j_common_ptr cinfo);
 
 void my_output_message(j_common_ptr cinfo);
 
-rrimage* read_jpeg(const char *);
+uglyimage* read_jpeg(const char *);
 
-int write_jpeg(const char *, rrimage *);
+int write_jpeg(const char *, uglyimage *);
 
-rrimage* read_png(const char *);
+uglyimage* read_png(const char *);
 
-int write_png(const char *, rrimage *);
+int write_png(const char *, uglyimage *);
 
-rrimage* read_png_from_asset(AAssetManager *mgr, const char *fileName);
+uglyimage* read_png_from_asset(AAssetManager *mgr, const char *fileName);
 
 char* read_string_from_asset(AAssetManager *mgr, const char *fileName);
 
 /**
  * 暂未处理RLE4和RLE8压缩的图像，有需求再加入
  */
-rrimage* read_bmp(const char *);
+uglyimage* read_bmp(const char *);
 
 /**
  * gif图一般不会很大，不考虑超大图的情况
  */
-rrimage* read_gif(const char *file_path);
+uglyimage* read_gif(const char *file_path);
 
 /**
  * 默认写入的bmp文件均为24位图像
  */
-int write_bmp(const char *, rrimage *);
+int write_bmp(const char *, uglyimage *);
 
-rrimage* read_image(const char *);
+uglyimage* read_image(const char *);
 
-int write_image(const char *, rrimage *);
+int write_image(const char *, uglyimage *);
 
 /**
  * 按照需求读取大图片并压缩到合适的大小
@@ -149,7 +149,7 @@ int write_image(const char *, rrimage *);
  *
  * @return 返回图片数据
  */
-rrimage* read_image_with_compress(const char *file_path,
+uglyimage* read_image_with_compress(const char *file_path,
 		COMPRESS_METHOD compress_method, int min_width);
 
 /**
@@ -168,7 +168,7 @@ rrimage* read_image_with_compress(const char *file_path,
  * @param w 裁剪区域宽度
  * @param h 裁剪区域高度
  */
-rrimage* read_image_with_compress_by_area(const char *file_path,
+uglyimage* read_image_with_compress_by_area(const char *file_path,
 		COMPRESS_METHOD compress_method, int min_width, int x, int y, int w, int h,
 		int rotate);
 
@@ -188,7 +188,7 @@ rrimage* read_image_with_compress_by_area(const char *file_path,
  * @param w 裁剪区域宽度
  * @param h 裁剪区域高度
  */
-void compress_image_by_area(rrimage *data,
+void compress_image_by_area(uglyimage *data,
 		COMPRESS_METHOD compress_method, int min_width, int x, int y, int w, int h,
 		int rotate);
 
@@ -212,7 +212,7 @@ void compress_strategy(int width, int height, int *out_width, int *out_height, i
 /**
  * 8种旋转方式
  */
-void flip_or_rotate(rrimage *data, int orientation);
+void flip_or_rotate(uglyimage *data, int orientation);
 
 #ifdef __cplusplus
 }

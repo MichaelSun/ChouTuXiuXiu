@@ -482,17 +482,19 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 	public final void update() {
 		ImageView imageView = getImageView();
 
+		
+		//修改为设置zoomable只影响触摸手势，但不影响fitCenter
 		if (null != imageView) {
-			if (mZoomEnabled) {
+//			if (mZoomEnabled) {
 				// Make sure we using MATRIX Scale Type
 				setImageViewScaleTypeMatrix(imageView);
 
 				// Update the base matrix using the current drawable
 				updateBaseMatrix(imageView.getDrawable());
-			} else {
+//			} else {
 				// Reset the Matrix...
-				resetMatrix();
-			}
+//				resetMatrix();
+//			}
 		}
 	}
 

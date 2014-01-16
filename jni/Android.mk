@@ -7,7 +7,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 endif
 
 LOCAL_MODULE    := ndk
-LOCAL_SRC_FILES := rrimagelib.c rrutil_exif.c main.cpp libnsgif.c
+LOCAL_SRC_FILES := imagelib.c util_exif.c main.cpp libnsgif.c
 LOCAL_LDLIBS +=  -lm -llog -ljnigraphics -lz -lEGL -lGLESv2 -landroid 
 
 LOCAL_STATIC_LIBRARIES += libjpeg

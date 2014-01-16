@@ -443,6 +443,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mRootView = (RelativeLayout) findViewById(R.id.photo_editor_root_view);
 		mViewBottomPanel = findViewById(R.id.photo_editor_bottom_panel);
 		mPvPhoto = (PhotoView) findViewById(R.id.photo_editor_photo);
+		mPvPhoto.setZoomable(true);
 		mFootageListContainer = (RelativeLayout) findViewById(R.id.photo_editor_footage_list_container);
 
 		mTopContextMenu = findViewById(R.id.photo_editor_topbar_object_menu);
@@ -503,7 +504,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			public void onInvisible() {
 				mViewContextBtn.setVisibility(View.VISIBLE);
 				mViewBottomPanel.setVisibility(View.VISIBLE);
-				if (mSceneOverlay == null || mSceneOverlay == mNullScene) {
+				if (mHasLoadPhoto && (mSceneOverlay == null || mSceneOverlay == mNullScene)) {
 					mPvPhoto.setZoomable(false);
 				} else {
 					mPvPhoto.setZoomable(true);

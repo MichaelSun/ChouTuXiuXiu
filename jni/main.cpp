@@ -1,5 +1,5 @@
 #include "main.h"
-#include "rrimagelib.h"
+#include "imagelib.h"
 
 #include <string>
 #include <map>
@@ -147,7 +147,7 @@ int getExifOrientation(const char *inFileName) {
 	return orientation;
 }
 
-GLuint loadTexture(GLuint textureId, rrimage* data) {
+GLuint loadTexture(GLuint textureId, uglyimage* data) {
 	if (!data) {
 		LOGD("loadTexture: png is null");
 		return -1;
@@ -323,7 +323,7 @@ GLuint initializeProgram(JNIEnv *env, jobject object) {
 /*
  * 针对bitmap，android bitmap为4个通道且像素排列顺序为ARGB
  */
-void processGaussianFilter(rrimage *data, int radius, double sigma) {
+void processGaussianFilter(uglyimage *data, int radius, double sigma) {
 	if (!data || data->channels != 4) {
 		return;
 	}
@@ -500,7 +500,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 	const char* inFilePath = env->GetStringUTFChars(jInFilePath, 0);
 	int rotation = getRotation(jOrientation, 0);
 	//相机PictureSize不会有超大图，此处可以不必压缩
-	rrimage *src = read_image_with_compress_by_area(inFilePath, 0, 0, 0, 0, 0,
+	uglyimage *src = read_image_with_compress_by_area(inFilePath, 0, 0, 0, 0, 0,
 			0, ROTATE_0);
 	int imageWidth = src->width;
 	int imageHeight = src->height;
@@ -646,7 +646,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 	}
 
 	GLuint textureId = loadTexture(-1, src);
-	free_rrimage(src);
+	free_image(src);
 
 	glClearColor(0, 0, 0, 1);
 	glViewport(0, 0, width, height);
@@ -678,7 +678,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 	eglDestroySurface(display, surface);
 	eglTerminate(display);
 
-	rrimage *data = init_rrimage();
+	uglyimage *data = init_image();
 	data->width = width;
 	data->height = height;
 	data->channels = 4;
@@ -687,7 +687,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 
 	const char *outFilePath = env->GetStringUTFChars(jOutFilePath, 0);
 	write_image(outFilePath, data);
-	free_rrimage(data);
+	free_image(data);
 	copyExif(inFilePath, outFilePath);
 
 	env->ReleaseStringUTFChars(jOutFilePath, outFilePath);
@@ -702,13 +702,13 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 		jint height, jint minWidth) {
 	const char* inFilePath = env->GetStringUTFChars(jInFilePath, 0);
 	int rotation = getRotation(orientation, mirror);
-	rrimage *data = read_image_with_compress_by_area(inFilePath,
+	uglyimage *data = read_image_with_compress_by_area(inFilePath,
 			compress_strategy, minWidth, left, top, width, height, rotation);
 	LOGD("%d, %d, %d, %d", left, top, width, height);LOGD("%d, %d, %d", data->width, data->height, data->channels);LOGD("%d, %d", orientation, rotation);
 
 	const char *outFilePath = env->GetStringUTFChars(jOutFilePath, 0);
 	write_image(outFilePath, data);
-	free_rrimage(data);
+	free_image(data);
 	copyExif(inFilePath, outFilePath);
 
 	env->ReleaseStringUTFChars(jOutFilePath, outFilePath);
@@ -723,7 +723,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 		jint minWidth, jint isSquare) {
 	const char* inFilePath = env->GetStringUTFChars(jInFilePath, 0);
 	int rotation = getExifOrientation(inFilePath);
-	rrimage *src = read_image_with_compress_by_area(inFilePath,
+	uglyimage *src = read_image_with_compress_by_area(inFilePath,
 			compress_strategy, minWidth, 0, 0, 0, 0, ROTATE_0);
 	int imageWidth = src->width;
 	int imageHeight = src->height;
@@ -865,7 +865,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 	}
 
 	GLuint textureId = loadTexture(-1, src);
-	free_rrimage(src);
+	free_image(src);
 
 	glClearColor(0, 0, 0, 1);
 	glViewport(0, 0, width, height);
@@ -895,7 +895,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 	eglDestroySurface(display, surface);
 	eglTerminate(display);
 
-	rrimage *data = init_rrimage();
+	uglyimage *data = init_image();
 	data->width = width;
 	data->height = height;
 	data->channels = 4;
@@ -904,7 +904,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 
 	const char *outFilePath = env->GetStringUTFChars(jOutFilePath, 0);
 	write_image(outFilePath, data);
-	free_rrimage(data);
+	free_image(data);
 	copyExif(inFilePath, outFilePath);
 
 	glDeleteTextures(1, &textureId);
@@ -921,7 +921,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 		jint orientation) {
 	const char* inFilePath = env->GetStringUTFChars(jInFilePath, 0);
 	orientation = getRotation(orientation, 0);
-	rrimage *data = read_image_with_compress_by_area(inFilePath,
+	uglyimage *data = read_image_with_compress_by_area(inFilePath,
 			compress_strategy, minWidth, left, top, width, height, orientation);
 	int imageWidth = data->width;
 	int imageHeight = data->height;
@@ -929,7 +929,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 
 	const char *outFilePath = env->GetStringUTFChars(jOutFilePath, 0);
 	write_image(outFilePath, data);
-	free_rrimage(data);
+	free_image(data);
 	copyExif(inFilePath, outFilePath);
 
 	env->ReleaseStringUTFChars(jOutFilePath, outFilePath);
@@ -967,7 +967,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 
 	LOGD("width=%d, height=%d, stride=%d", width, height, stride);
 
-	rrimage *src = init_rrimage();
+	uglyimage *src = init_image();
 	src->width = width;
 	src->height = height;
 	src->channels = 4;
@@ -994,7 +994,7 @@ JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
 
 JNIEXPORT void JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_test
 (JNIEnv *env, jobject object) {
-	rrimage *data = read_image_with_compress_by_area("/sdcard/Pictures/comic/10.png",
+	uglyimage *data = read_image_with_compress_by_area("/sdcard/Pictures/comic/10.png",
 			0, 0, 0, 0, 800, 800, ROTATE_90);
 	LOGD("%d, %d, %d", data->width, data->height, data->channels);
 	write_image("/sdcard/1.jpg", data);
@@ -1007,7 +1007,6 @@ JNIEXPORT void JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_
  */
 JNIEXPORT jint JNICALL Java_com_canruoxingchen_uglypic_util_jni_NativeImageUtil_mergePhoto
   (JNIEnv *env, jobject object, jstring origPath, jstring processedPath, jstring outPath,
-		  jint origWidth, jint origHeight, jint processedWidth, jint processedWidth) {
+		  jint origWidth, jint origHeight, jint processedWidth, jint processedHeight) {
 
-}
 }
