@@ -37,10 +37,19 @@ public abstract class ObjectOverlay implements IOverlay {
 
 	public static final int CONTROL_POINTS_RADIUS = 20;
 
+	/**
+	 * 屏幕密度
+	 */
 	protected float mDensity = -1.0f;
 
+	/**
+	 * Footage变换的Matrix
+	 */
 	private Matrix mMatrix = new Matrix();
 
+	/**
+	 * 从开始到现在旋转的角度
+	 */
 	private float mRotateDegrees = 0.0f;
 
 	// 控制点是否被选中
@@ -48,8 +57,14 @@ public abstract class ObjectOverlay implements IOverlay {
 	// 是否选中了删除键
 	private boolean mFlipPointSelected = false;
 
+	/**
+	 * Activity中编辑器的面板
+	 */
 	private View mEditorPanel;
 
+	/**
+	 * 是否被选中过，如果未被选中过，则选则其他素材时，当期素材将被移除
+	 */
 	private boolean mHasBeenSelected = false;
 
 	public interface ObjectOperationListener {

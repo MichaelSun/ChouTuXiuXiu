@@ -44,13 +44,24 @@ import com.canruoxingchen.uglypic.overlay.ImageOverlayContextView.ResetListener;
 import com.canruoxingchen.uglypic.overlay.ImageOverlayContextView.SatuationChangedListener;
 import com.canruoxingchen.uglypic.util.Logger;
 
+/**
+ * 图片素材浮层
+ * 
+ * @author wsf
+ */
 public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationChangedListener, ContrastChangedListener,
 		SatuationChangedListener, ResetListener, EraseListener {
 
+	/**
+	 * 橡皮的宽度
+	 */
 	private static final int[] ERASER_WIDTH = new int[] { 16, 20, 24, 28, 32, 36, 40 };
 	private static final int TOUCH_SPAN_THREASHOLD = 4;
 	private static final String TAG = "ImageWidgetOverlay";
 
+	/**
+	 * 支持擦除的ImageView
+	 */
 	private CopyOnWriteImageView mAivImage;
 
 	private Context mContext;
@@ -441,16 +452,17 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			copyImage();
 			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
 			// 首先调整contrast到[-1,1]
-			float c = (contrast * 1.0f - ContrastImageOperation.DEFAULT) / ContrastImageOperation.DEFAULT;
+			float c = (contrast * 1.0f - ContrastImageOperation.DEFAULT) / ContrastImageOperation.SCALE;
 			mContrast = (float) Math.tan((45 + 44 * c) / 180 * Math.PI);
-			LOGD(">>>>>>>> color params >>>>>>>> c=" + c + ", contrast=" + mContrast);
 			invalidate();
+			LOGD(">>>>>>>>>>>>Contrast>>>>>>>>>>>>> origin:" + contrast + ", result:" + mContrast);
 		}
 
 		private void setSatuation(int satuation) {
 			copyImage();
 			mSatuation = satuation * 1.0F / SatuationImageOperation.DEFAULT;
 			invalidate();
+			LOGD(">>>>>>>>>>>>Satuation>>>>>>>>>>>>>" + mSatuation);
 		}
 
 		private void setIllumination(int illumination) {
@@ -458,8 +470,9 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			// 参考了http://blog.csdn.net/pizi0475/article/details/6740428
 			// 调整亮度参数到 [-1, 1]区间
 			mIllumination = (illumination - IlluminationImageOperation.DEFAULT)
-					/ (1.0f * IlluminationImageOperation.DEFAULT);
+					/ (1.0f * IlluminationImageOperation.SCALE);
 			invalidate();
+			LOGD(">>>>>>>>>>>>illumination>>>>>>>>>>>>>" + mIllumination);
 		}
 
 		private void flip() {
@@ -707,7 +720,6 @@ public class ImageWidgetOverlay extends ObjectOverlay implements IlluminationCha
 			Bitmap image = mEraserMode ? mEraseableImage : mImage;
 
 			if (image != null) {
-				LOGD("<<<<<<<<< draw with color matrix >>>>>>>>>>>>");
 				int saveCount = canvas.getSaveCount();
 				canvas.save();
 				// canvas.translate(padding, padding);

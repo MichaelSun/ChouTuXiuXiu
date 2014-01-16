@@ -153,7 +153,6 @@ GLuint loadTexture(GLuint textureId, rrimage* data) {
 		return -1;
 	}
 
-	// 有些三通道图片使用RGB模式会出问题，不知道为什么（对齐？），这里统一使用RGBA传入
 	GLenum format = GL_RGBA;
 	int width = data->width;
 	int height = data->height;

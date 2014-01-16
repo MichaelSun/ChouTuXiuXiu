@@ -1039,10 +1039,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 					mLastOverlay = null;
 					// 是否点中了删除按钮
 					if (mCurrentOverlay.isFlipPointSelected()) {
-						// removeOverlay(mCurrentOverlay);
-						// TODO: flip
 						flipOverlay(mCurrentOverlay);
-						// mCurrentOverlay = null;
 						return true;
 					}
 
@@ -1050,10 +1047,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						mTopContextMenu.setVisibility(View.VISIBLE);
 						mCurrentOverlay.setOverlaySelected(true);
 						mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
-						// mVgContextMenuContainer.removeAllViews();
-						// mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
-						// mVgContextMenuContainer.setVisibility(View.VISIBLE);
-						// mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
 					} else {
 						mVgContextMenuContainer.setVisibility(View.GONE);
 					}
@@ -1093,23 +1086,10 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mCurrentOverlay.setHasBeenSelected(true);
 				mLastOverlay = null;
 				if (mCurrentOverlay.isFlipPointSelected()) {
-					// removeOverlay(mCurrentOverlay);
-					// mCurrentOverlay = null;
-					// mVgContextMenuContainer.removeAllViews();
-					// mVgContextMenuContainer.setVisibility(View.GONE);
 					flipOverlay(mCurrentOverlay);
 				} else {
 					mCurrentOverlay.setEditorContainerView(mEditorContainerView);
 					mTopContextMenu.setVisibility(View.VISIBLE);
-
-					// if (mCurrentOverlay.getContextView() != null) {
-					// mVgContextMenuContainer.removeAllViews();
-					// mVgContextMenuContainer.addView(mCurrentOverlay.getContextView());
-					// mVgContextMenuContainer.setVisibility(View.VISIBLE);
-					// } else {
-					// mVgContextMenuContainer.setVisibility(View.GONE);
-					// }
-					// mRlOverlayContainer.bringChildToFront(mCurrentOverlay.getContainerView(PhotoEditor.this));
 				}
 				return true;
 			}

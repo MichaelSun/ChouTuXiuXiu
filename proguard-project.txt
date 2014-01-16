@@ -20,5 +20,87 @@
 #}
 
 
--keep class com.tencent.mm.sdk.openapi.WXMediaMessage {*;}
--keep class com.tencent.mm.sdk.openapi.** implements com.tencent.mm.sdk.openapi.WXMediaMessage$IMediaObject {*;}
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-verbose
+
+-keepattributes Signature
+-keepattributes InnerClass
+
+-dontwarn android.net.http.**
+
+
+-keep class de.greenrobot.** { *; }
+
+-keepclassmembers class * {
+   public <init>(org.json.JSONObject);
+}
+
+-keep class com.canruoxingchen.uglypic.dao.** { *; }
+
+-keep public class * extends android.content.BroadcastReceiver
+-keep class com.canruoxingchen.uglypic.footage.RecentFootAge
+
+# cache
+-keep class uk.co.senab.bitmapcache.** { *; }
+-keep class com.jakewharton.disklrucache.** { *; }
+-keep class uk.co.senab.photoview.** { *; }
+
+# fastJson
+-keep class com.alibaba.fastjson.** { *; }
+-dontwarn com.alibaba.fastjson.**
+-dontnote com.alibaba.fastjson.**
+
+# Weibo
+-keep class com.weibo.sdk.** { *; }
+-dontwarn com.weibo.sdk.**
+-dontnote com.weibo.sdk.**
+-keep class com.sina.sso.**
+
+# WeiXin
+-keep class com.tencent.mm.sdk.openapi.WXMediaMessage { *; }
+-keep class com.tencent.mm.sdk.openapi.** implements com.tencent.mm.sdk.openapi.WXMediaMessage$IMediaObject { *; }
+
+
+#AVOS
+-dontwarn com.jcraft.jzlib.**
+-keep class com.jcraft.jzlib.**  { *;}
+
+-dontwarn sun.misc.**
+-keep class sun.misc.** { *;}
+
+-dontwarn sun.security.**
+-keep class sun.security.** { *; }
+
+-dontwarn com.google.**
+-keep class com.google.** { *;}
+
+-dontwarn com.avos.**
+-keep class com.avos.** { *;}
+
+
+-dontwarn org.apache.**
+-keep class org.apache.** { *;}
+
+-dontwarn org.jivesoftware.smack.**
+-keep class org.jivesoftware.smack.** { *;}
+
+-dontwarn com.loopj.**
+-keep class com.loopj.** { *;}
+
+-dontwarn org.xbill.**
+-keep class org.xbill.** { *;}
+
+-keep public class com.canruoxingchen.uglypic.R$*{
+public static final int *;
+}
+
+#umeng
+# 添加第三方jar包
+-libraryjars libs/umeng_sdk.jar
+-keep public class * extends com.umeng.**
+# 以下包不进行过滤 
+-keep class com.umeng.** { *; }
+-dontwarn com.umeng.**
+
+

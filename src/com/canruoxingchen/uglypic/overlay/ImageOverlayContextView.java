@@ -131,6 +131,9 @@ public class ImageOverlayContextView extends FrameLayout implements View.OnClick
 		mSbContrast.setProgress(ContrastImageOperation.DEFAULT);
 		mSbIllumination.setProgress(IlluminationImageOperation.DEFAULT);
 		mSbSatuation.setProgress(SatuationImageOperation.DEFAULT);
+		onProgressChanged(mSbContrast, ContrastImageOperation.DEFAULT, false);
+		onProgressChanged(mSbIllumination, IlluminationImageOperation.DEFAULT, false);
+		onProgressChanged(mSbSatuation, SatuationImageOperation.DEFAULT, false);
 	}
 
 	@Override

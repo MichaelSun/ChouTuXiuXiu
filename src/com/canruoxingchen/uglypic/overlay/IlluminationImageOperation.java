@@ -11,9 +11,10 @@ package com.canruoxingchen.uglypic.overlay;
  */
 public class IlluminationImageOperation extends SingleParamImageOperation{
 	
-	public static int MAX = 200;
-	public static int MIN = 0;
-	public static int DEFAULT = 100;
+	public static int MAX = 60;
+	public static int MIN = 30;
+	public static int DEFAULT = 30;
+	public static int SCALE = 100;
 	
 	private int mValue = DEFAULT;
 
