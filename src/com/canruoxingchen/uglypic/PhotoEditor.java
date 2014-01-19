@@ -899,8 +899,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				mNullScene = new SceneOverlay.Builder(PhotoEditor.this, null).create();
 			}
 			scene = mNullScene;
+		} else {
+			mViewContextBtn.setVisibility(View.VISIBLE);
 		}
-
 		mSceneOverlay = scene;
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.MATCH_PARENT);
