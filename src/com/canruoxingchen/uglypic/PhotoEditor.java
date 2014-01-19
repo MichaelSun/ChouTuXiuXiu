@@ -1202,6 +1202,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		}
 		mTypeAdapter.notifyDataSetChanged();
 		mFootageAdapter.notifyDataSetChanged();
+		mPvPhoto.update();
 	}
 
 	@Override

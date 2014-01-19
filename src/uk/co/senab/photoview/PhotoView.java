@@ -114,18 +114,30 @@ public class PhotoView extends AsyncImageView implements IPhotoView {
 	public void setMaxScale(float maxScale) {
 		mAttacher.setMaxScale(maxScale);
 	}
+	
+	public void update() {
+		if(null != mAttacher) {
+			mAttacher.update();
+		}
+	}
 
 	@Override
 	public void setImageDrawable(Drawable drawable) {
+		Drawable old = getDrawable();
 		super.setImageDrawable(drawable);
-		if (null != mAttacher) {
-			mAttacher.update();
+
+		if (old != drawable) {
+			Logger.d("---------PhotoViewAttacher---------setImageDrawable  update()");
+			if (null != mAttacher) {
+				mAttacher.update();
+			}
 		}
 	}
 
 	@Override
 	public void setImageResource(int resId) {
 		super.setImageResource(resId);
+		Logger.d("---------PhotoViewAttacher---------setImageResource  update()");
 		if (null != mAttacher) {
 			mAttacher.update();
 		}
@@ -134,6 +146,7 @@ public class PhotoView extends AsyncImageView implements IPhotoView {
 	@Override
 	public void setImageURI(Uri uri) {
 		super.setImageURI(uri);
+		Logger.d("---------PhotoViewAttacher---------setImageURI  update()");
 		if (null != mAttacher) {
 			mAttacher.update();
 		}

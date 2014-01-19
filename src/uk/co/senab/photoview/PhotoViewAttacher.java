@@ -472,6 +472,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 			mScaleType = scaleType;
 
 			// Finally update
+			Logger.d("---------PhotoViewAttacher---------setScaleType  update()");
 			update();
 		}
 	}
@@ -479,12 +480,14 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 	@Override
 	public final void setZoomable(boolean zoomable) {
 		mZoomEnabled = zoomable;
+		Logger.d("---------PhotoViewAttacher---------setZoomable  update()");
 		update();
 	}
 
 	public final void update() {
 		ImageView imageView = getImageView();
 
+		Logger.d("---------PhotoViewAttacher---------  update()");
 		
 		//修改为设置zoomable只影响触摸手势，但不影响fitCenter
 		if (null != imageView) {
@@ -643,6 +646,8 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 	 * Resets the Matrix back to FIT_CENTER, and then displays it.s
 	 */
 	private void resetMatrix() {
+
+		Logger.d("---------PhotoViewAttacher---------resetMatrix ");
 		mSuppMatrix.reset();
 		setImageViewMatrix(getDisplayMatrix());
 		checkMatrixBounds();
