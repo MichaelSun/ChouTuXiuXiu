@@ -447,10 +447,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mFootageListContainer = (RelativeLayout) findViewById(R.id.photo_editor_footage_list_container);
 
 		mTopContextMenu = findViewById(R.id.photo_editor_topbar_object_menu);
+		mViewContextBtn = (Button) findViewById(R.id.photo_editor_context_button);
+		//初始状态下，分享按钮不可见
+		mViewContextBtn.setVisibility(View.GONE);
 		mViewModify = findViewById(R.id.photo_editor_top_bar_object_modify);
 		mViewDelete = findViewById(R.id.photo_editor_top_bar_object_delete);
 		mViewEraser = findViewById(R.id.photo_editor_top_bar_object_eraser);
-		mViewContextBtn = (Button) findViewById(R.id.photo_editor_context_button);
 		mLvTypes = (HorizontalListView) findViewById(R.id.photo_editor_footage_types_list);
 		mLvFootages = (HorizontalListView) findViewById(R.id.photo_editor_footage_list);
 		mViewModifyFinish = findViewById(R.id.photo_editor_topbar_modify_finish);
@@ -1037,6 +1039,9 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isFlipPointSelected()) {
 					// 标记为已经选中过
 					mCurrentOverlay.setHasBeenSelected(true);
+					//显示context按钮
+					mViewContextBtn.setVisibility(View.VISIBLE);
+					
 					mLastOverlay = null;
 					// 是否点中了删除按钮
 					if (mCurrentOverlay.isFlipPointSelected()) {
@@ -1084,6 +1089,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			// 选中了一个浮层
 			if (mCurrentOverlay != null) {
 				// 标记为已经选中过
+				mViewContextBtn.setVisibility(View.VISIBLE);
 				mCurrentOverlay.setHasBeenSelected(true);
 				mLastOverlay = null;
 				if (mCurrentOverlay.isFlipPointSelected()) {

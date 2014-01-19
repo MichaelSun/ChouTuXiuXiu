@@ -11,4 +11,6 @@ bin/
 
 *.class
 
+output_pkgs/
+
 # Package Files #
