@@ -24,6 +24,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
@@ -38,6 +39,7 @@ import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
 import com.almeros.android.multitouch.gesturedetector.MoveGestureDetector;
+import com.almeros.android.multitouch.gesturedetector.RotateGestureDetector;
 import com.canruoxingchen.uglypic.cache.AsyncImageView;
 import com.canruoxingchen.uglypic.cache.ImageInfo;
 import com.canruoxingchen.uglypic.concurrent.ThreadPoolManager;
@@ -57,6 +59,7 @@ import com.canruoxingchen.uglypic.statistics.StatisticsUtil;
 import com.canruoxingchen.uglypic.util.ImageUtils;
 import com.canruoxingchen.uglypic.util.Logger;
 import com.canruoxingchen.uglypic.util.UiUtils;
+import com.canruoxingchen.uglypic.view.GestureView;
 import com.canruoxingchen.uglypic.view.HorizontalListView;
 
 /**
@@ -124,6 +127,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private Dialog mDialog = null;
 
 	private MoveGestureDetector mMoveGestureDetector;
+	private ScaleGestureDetector mScaleGestureDetector;
+	private RotateGestureDetector mRotateGestureDetector;
 
 	/**
 	 * 添加在图片上的浮层
@@ -164,6 +169,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	private FootAgeType mCurrentType;
 
 	private boolean mHasLoadPhoto = false;
+
+	private boolean mSceneGestureEnabled = false;
 
 	/**
 	 * 启动照片编辑页面
@@ -409,6 +416,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		mLvFootages.setAdapter(mFootageAdapter);
 
 		mMoveGestureDetector = new MoveGestureDetector(this, new MoveListener());
+		mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
+		mRotateGestureDetector = new RotateGestureDetector(this, new RotateListener());
 
 		mFootageManager = FootageManager.getInstance(this);
 
@@ -448,7 +457,7 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 		mTopContextMenu = findViewById(R.id.photo_editor_topbar_object_menu);
 		mViewContextBtn = (Button) findViewById(R.id.photo_editor_context_button);
-		//初始状态下，分享按钮不可见
+		// 初始状态下，分享按钮不可见
 		mViewContextBtn.setVisibility(View.GONE);
 		mViewModify = findViewById(R.id.photo_editor_top_bar_object_modify);
 		mViewDelete = findViewById(R.id.photo_editor_top_bar_object_delete);
@@ -499,18 +508,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 				}
 				mViewBottomPanel.setVisibility(View.GONE);
 				// 编辑过程中，原图不可放缩
-				mPvPhoto.setZoomable(false);
 			}
 
 			@Override
 			public void onInvisible() {
 				mViewContextBtn.setVisibility(View.VISIBLE);
 				mViewBottomPanel.setVisibility(View.VISIBLE);
-				if (mHasLoadPhoto && (mSceneOverlay == null || mSceneOverlay == mNullScene)) {
-					mPvPhoto.setZoomable(false);
-				} else {
-					mPvPhoto.setZoomable(true);
-				}
 			}
 		});
 
@@ -583,11 +586,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 
 						@Override
 						public void run() {
-							if (mPvPhoto != null && mSceneOverlay == mNullScene) {
-								mPvPhoto.setZoomable(false);
-							} else {
-								mPvPhoto.setZoomable(true);
-							}
 							LOGD(">>>>>>> StartToLoad >>>>>>>>>>>>>>>");
 							// 加载素材类型数据
 							mFootageManager.loadFootageTypeFromLocal();
@@ -753,15 +751,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		switch (requestCode) {
 		case REQUEST_CODE_EDIT_TEXT: { // 编辑了文本后，显示选择背景列表
 			if (resultCode == RESULT_OK) {
-				// 添加一个TextOverLay
-				// if (data != null) {
-				// String text =
-				// data.getStringExtra(EditTextActivity.EXTRA_TEXT);
-				// if (!TextUtils.isEmpty(text)) {
-				// TextOverlay overlay = new TextOverlay(this, text);
-				// addOverlay(overlay);
-				// }
-				// }
 			}
 			break;
 		}
@@ -828,53 +817,6 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			}
 		}
 	}
-
-	// private void saveOriginImage() {
-	// String savePath = FileUtils.createSdCardFile("photo_editor_origin.jpg");
-	// if (TextUtils.isEmpty(savePath)) {
-	// UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
-	// return;
-	// }
-	// File file = new File(savePath);
-	// if (file.exists()) {
-	// file.delete();
-	// }
-	// try {
-	// file.createNewFile();
-	// } catch (IOException e) {
-	// UiUtils.toastMessage(this, R.string.photo_editor_save_failure);
-	// return;
-	// }
-	//
-	// mPvPhoto.buildDrawingCache();
-	// final Bitmap image = mPvPhoto.getDrawingCache();
-	// mPvPhoto.destroyDrawingCache();
-	// ThreadPoolManager.getInstance().execute(new Runnable() {
-	//
-	// @Override
-	// public void run() {
-	// String path =
-	// ImageUtils.saveBitmapForLocalPath(UglyPicApp.getAppExContext(), image, 0,
-	// true);
-	// if (TextUtils.isEmpty(path)) {
-	// UglyPicApp.getUiHander().post(new Runnable() {
-	//
-	// @Override
-	// public void run() {
-	// UiUtils.toastMessage(PhotoEditor.this,
-	// R.string.photo_editor_save_failure);
-	// return;
-	// }
-	// });
-	// } else {
-	// if (mHandler != null) {
-	// Message msg = Message.obtain(mHandler, MSG_ORIGIN_IMAGE_SAVED, path);
-	// msg.sendToTarget();
-	// }
-	// }
-	// }
-	// });
-	// }
 
 	// 保存当前图片
 	private void saveCurrentImage() {
@@ -965,13 +907,13 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		scene.getView().setLayoutParams(params);
 		mRlOverlayContainer.addView(scene.getView(), 0);
 		scene.setViewSizeAdjustedListener(this);
-		
 
 		if (mHasLoadPhoto && mPvPhoto != null && mSceneOverlay == mNullScene) {
-			mPvPhoto.setZoomable(false);
+			mSceneGestureEnabled = false;
 		} else {
-			mPvPhoto.setZoomable(true);
+			mSceneGestureEnabled = true;
 		}
+		LOGD("----------setSceneOverlay,,,,SceneGestureEnabled------------" + mSceneGestureEnabled);
 	}
 
 	private void unSelectAllOverlays() {
@@ -1026,6 +968,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 	@Override
 	public boolean onTouch(View view, MotionEvent e) {
 		mMoveGestureDetector.onTouchEvent(e);
+		mScaleGestureDetector.onTouchEvent(e);
+		mRotateGestureDetector.onTouchEvent(e);
 
 		switch (e.getAction()) {
 		case MotionEvent.ACTION_DOWN: {
@@ -1039,9 +983,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 						|| mCurrentOverlay.isControlPointSelected() || mCurrentOverlay.isFlipPointSelected()) {
 					// 标记为已经选中过
 					mCurrentOverlay.setHasBeenSelected(true);
-					//显示context按钮
+					// 显示context按钮
 					mViewContextBtn.setVisibility(View.VISIBLE);
-					
+					// 选中素材后，背景不可以缩放
+					mSceneGestureEnabled = false;
+					LOGD("----------onTouch,,,,SceneGestureEnabled------------" + mSceneGestureEnabled);
+
 					mLastOverlay = null;
 					// 是否点中了删除按钮
 					if (mCurrentOverlay.isFlipPointSelected()) {
@@ -1089,6 +1036,8 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			// 选中了一个浮层
 			if (mCurrentOverlay != null) {
 				// 标记为已经选中过
+				mSceneGestureEnabled = false;
+				LOGD("----------onTouch,,,,,SceneGestureEnabled------------" + mSceneGestureEnabled);
 				mViewContextBtn.setVisibility(View.VISIBLE);
 				mCurrentOverlay.setHasBeenSelected(true);
 				mLastOverlay = null;
@@ -1106,6 +1055,12 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 			mViewModifyFinish.setVisibility(View.GONE);
 			break;
 		}
+		}
+
+		// 如果当前已取消了场景手势，则直接吞掉touch事件
+		if (!mSceneGestureEnabled) {
+			LOGD("----------onTouch,,,,Check,,,,SceneGestureEnabled------------" + mSceneGestureEnabled);
+			return true;
 		}
 		return false;
 	}
@@ -1135,6 +1090,43 @@ public class PhotoEditor extends BaseActivity implements OnClickListener, OnTouc
 		} else {
 			return 360 + atan;
 		}
+	}
+
+	private class RotateListener extends RotateGestureDetector.SimpleOnRotateGestureListener {
+
+		@Override
+		public boolean onRotate(RotateGestureDetector detector) {
+			// 编辑过程中不处理事件
+			if (isEditting()) {
+				return true;
+			}
+
+			float rotate = -detector.getRotationDegreesDelta();
+			if (mCurrentOverlay != null && mCurrentOverlay.isOverlaySelected()) {
+				mCurrentOverlay.rotate(rotate);
+				mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
+			}
+			return true;
+		}
+
+	}
+
+	private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+
+		@Override
+		public boolean onScale(ScaleGestureDetector detector) {
+			// 编辑过程中不处理事件
+			if (isEditting()) {
+				return true;
+			}
+			float scale = detector.getScaleFactor();
+			if (mCurrentOverlay != null && mCurrentOverlay.isOverlaySelected()) {
+				mCurrentOverlay.scale(scale, scale);
+				mCurrentOverlay.getContainerView(PhotoEditor.this).invalidate();
+			}
+			return true;
+		}
+
 	}
 
 	private class MoveListener extends MoveGestureDetector.SimpleOnMoveGestureListener {

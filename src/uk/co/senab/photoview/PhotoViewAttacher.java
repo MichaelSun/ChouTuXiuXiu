@@ -17,6 +17,8 @@ package uk.co.senab.photoview;
 
 import java.lang.ref.WeakReference;
 
+import com.canruoxingchen.uglypic.util.Logger;
+
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.Matrix.ScaleToFit;
@@ -325,6 +327,7 @@ public class PhotoViewAttacher implements IPhotoView, View.OnTouchListener, Vers
 			 */
 			if (top != mIvTop || bottom != mIvBottom || left != mIvLeft || right != mIvRight) {
 				// Update our base matrix, as the bounds have changed
+				Logger.d("------------onGlobalLayout--------------");
 				updateBaseMatrix(imageView.getDrawable());
 
 				// Update values as something has changed
